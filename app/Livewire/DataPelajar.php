@@ -22,6 +22,7 @@ class DataPelajar extends Component
     public $tempat_lahir;
     public $tgl_lahir;
     public $jk;
+    public $alamat = '';
 
     public $isEdit = false;
 

@@ -13,8 +13,11 @@
     <link rel="stylesheet" href="{{ asset('assets/css/vendor.bundle.base.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/select2-bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/font-awesome.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap-datepicker.min.css') }}" />
+
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}" />
+
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" />
     <link rel="shortcut icon" href="{{ asset('assets/images/icon.png') }}" />
 
@@ -24,6 +27,8 @@
     <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}" />
 
     <link rel="stylesheet" href="{{ asset('assets/css/other-style.css') }}" />
+
+    @livewireStyles
 
 </head>
 
@@ -110,7 +115,6 @@
     <!-- container-scroller -->
 
     <!-- plugins:js -->
-    <script src="{{ asset('assets/js/vendor.bundle.base.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- JS Select2 -->
@@ -223,6 +227,7 @@
 
         });
     </script>
+
 </body>
 
 </html>

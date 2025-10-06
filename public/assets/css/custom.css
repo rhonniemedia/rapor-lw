@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap");
+
 /* Style untuk gambar preview */
 .preview-image {
     height: 150px;
@@ -54,5 +56,3 @@
     /* Mengubah vertical alignment menjadi top */
     height: 35px;
 }
-
-
