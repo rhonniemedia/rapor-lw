@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Rapor Digital | </title>
+    <link rel="stylesheet" href="{{ asset('assets/css/materialdesignicons.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/flag-icon.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/vendor.bundle.base.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/select2-bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/font-awesome.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap-datepicker.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" />
+    <link rel="shortcut icon" href="{{ asset('assets/images/icon.png') }}" />
+
+    <!-- Demo CSS -->
+    <link rel="stylesheet" href="{{ asset('assets/css/button.css') }}">
+
+    <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}" />
+
+    <link rel="stylesheet" href="{{ asset('assets/css/other-style.css') }}" />
+
+</head>
+
+<body>
+    <div class="container-scroller">
+
+        <!-- Left Sidebar -->
+        @include ('layouts.admin.sidebar')
+        <!-- End of left sidebar -->
+
+        <div class="container-fluid page-body-wrapper">
+            <div id="theme-settings" class="settings-panel">
+                <i class="settings-close mdi mdi-close"></i>
+                <p class="settings-heading">SIDEBAR SKINS</p>
+                <div class="sidebar-bg-options selected" id="sidebar-default-theme">
+                    <div class="img-ss rounded-circle bg-light border mr-3"></div> Default
+                </div>
+                <div class="sidebar-bg-options" id="sidebar-dark-theme">
+                    <div class="img-ss rounded-circle bg-dark border mr-3"></div> Dark
+                </div>
+                <p class="settings-heading mt-2">HEADER SKINS</p>
+                <div class="color-tiles mx-0 px-4">
+                    <div class="tiles light"></div>
+                    <div class="tiles dark"></div>
+                </div>
+            </div>
+            <nav class="navbar col-lg-12 col-12 p-lg-0 fixed-top d-flex flex-row">
+                <div class="navbar-menu-wrapper d-flex align-items-stretch justify-content-between">
+                    <a class="navbar-brand brand-logo-mini align-self-center d-lg-none" href="index.html"><img src="{{ asset('assets/images/logo-mini.svg') }}" alt="logo" /></a>
+                    <button class="navbar-toggler navbar-toggler align-self-center mr-2" type="button" data-toggle="minimize">
+                        <i class="mdi mdi-menu"></i>
+                    </button>
+
+                    <!-- Notifications -->
+
+                    <ul class="navbar-nav navbar-nav-right ml-lg-auto">
+                        <!-- Setting -->
+                        <li class="nav-item dropdown d-none d-xl-flex border-0">
+                            <a class="nav-link dropdown-toggle" id="languageDropdown" href="{{ url('#') }}" data-toggle="dropdown">
+                                <i class="mdi mdi-settings"></i> Pengaturan </a>
+                            <div class="dropdown-menu navbar-dropdown" aria-labelledby="languageDropdown">
+                                <a class="dropdown-item" href="{{url('master-data/school-data')}}">Data Sekolah</a>
+                            </div>
+                        </li>
+                        <li class="nav-item nav-profile dropdown border-0">
+                            <a class="nav-link dropdown-toggle" id="profileDropdown" href="#" data-toggle="dropdown">
+                                <img class="nav-profile-img mr-2" alt="" src="{{ asset('assets/images/icons/smile.png') }}" />
+                                <span class="profile-name">Administrator</span>
+                            </a>
+                            <div class="dropdown-menu navbar-dropdown w-100" aria-labelledby="profileDropdown">
+                                <button type="submit" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalProfile">
+                                    <i class="mdi mdi-account-badge mr-2 text-success"></i>Profil </button>
+                                <form action="" method="post">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item"><i class="mdi mdi-logout mr-2 text-primary"></i> Signout</button>
+                                </form>
+                            </div>
+                        </li>
+                    </ul>
+                    <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+                        <span class="mdi mdi-menu"></span>
+                    </button>
+                </div>
+            </nav>
+            <div class="main-panel">
+
+                <!-- Content -->
+
+                @yield('container')
+
+                <!-- End of content -->
+
+                <!-- Footer -->
+                <footer class="footer">
+                    <div class="d-sm-flex justify-content-center justify-content-sm-between">
+                        <span class="text-muted d-block text-center text-sm-left d-sm-inline-block">Copyright © {{ date('Y') }} SMK Negeri 1 Rejang Lebong.</span>
+                    </div>
+                </footer>
+            </div>
+            <!-- main-panel ends -->
+        </div>
+        <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+
+    <!-- plugins:js -->
+    <script src="{{ asset('assets/js/vendor.bundle.base.js') }}"></script>
+
+    <!-- Select2 -->
+    <script src="{{ asset('assets/js/select2.min.js') }}"></script>
+    <script src="{{ asset('assets/js/select2.js') }}"></script>
+
+    <!-- file inisialisasi kamu: jangan beri nama sama dengan plugin (mis. select2-init.js) -->
+    <script src="{{ asset('assets/js/select2-init.js') }}"></script>
+
+    <!-- Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Flot, datepicker, dll -->
+    <script src="{{ asset('assets/js/bootstrap-datepicker.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.flot.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.flot.resize.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.flot.categories.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.flot.fillbetween.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.flot.stack.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.flot.pie.js') }}"></script>
+
+    <!-- Custom js -->
+    <script src="{{ asset('assets/js/dashboard.js') }}"></script>
+    <script src="{{ asset('assets/js/off-canvas.js') }}"></script>
+    <script src="{{ asset('assets/js/hoverable-collapse.js') }}"></script>
+    <script src="{{ asset('assets/js/misc.js') }}"></script>
+
+    <!-- endinject -->
+
+    @stack('scripts')
+
+    <!-- Inisialisasi DataTable -->
+</body>
+
+</html>

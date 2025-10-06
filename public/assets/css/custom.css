@@ -1,0 +1,58 @@
+/* Style untuk gambar preview */
+.preview-image {
+    height: 150px;
+    /* Tinggi tetap untuk semua gambar */
+    width: auto;
+    /* Lebar otomatis agar proporsi gambar tetap */
+    object-fit: contain;
+    /* Gambar menyesuaikan area tanpa terdistorsi */
+    padding: 10px;
+    /* Jarak di dalam card */
+    display: none;
+    /* Awalnya disembunyikan */
+}
+
+.show-image {
+    height: 150px;
+    /* Tinggi tetap untuk semua gambar */
+    width: auto;
+    /* Lebar otomatis agar proporsi gambar tetap */
+    object-fit: contain;
+    /* Gambar menyesuaikan area tanpa terdistorsi */
+    padding: 10px;
+    /* Jarak di dalam card */
+}
+
+.card p {
+    margin-bottom: 10px;
+    /* Jarak bawah pada teks */
+    color: #333;
+    /* Warna teks */
+}
+
+.reload-outer {
+    width: 25px; /* Sesuaikan ukuran lingkaran */
+    height: 25px; /* Sesuaikan ukuran lingkaran */
+    border-radius: 50%; /* Membuat bentuk lingkaran */
+    color: white; /* Warna ikon */
+    font-size: 20px; /* Ukuran ikon */
+}
+
+.detail {
+    border-collapse: collapse;
+    /* Pastikan tidak ada border antar sel */
+}
+
+.detail th,
+.detail td {
+    padding: 8px;
+    position: relative;
+    /* Menetapkan posisi relatif untuk elemen */
+    padding-left: 0px;
+    /* Tetap menjaga padding kiri 0px */
+    vertical-align: top;
+    /* Mengubah vertical alignment menjadi top */
+    height: 35px;
+}
+
+
