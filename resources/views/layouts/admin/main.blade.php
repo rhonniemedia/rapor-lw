@@ -15,7 +15,10 @@
     <link rel="stylesheet" href="{{ asset('assets/css/select2-bootstrap.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/font-awesome.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap-datepicker.min.css') }}" />
+
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}" />
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" />
     <link rel="shortcut icon" href="{{ asset('assets/images/icon.png') }}" />
 
@@ -25,6 +28,10 @@
     <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}" />
 
     <link rel="stylesheet" href="{{ asset('assets/css/other-style.css') }}" />
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    @livewireStyles
 
 </head>
 
@@ -111,11 +118,12 @@
     <!-- container-scroller -->
 
     <!-- plugins:js -->
-    <script src="{{ asset('assets/js/vendor.bundle.base.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Select2 -->
+    <!-- JS Select2 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <script src="{{ asset('assets/js/select2.min.js') }}"></script>
-    <script src="{{ asset('assets/js/select2.js') }}"></script>
 
     <!-- file inisialisasi kamu: jangan beri nama sama dengan plugin (mis. select2-init.js) -->
     <script src="{{ asset('assets/js/select2-init.js') }}"></script>
@@ -140,9 +148,87 @@
 
     <!-- endinject -->
 
+    @livewireScripts
+
     @stack('scripts')
 
-    <!-- Inisialisasi DataTable -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // --- swal:success ---
+            window.addEventListener('swal:success', event => {
+                // Logika pengambilan detail Livewire V2/V3 yang fleksibel
+                let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+                if (typeof detail === 'string') {
+                    // Jika dikirim sebagai string
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: detail,
+                        showConfirmButton: true,
+                        // Tambahkan timer jika diinginkan: timer: 2000, timerProgressBar: true,
+                    });
+                } else if (typeof detail === 'object' && detail !== null) {
+                    // Jika dikirim sebagai object (title & text)
+                    Swal.fire({
+                        icon: 'success',
+                        title: detail.title ?? 'Berhasil!',
+                        text: detail.text ?? '',
+                        showConfirmButton: true,
+                        // Tambahkan timer jika diinginkan: timer: 2000, timerProgressBar: true,
+                    });
+                }
+            });
+
+            // --- swal:error ---
+            window.addEventListener('swal:error', event => {
+                // Logika pengambilan detail Livewire V2/V3 yang fleksibel
+                let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+                if (typeof detail === 'string') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: detail,
+                        confirmButtonText: 'Tutup'
+                    });
+                } else if (typeof detail === 'object' && detail !== null) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: detail.title ?? 'Error!',
+                        text: detail.text ?? '',
+                        confirmButtonText: 'Tutup'
+                    });
+                }
+            });
+
+            // --- swal:confirm ---
+            window.addEventListener('swal:confirm', event => {
+                let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+                if (typeof detail === 'object' && detail !== null && detail.nextEvent) {
+                    Swal.fire({
+                        icon: detail.icon ?? 'question',
+                        title: detail.title ?? 'Konfirmasi',
+                        text: detail.text ?? 'Apakah Anda yakin melanjutkan aksi ini?',
+                        showCancelButton: true,
+                        confirmButtonText: detail.confirmButtonText ?? 'Ya',
+                        cancelButtonText: detail.cancelButtonText ?? 'Batal',
+                        confirmButtonColor: detail.confirmButtonColor ?? '#3085d6',
+                        cancelButtonColor: detail.cancelButtonColor ?? '#d33',
+                    }).then(result => {
+                        if (result.isConfirmed) {
+                            // ✅ Kirim parameter dalam array, bukan langsung nilai tunggal
+                            Livewire.dispatch(detail.nextEvent, [detail.id]);
+                        }
+                    });
+                }
+            });
+
+        });
+    </script>
+
 </body>
 
 </html>

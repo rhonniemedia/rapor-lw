@@ -2,6 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('contents.admin.home');
+Route::get('/dashboard', function () {
+    return view('contents.admin.dashboard');
+});
+
+Route::get('/rombongan-belajar', function () {
+    return view('contents.admin.rombel');
 });

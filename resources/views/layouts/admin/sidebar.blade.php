@@ -84,7 +84,7 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{url('dashboard/rombel')}}">
+            <a class="nav-link" href="{{url('rombongan-belajar')}}">
                 <i class="mdi mdi-ungroup menu-icon"></i>
                 <span class="menu-title">Rombongan Belajar</span>
             </a>

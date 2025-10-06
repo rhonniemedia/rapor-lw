@@ -24,4 +24,24 @@
             });
         }
     });
+
+    // Tambahan agar tetap aktif setelah Livewire update
+    document.addEventListener("livewire:load", function () {
+        Livewire.hook("morph.updated", () => {
+            if ($(".js-example-basic-multiple").length) {
+                $(".js-example-basic-multiple").select2({
+                    placeholder: "-- Pilih beberapa --",
+                    allowClear: true,
+                    width: "100%",
+                });
+            }
+            if ($(".js-example-basic-single").length) {
+                $(".js-example-basic-single").select2({
+                    placeholder: "-- Pilih --",
+                    allowClear: true,
+                    width: "100%",
+                });
+            }
+        });
+    });
 })(jQuery);
