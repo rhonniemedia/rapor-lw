@@ -9,3 +9,7 @@ Route::get('/dashboard', function () {
 Route::get('/rombongan-belajar', function () {
     return view('contents.admin.rombel');
 });
+
+Route::get('/sekolah/jurusan', function () {
+    return view('contents.admin.jurusan');
+});

@@ -26,7 +26,8 @@ class DataPelajar extends Component
 
     public $isEdit = false;
 
-    protected $rules = [
+    // Aturan dasar (tanpa pengecualian ID)
+    protected $baseRules = [
         'nis' => 'required|unique:data_pelajars,nis',
         'nik' => 'required|numeric|digits:16|unique:data_pelajars,nik',
         'nama' => 'required|min:3',
@@ -47,6 +48,18 @@ class DataPelajar extends Component
         $this->resetPage();
     }
 
+    public function getRules()
+    {
+        $rules = $this->baseRules;
+
+        if ($this->isEdit && $this->pelajar_id) {
+            $rules['nis'] = 'required|unique:data_pelajars,nis,' . $this->pelajar_id . ',id';
+            $rules['nik'] = 'required|numeric|digits:16|unique:data_pelajars,nik,' . $this->pelajar_id . ',id';
+        }
+
+        return $rules;
+    }
+
     public function create()
     {
         $this->resetForm();
@@ -56,7 +69,7 @@ class DataPelajar extends Component
 
     public function store()
     {
-        $this->validate();
+        $this->validate($this->getRules());
 
         Pelajar::create([
             'nis' => $this->nis,
@@ -94,14 +107,7 @@ class DataPelajar extends Component
 
     public function update()
     {
-        $this->validate([
-            'nis' => 'required|unique:data_pelajars,nis,' . $this->pelajar_id . ',id',
-            'nik' => 'required|numeric|digits:16|unique:data_pelajars,nik,' . $this->pelajar_id . ',id',
-            'nama' => 'required|min:3',
-            'tempat_lahir' => 'required',
-            'tgl_lahir' => 'required|date',
-            'jk' => 'required|in:L,P',
-        ]);
+        $this->validate($this->getRules());
 
         $pelajar = Pelajar::findOrFail($this->pelajar_id);
 

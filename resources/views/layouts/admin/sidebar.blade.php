@@ -33,21 +33,21 @@
 
         <!-- Sekolah -->
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('dashboard/sekolah*') ? 'active' : '' }}" data-toggle="collapse" href="#ui-school" aria-expanded="false" aria-controls="ui-school">
+            <a class="nav-link {{ request()->is('sekolah*') ? 'active' : '' }}" data-toggle="collapse" href="#ui-school" aria-expanded="false" aria-controls="ui-school">
                 <i class="mdi mdi-school menu-icon"></i>
                 <span class="menu-title">Sekolah</span>
                 <i class="menu-arrow"></i>
             </a>
-            <div class="collapse {{ request()->is('dashboard/sekolah*') ? 'show' : '' }}" id="ui-school">
+            <div class="collapse {{ request()->is('sekolah*') ? 'show' : '' }}" id="ui-school">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('dashboard/sekolah/profil') ? 'active' : '' }}" href="{{ url('dashboard/sekolah/profil') }}">Profil</a>
+                        <a class="nav-link {{ request()->is('sekolah/profil') ? 'active' : '' }}" href="{{ url('sekolah/profil') }}">Profil</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('dashboard/sekolah/jurusan') ? 'active' : '' }}" href="{{ url('dashboard/sekolah/jurusan') }}">Jurusan</a>
+                        <a class="nav-link {{ request()->is('sekolah/jurusan') ? 'active' : '' }}" href="{{ url('sekolah/jurusan') }}">Jurusan</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('dashboard/sekolah/ekstrakurikuler') ? 'active' : '' }}" href="{{ url('dashboard/sekolah/ekstrakurikuler') }}">Ekstrakurikuler</a>
+                        <a class="nav-link {{ request()->is('sekolah/ekstrakurikuler') ? 'active' : '' }}" href="{{ url('sekolah/ekstrakurikuler') }}">Ekstrakurikuler</a>
                     </li>
                 </ul>
             </div>
@@ -55,25 +55,25 @@
 
         <!-- Akademik -->
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('dashboard/akademik*') ? 'active' : '' }}" data-toggle="collapse" href="#ui-akademik" aria-expanded="false" aria-controls="ui-akademik">
+            <a class="nav-link {{ request()->is('akademik*') ? 'active' : '' }}" data-toggle="collapse" href="#ui-akademik" aria-expanded="false" aria-controls="ui-akademik">
                 <i class="mdi mdi-animation menu-icon"></i>
                 <span class="menu-title">Akademik</span>
                 <i class="menu-arrow"></i>
             </a>
-            <div class="collapse {{ request()->is('dashboard/akademik*') ? 'show' : '' }}" id="ui-akademik">
+            <div class="collapse {{ request()->is('akademik*') ? 'show' : '' }}" id="ui-akademik">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('dashboard/akademik/tahun-ajaran') ? 'active' : '' }}" href="{{url('dashboard/akademik/tahun-ajaran')}}">Tahun Ajaran</a>
+                        <a class="nav-link {{ request()->is('akademik/tahun-ajaran') ? 'active' : '' }}" href="{{url('akademik/tahun-ajaran')}}">Tahun Ajaran</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('dashboard/akademik/mata-pelajaran') ? 'active' : '' }}" href="{{url('dashboard/akademik/mata-pelajaran')}}">Mata Pelajaran</a>
+                        <a class="nav-link {{ request()->is('akademik/mata-pelajaran') ? 'active' : '' }}" href="{{url('akademik/mata-pelajaran')}}">Mata Pelajaran</a>
                     </li>
                 </ul>
             </div>
         </li>
 
         <li class="nav-item">
-            <a class="nav-link" href="{{url('dashboard/pendidik')}}">
+            <a class="nav-link" href="{{url('home/pendidik')}}">
                 <i class="mdi mdi-human-greeting menu-icon"></i>
                 <span class="menu-title">Pendidik</span>
             </a>
@@ -84,7 +84,7 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{url('rombongan-belajar')}}">
+            <a class="nav-link" href="{{url('home/rombongan-belajar')}}">
                 <i class="mdi mdi-ungroup menu-icon"></i>
                 <span class="menu-title">Rombongan Belajar</span>
             </a>
@@ -97,7 +97,7 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{url('dashboard/user')}}">
+            <a class="nav-link" href="{{url('home/user')}}">
                 <i class="mdi mdi-account menu-icon"></i>
                 <span class="menu-title">Daftar Pengguna</span>
             </a>
