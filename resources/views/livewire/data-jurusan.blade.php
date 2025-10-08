@@ -12,7 +12,7 @@
         </div>
         <div>
             <input type="text" class="form-control" placeholder="Cari jurusan..."
-                wire:model.debounce.500ms="search" style="width:250px;">
+                wire:model.live.debounce.500ms="search" style="width:250px;">
         </div>
     </div>
 

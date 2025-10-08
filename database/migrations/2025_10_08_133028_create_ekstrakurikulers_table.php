@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('jurusans', function (Blueprint $table) {
+        Schema::create('ekstrakurikulers', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('nama');
-            $table->string('alias')->unique();
-            $table->string('kode')->unique();
+            $table->text('deskripsi')->nullable();
             $table->enum('status', ['aktif', 'arsip'])->default('aktif');
+            $table->uuid('pembina_id');
+            $table->foreign('pembina_id')->references('id')->on('users');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('jurusans');
+        Schema::dropIfExists('ekstrakurikulers');
     }
 };

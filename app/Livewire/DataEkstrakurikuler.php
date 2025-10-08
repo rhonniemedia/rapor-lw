@@ -2,11 +2,12 @@
 
 namespace App\Livewire;
 
-use App\Models\Jurusan;
+use App\Models\Ekstrakurikuler;
+use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class DataJurusan extends Component
+class DataEkstrakurikuler extends Component
 {
     use WithPagination;
 
@@ -17,23 +18,24 @@ class DataJurusan extends Component
     public $perPage = 10;
 
     // 🔹 Form field
-    public $jurusan_id;
+    public $ekstrakurikuler_id;
     public $nama;
-    public $alias;
-    public $kode;
+    public $deskripsi;
+    public $status = 'aktif';
+    public $pembina_id;
 
     public $isEdit = false;
 
     protected $baseRules = [
-        'nama' => 'required|min:3',
-        'alias' => 'required|unique:jurusans,alias',
-        'kode' => 'required|unique:jurusans,kode|max:10',
+        'nama' => 'required|min:3|unique:ekstrakurikulers,nama',
+        'deskripsi' => 'nullable|string',
+        'status' => 'required|in:aktif,arsip',
+        'pembina_id' => 'required|exists:users,id',
     ];
 
-    // 🔹 Event listener
     protected $listeners = [
         'deleteConfirmed',
-        'createJurusan' => 'create',
+        'createEkstrakurikuler' => 'create',
     ];
 
     // 🔹 Reset pagination saat search/perPage berubah
@@ -41,20 +43,18 @@ class DataJurusan extends Component
     {
         $this->resetPage();
     }
-
     public function updatingPerPage()
     {
         $this->resetPage();
     }
 
-    // 🔹 Rules dinamis untuk edit vs tambah
+    // 🔹 Rules dinamis untuk edit
     public function getRules()
     {
         $rules = $this->baseRules;
 
-        if ($this->isEdit && $this->jurusan_id) {
-            $rules['alias'] = 'required|unique:jurusans,alias,' . $this->jurusan_id . ',id';
-            $rules['kode'] = 'required|unique:jurusans,kode,' . $this->jurusan_id . ',id|max:10';
+        if ($this->isEdit && $this->ekstrakurikuler_id) {
+            $rules['nama'] = 'required|min:3|unique:ekstrakurikulers,nama,' . $this->ekstrakurikuler_id . ',id';
         }
 
         return $rules;
@@ -73,29 +73,31 @@ class DataJurusan extends Component
     {
         $this->validate($this->getRules());
 
-        Jurusan::create([
+        Ekstrakurikuler::create([
             'nama' => $this->nama,
-            'alias' => $this->alias,
-            'kode' => strtoupper($this->kode),
+            'deskripsi' => $this->deskripsi,
+            'status' => $this->status,
+            'pembina_id' => $this->pembina_id,
         ]);
 
         $this->resetForm();
         $this->dispatch('closeModal');
         $this->dispatch('swal:success', [
             'title' => 'Berhasil!',
-            'text' => 'Data jurusan berhasil ditambahkan!',
+            'text' => 'Data ekstrakurikuler berhasil ditambahkan!',
         ]);
     }
 
     // 🔹 Edit data
     public function edit($id)
     {
-        $jurusan = Jurusan::findOrFail($id);
+        $ekstra = Ekstrakurikuler::findOrFail($id);
 
-        $this->jurusan_id = $jurusan->id;
-        $this->nama = $jurusan->nama;
-        $this->alias = $jurusan->alias;
-        $this->kode = $jurusan->kode;
+        $this->ekstrakurikuler_id = $ekstra->id;
+        $this->nama = $ekstra->nama;
+        $this->deskripsi = $ekstra->deskripsi;
+        $this->status = $ekstra->status;
+        $this->pembina_id = $ekstra->pembina_id;
 
         $this->isEdit = true;
         $this->dispatch('openModal');
@@ -106,19 +108,20 @@ class DataJurusan extends Component
     {
         $this->validate($this->getRules());
 
-        $jurusan = Jurusan::findOrFail($this->jurusan_id);
+        $ekstra = Ekstrakurikuler::findOrFail($this->ekstrakurikuler_id);
 
-        $jurusan->update([
+        $ekstra->update([
             'nama' => $this->nama,
-            'alias' => $this->alias,
-            'kode' => strtoupper($this->kode),
+            'deskripsi' => $this->deskripsi,
+            'status' => $this->status,
+            'pembina_id' => $this->pembina_id,
         ]);
 
         $this->resetForm();
         $this->dispatch('closeModal');
         $this->dispatch('swal:success', [
             'title' => 'Berhasil!',
-            'text' => 'Data jurusan berhasil diperbarui!',
+            'text' => 'Data ekstrakurikuler berhasil diperbarui!',
         ]);
     }
 
@@ -127,7 +130,7 @@ class DataJurusan extends Component
     {
         $this->dispatch('swal:confirm', [
             'title' => 'Hapus Data?',
-            'text' => 'Data jurusan ini akan dihapus secara permanen!',
+            'text' => 'Data ekstrakurikuler ini akan dihapus secara permanen!',
             'nextEvent' => 'deleteConfirmed',
             'id' => $id,
         ]);
@@ -136,40 +139,41 @@ class DataJurusan extends Component
     // 🔹 Hapus data
     public function deleteConfirmed($id)
     {
-        Jurusan::findOrFail($id)->delete();
+        Ekstrakurikuler::findOrFail($id)->delete();
 
         $this->dispatch('swal:success', [
             'title' => 'Berhasil!',
-            'text' => 'Data jurusan berhasil dihapus!',
+            'text' => 'Data ekstrakurikuler berhasil dihapus!',
         ]);
     }
 
     // 🔹 Reset form
     private function resetForm()
     {
-        $this->jurusan_id = null;
+        $this->ekstrakurikuler_id = null;
         $this->nama = '';
-        $this->alias = '';
-        $this->kode = '';
+        $this->deskripsi = '';
+        $this->status = 'aktif';
+        $this->pembina_id = '';
         $this->resetErrorBag();
     }
 
     // 🔹 Render data
     public function render()
     {
-        $query = Jurusan::query();
+        $query = Ekstrakurikuler::with('pembina');
 
         // Filter pencarian (jika ada)
         if (!empty($this->search)) {
             $query->where(function ($q) {
                 $q->where('nama', 'like', '%' . $this->search . '%')
-                    ->orWhere('alias', 'like', '%' . $this->search . '%')
-                    ->orWhere('kode', 'like', '%' . $this->search . '%');
+                    ->orWhere('deskripsi', 'like', '%' . $this->search . '%');
             });
         }
 
-        return view('livewire.data-jurusan', [
-            'jurusans' => $query->orderBy('nama', 'asc')->paginate($this->perPage)
+        return view('livewire.data-ekstrakurikuler', [
+            'ekstrakurikulers' => $query->orderBy('nama', 'asc')->paginate($this->perPage),
+            'pembinas' => User::orderBy('name', 'asc')->get(),
         ]);
     }
 }

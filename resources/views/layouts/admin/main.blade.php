@@ -7,7 +7,7 @@
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Rapor Digital | </title>
+    <title>Rapor Digital | {{ $title }}</title>
     <link rel="stylesheet" href="{{ asset('assets/css/materialdesignicons.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/flag-icon.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/vendor.bundle.base.css') }}" />

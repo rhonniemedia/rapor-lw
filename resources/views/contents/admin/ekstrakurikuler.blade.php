@@ -6,15 +6,14 @@
 
 <div class="content-wrapper pb-0">
     <div class="page-header flex-wrap">
-        <h3 class="mb-0"> Konsentrasi Keahlian
+        <h3 class="mb-0"> {{ $title }}
             <span class="pl-0 h6 pl-sm-2 text-muted d-inline-block">
                 Sekolah
             </span>
         </h3>
         <div class="d-flex">
-            <button type="button" class="btn btn-labeled btn-info" onclick="Livewire.dispatch('createJurusan')">
-                <span class="btn-label"><i class="mdi mdi-note-plus"></i></span>Tambah
-            </button>
+            <button type="button" class="btn btn-labeled btn-info" onclick="Livewire.dispatch('createEkstrakurikuler')">
+                <span class="btn-label"><i class="mdi mdi-note-plus"></i></span>Tambah</button>
         </div>
     </div>
 
@@ -26,7 +25,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    <livewire:data-jurusan />
+                    <livewire:data-ekstrakurikuler />
 
                 </div>
             </div>
