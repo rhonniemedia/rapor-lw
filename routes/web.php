@@ -25,3 +25,9 @@ Route::get('/sekolah/ekstrakurikuler', function () {
         'title' => 'Data Ekstrakurikuler',
     ]);
 });
+
+Route::get('/akademik/mata-pelajaran', function () {
+    return view('contents.admin.mata-pelajaran', [
+        'title' => 'Data Mata Pelajaran',
+    ]);
+});
