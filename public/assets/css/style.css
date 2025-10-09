@@ -15760,10 +15760,10 @@ code {
 }
 
 .nav-tabs .nav-link {
-    background: #f6f8fa;
+    /* background: #000000; */
     color: #000000;
     border-radius: 0;
-    border: 1px solid #ebedf2;
+    /* border: 1px solid #ebedf2; */
     padding: 0.75rem 1.5rem;
 }
 @media (max-width: 568px) {

@@ -80,14 +80,14 @@ body {
 .nav-tabs-modern {
     border: none;
     background: #f8f9fb;
-    border-radius: 15px;
+    /* border-radius: 15px; */
     padding: 0.3rem;
     margin: 1.2rem 0;
 }
 
 .nav-tabs-modern .nav-link {
     border: none;
-    border-radius: 10px;
+    /* border-radius: 10px; */
     color: #6c757d;
     font-weight: 500;
     transition: all 0.3s ease;
@@ -101,11 +101,11 @@ body {
 }
 
 .nav-tabs .nav-item:first-child .nav-link {
-    border-radius: 10px;
+    /* border-radius: 10px; */
 }
 
 .nav-tabs .nav-item:last-child .nav-link {
-    border-radius: 10px;
+    /* border-radius: 10px; */
 }
 
 .tab-content {
