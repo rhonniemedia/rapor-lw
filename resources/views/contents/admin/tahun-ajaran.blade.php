@@ -141,8 +141,8 @@
                                     🔗 Mapping Tahun Ajaran
                                 </h6>
 
-                                <button type="button" class="btn btn-info btn-sm d-flex align-items-center">
-                                    <i class="mdi mdi-note-plus me-1"></i> Tambah
+                                <button type="button" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center">
+                                    <i class="mdi mdi-plus"></i>
                                 </button>
                             </div>
                             <table class="table table-hover mb-0">

@@ -223,3 +223,25 @@ code{
 .btn-group.show .dropdown-toggle-split {
     border-radius: 0 0.2rem 0.2rem 0 !important;
 }
+
+/* Di file CSS atau <style> Anda */
+.btn-outline-light-muted {
+    color: #495057; /* Warna teks/ikon saat normal, misalnya abu-abu gelap */
+    border-color: #ced4da; /* Warna garis luar, misalnya abu-abu sangat terang */
+}
+
+.btn-outline-light-muted:hover {
+    /* Atur warna saat di-hover jika perlu */
+    color: #212529; 
+    background-color: #f0f0f0;
+    border-color: #f0f0f0;
+}
+
+/* 🚨 Keadaan Saat Diklik (Active) dan Terfokus (Focus) 🚨 */
+/* Buat tombol sedikit lebih gelap saat diklik */
+.btn-outline-light-muted:active  {
+    color: #3272b3;                 /* Warna ikon/teks tetap gelap */
+    background-color: #e0e0e0;      /* Sedikit lebih gelap dari hover */
+    border-color: #bb3d3d;          /* Garis luar mengikuti background */
+    /* Tambahkan box-shadow untuk efek focus yang mirip Bootstrap jika perlu */
+}
