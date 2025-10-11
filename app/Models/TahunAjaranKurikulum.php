@@ -11,4 +11,14 @@ class TahunAjaranKurikulum extends Model
     use HasFactory, HasUuids;
 
     protected $guarded = ['id'];
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(TahunAjaran::class);
+    }
+
+    public function kurikulum()
+    {
+        return $this->belongsTo(Kurikulum::class);
+    }
 }

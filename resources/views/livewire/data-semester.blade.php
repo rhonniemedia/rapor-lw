@@ -1,58 +1,60 @@
-<div>
-    <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-3">
-        <h6 class="fw-bold mb-0">📚 Daftar Semester</h6>
-        <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center">
-            <i class="mdi mdi-plus"></i>
-        </button>
-    </div>
+<div class="card" style="width: 100%;">
+    <div class="card-body">
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <h6 class="fw-bold mb-0">📚 Daftar Semester</h6>
+            <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center">
+                <i class="mdi mdi-plus"></i>
+            </button>
+        </div>
 
-    <table class="table table-hover mb-0">
-        <thead class="bg-light">
-            <tr>
-                <th style="width: 50%;">
-                    <p class="mb-0">Semester</p>
-                    <small>Ganjil | Genap</small>
-                </th>
-                <th style="width: 40%;">
-                    <p class="mb-0">Urutan</p>
-                    <small>Semester ke (1 atau 2)</small>
-                </th>
-                <th style="width: 10%;">
-                    <p class="mb-0">Aksi</p>
-                    <small>Edit | Delete</small>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($semesters as $semester)
-            <tr>
-                <td>{{ $semester->nama }}</td>
-                <td>
-                    @if($semester->urutan)
-                    <span class="badge bg-info">Semester {{ $semester->urutan }}</span>
-                    @else
-                    <span class="text-muted">-</span>
-                    @endif
-                </td>
-                <td>
-                    <button type="button" class="border-0 bg-transparent" title="Edit" wire:click="edit('{{ $semester->id }}')">
-                        <img src="{{ asset('assets/images/icons/edit.png') }}" width="30" height="30" alt="Edit">
-                    </button>
-                    <button type="button" class="border-0 bg-transparent" title="Delete" wire:click="confirmDeleteSemester('{{ $semester->id }}')">
-                        <img src="{{ asset('assets/images/icons/delete.png') }}" width="30" height="30" alt="Delete">
-                    </button>
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="3" class="text-center text-muted">Belum ada data semester.</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
+        <table class="table table-hover mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th style="width: 45%;">
+                        <p class="mb-0">Semester</p>
+                        <small>Ganjil | Genap</small>
+                    </th>
+                    <th style="width: 45%;">
+                        <p class="mb-0">Urutan</p>
+                        <small>Semester ke (1 atau 2)</small>
+                    </th>
+                    <th style="width: 10%;">
+                        <p class="mb-0">Aksi</p>
+                        <small>Edit | Delete</small>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($semesters as $semester)
+                <tr>
+                    <td>{{ $semester->nama }}</td>
+                    <td>
+                        @if($semester->urutan)
+                        <span class="badge bg-info">Semester {{ $semester->urutan }}</span>
+                        @else
+                        <span class="text-muted">-</span>
+                        @endif
+                    </td>
+                    <td>
+                        <button type="button" class="border-0 bg-transparent" title="Edit" wire:click="edit('{{ $semester->id }}')">
+                            <img src="{{ asset('assets/images/icons/edit.png') }}" width="30" height="30" alt="Edit">
+                        </button>
+                        <button type="button" class="border-0 bg-transparent" title="Delete" wire:click="confirmDeleteSemester('{{ $semester->id }}')">
+                            <img src="{{ asset('assets/images/icons/delete.png') }}" width="30" height="30" alt="Delete">
+                        </button>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="3" class="text-center text-muted">Belum ada data semester.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
 
-    <div class="mt-3">
-        {{ $semesters->links() }}
+        <div class="mt-3">
+            {{ $semesters->links() }}
+        </div>
     </div>
 
     {{-- Modal Form --}}

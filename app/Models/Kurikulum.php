@@ -11,4 +11,9 @@ class Kurikulum extends Model
     use HasFactory, HasUuids;
 
     protected $guarded = ['id'];
+
+    public function tahunAjaranKurikulum()
+    {
+        return $this->hasMany(TahunAjaranKurikulum::class);
+    }
 }

@@ -1,63 +1,64 @@
-<div>
-    <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-3">
-        <h6 class="fw-bold mb-0">📘 Daftar Kurikulum</h6>
-        <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center">
-            <i class="mdi mdi-plus"></i>
-        </button>
-    </div>
+<div class="card" style="width: 100%;">
+    <div class="card-body">
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <h6 class="fw-bold mb-0">📘 Daftar Kurikulum</h6>
+            <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center">
+                <i class="mdi mdi-plus"></i>
+            </button>
+        </div>
 
-    <table class="table table-hover mb-0">
-        <thead class="bg-light">
-            <tr>
-                <th style="width: 30%;">
-                    <p class="mb-0">Kurikulum</p>
-                    <small>Nama | Kode</small>
-                </th>
-                <th style="width: 35%;">
-                    <p class="mb-0">Deskripsi</p>
-                    <small>Deskripsi Kurikulum</small>
-                </th>
-                <th style="width: 25%;">
-                    <p class="mb-0">Status</p>
-                    <small>Aktif | Arsip</small>
-                </th>
-                <th style="width: 10%;">
-                    <p class="mb-0">Aksi</p>
-                    <small>Edit | Delete</small>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($kurikulums as $kurikulum)
-            <tr>
-                <td>{{ $kurikulum->nama }} ({{ $kurikulum->kode }})</td>
-                <td>{{ $kurikulum->deskripsi ?? '-' }}</td>
-                <td>
-                    @if ($kurikulum->status === 'aktif')
-                    <span class="badge bg-success">Aktif</span>
-                    @else
-                    <span class="badge bg-secondary">Arsip</span>
-                    @endif
-                </td>
-                <td>
-                    <button type="button" class="border-0 bg-transparent" title="Edit" wire:click="edit('{{ $kurikulum->id }}')">
-                        <img src="{{ asset('assets/images/icons/edit.png') }}" width="30" height="30" alt="Edit">
-                    </button>
-                    <button type="button" class="border-0 bg-transparent" title="Delete" wire:click="confirmDeleteKurikulum('{{ $kurikulum->id }}')">
-                        <img src="{{ asset('assets/images/icons/delete.png') }}" width="30" height="30" alt="Delete">
-                    </button>
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="4" class="text-center text-muted">Belum ada data kurikulum.</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <div class="mt-3">
-        {{ $kurikulums->links() }}
+        <table class="table table-hover mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th style="width: 30%;">
+                        <p class="mb-0">Kurikulum</p>
+                        <small>Nama | Kode</small>
+                    </th>
+                    <th style="width: 30%;">
+                        <p class="mb-0">Deskripsi</p>
+                        <small>Deskripsi Kurikulum</small>
+                    </th>
+                    <th style="width: 30%;">
+                        <p class="mb-0">Status</p>
+                        <small>Aktif | Arsip</small>
+                    </th>
+                    <th style="width: 10%;">
+                        <p class="mb-0">Aksi</p>
+                        <small>Edit | Delete</small>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($kurikulums as $kurikulum)
+                <tr>
+                    <td>{{ $kurikulum->nama }} ({{ $kurikulum->kode }})</td>
+                    <td>{{ $kurikulum->deskripsi ?? '-' }}</td>
+                    <td>
+                        @if ($kurikulum->status === 'aktif')
+                        <span class="badge bg-success">Aktif</span>
+                        @else
+                        <span class="badge bg-secondary">Arsip</span>
+                        @endif
+                    </td>
+                    <td>
+                        <button type="button" class="border-0 bg-transparent" title="Edit" wire:click="edit('{{ $kurikulum->id }}')">
+                            <img src="{{ asset('assets/images/icons/edit.png') }}" width="30" height="30" alt="Edit">
+                        </button>
+                        <button type="button" class="border-0 bg-transparent" title="Delete" wire:click="confirmDeleteKurikulum('{{ $kurikulum->id }}')">
+                            <img src="{{ asset('assets/images/icons/delete.png') }}" width="30" height="30" alt="Delete">
+                        </button>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="4" class="text-center text-muted">Belum ada data kurikulum.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+        <div class="mt-3">
+            {{ $kurikulums->links() }}
+        </div>
     </div>
 
     {{-- Modal Form --}}

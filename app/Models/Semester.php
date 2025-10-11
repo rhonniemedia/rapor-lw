@@ -11,4 +11,9 @@ class Semester extends Model
     use HasFactory, HasUuids;
 
     protected $guarded = ['id'];
+
+    public function tahunAjaranSemesters()
+    {
+        return $this->hasMany(TahunAjaranSemester::class, 'semester_id');
+    }
 }
