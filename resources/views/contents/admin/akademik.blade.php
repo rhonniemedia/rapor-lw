@@ -52,86 +52,26 @@
                     <div class="tab-content" id="academicTabContent">
                         <!-- Kurikulum -->
                         <div class="tab-pane fade show active" id="kurikulum" role="tabpanel">
-                            <h6 class="fw-bold mb-3">📘 Daftar Kurikulum</h6>
-                            <table class="table table-bordered table-striped">
-                                <thead class="table-primary">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Nama Kurikulum</th>
-                                        <th>Tahun Mulai</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>1</td>
-                                        <td>Kurikulum Merdeka</td>
-                                        <td>2022</td>
-                                        <td><span class="badge bg-success">Aktif</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>Kurikulum 2013</td>
-                                        <td>2013</td>
-                                        <td><span class="badge bg-secondary">Nonaktif</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+
+                            <!-- Livewire Kurikulum -->
+                            <livewire:data-kurikulum />
+
                         </div>
 
                         <!-- Tahun Ajaran -->
                         <div class="tab-pane fade" id="tahun" role="tabpanel">
-                            <h6 class="fw-bold mb-3">📆 Tahun Ajaran</h6>
-                            <table class="table table-bordered table-striped">
-                                <thead class="table-primary">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Tahun Ajaran</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>1</td>
-                                        <td>2024 / 2025</td>
-                                        <td><span class="badge bg-success">Aktif</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>2023 / 2024</td>
-                                        <td><span class="badge bg-secondary">Nonaktif</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+
+                            <!-- Livewire Tahun Ajaran -->
+                            <livewire:data-tahun-ajaran />
+
                         </div>
 
                         <!-- Semester -->
                         <div class="tab-pane fade" id="semester" role="tabpanel">
-                            <h6 class="fw-bold mb-3">🏫 Semester</h6>
-                            <table class="table table-bordered table-striped">
-                                <thead class="table-primary">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Semester</th>
-                                        <th>Tahun Ajaran</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>1</td>
-                                        <td>Ganjil</td>
-                                        <td>2024 / 2025</td>
-                                        <td><span class="badge bg-success">Aktif</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>Genap</td>
-                                        <td>2023 / 2024</td>
-                                        <td><span class="badge bg-secondary">Nonaktif</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+
+                            <!-- Livewire Semester -->
+                            <livewire:data-semester />
+
                         </div>
 
                         <!-- Mapping Tahun Ajaran -->

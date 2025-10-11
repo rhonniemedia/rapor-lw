@@ -26,9 +26,9 @@ Route::get('/sekolah/ekstrakurikuler', function () {
     ]);
 });
 
-Route::get('/akademik/tahun-ajaran', function () {
-    return view('contents.admin.tahun-ajaran', [
-        'title' => 'Data Tahun Ajaran',
+Route::get('/akademik/data-akademik', function () {
+    return view('contents.admin.akademik', [
+        'title' => 'Data Akademik',
     ]);
 });
 

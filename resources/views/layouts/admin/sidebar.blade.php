@@ -63,7 +63,7 @@
             <div class="collapse {{ request()->is('akademik*') ? 'show' : '' }}" id="ui-akademik">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('akademik/tahun-ajaran') ? 'active' : '' }}" href="{{url('akademik/tahun-ajaran')}}">Tahun Ajaran</a>
+                        <a class="nav-link {{ request()->is('akademik/data-akademik') ? 'active' : '' }}" href="{{url('akademik/data-akademik')}}">Data Akademik</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('akademik/mata-pelajaran') ? 'active' : '' }}" href="{{url('akademik/mata-pelajaran')}}">Mata Pelajaran</a>
