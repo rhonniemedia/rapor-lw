@@ -34,7 +34,7 @@ class DataTahunAjaran extends Component
         'nama' => 'required|string|min:4|unique:tahun_ajarans,nama',
         'tgl_mulai' => 'required|date',
         'tgl_selesai' => 'required|date|after:tgl_mulai',
-        'status' => 'required|in:aktif,arsip',
+        'status' => 'required|in:aktif,nonaktif',
     ];
 
     // 🔹 Reset pagination saat search berubah

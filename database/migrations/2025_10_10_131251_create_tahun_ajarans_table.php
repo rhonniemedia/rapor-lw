@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nama'); // contoh: 2025/2026
             $table->date('tgl_mulai');
             $table->date('tgl_selesai');
-            $table->enum('status', ['aktif', 'arsip'])->default('arsip');
+            $table->enum('status', ['aktif', 'nonaktif'])->default('nonaktif');
             $table->timestamps();
         });
     }

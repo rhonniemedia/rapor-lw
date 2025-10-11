@@ -19,7 +19,7 @@
                 </th>
                 <th style="width: 30%;">
                     <p class="mb-0">Status</p>
-                    <small>Aktif | Arsip</small>
+                    <small>Aktif | Nonaktif</small>
                 </th>
                 <th style="width: 10%;">
                     <p class="mb-0">Aksi</p>
@@ -36,7 +36,7 @@
                     @if ($tahun->status === 'aktif')
                     <span class="badge bg-success">Aktif</span>
                     @else
-                    <span class="badge bg-secondary">Arsip</span>
+                    <span class="badge bg-secondary">Nonaktif</span>
                     @endif
                 </td>
                 <td>
@@ -94,7 +94,7 @@
                         <select id="status" class="form-select" wire:model="status">
                             <option value="" disabled>-- Pilih Status --</option>
                             <option value="aktif">Aktif</option>
-                            <option value="arsip">Arsip</option>
+                            <option value="nonaktif">Nonaktif</option>
                         </select>
                         @error('status') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
