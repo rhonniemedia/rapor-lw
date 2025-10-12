@@ -14,21 +14,28 @@ return new class extends Migration
         Schema::create('rombels', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
-            // Relasi ke tahun ajaran dan kurikulum
-            $table->foreignUuid('tahun_ajaran_kurikulum_id')
-                ->constrained('tahun_ajaran_kurikulums')
-                ->cascadeOnDelete();
+            // Relasi ke tabel jurusans
+            $table->uuid('jurusan_id');
+            $table->foreign('jurusan_id')
+                ->references('id')
+                ->on('jurusans')
+                ->onDelete('cascade');
 
-            $table->foreignUuid('kelas_id')->constrained('kelas')->cascadeOnDelete();
+            // Relasi ke tabel tahun_ajaran_kurikulums (nullable)
+            $table->uuid('tahun_ajaran_kurikulum_id')->nullable();
+            $table->foreign('tahun_ajaran_kurikulum_id')
+                ->references('id')
+                ->on('tahun_ajaran_kurikulums')
+                ->onDelete('set null');
 
             // Wali kelas menggunakan slug (bukan UUID)
             $table->string('wali_kelas_slug')->nullable();
 
-            $table->string('nama'); // Contoh: XII RPL 1
-            $table->timestamps();
+            // Atribut rombel
+            $table->unsignedTinyInteger('tingkat')->comment('10 = X, 11 = XI, 12 = XII');
+            $table->string('nama');
 
-            // Unik agar tidak duplikat
-            $table->unique(['tahun_ajaran_kurikulum_id', 'kelas_id', 'nama']);
+            $table->timestamps();
 
             // Opsional: index untuk slug agar pencarian cepat
             $table->index('wali_kelas_slug');

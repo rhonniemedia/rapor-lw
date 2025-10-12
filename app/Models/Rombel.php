@@ -10,5 +10,28 @@ class Rombel extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $table = 'rombels';
+
     protected $guarded = ['id'];
+
+    public function jurusan()
+    {
+        return $this->belongsTo(Jurusan::class, 'jurusan_id', 'id');
+    }
+
+    /**
+     * Relasi ke Tahun Ajaran Kurikulum
+     */
+    public function tahunAjaranKurikulum()
+    {
+        return $this->belongsTo(TahunAjaranKurikulum::class, 'tahun_ajaran_kurikulum_id', 'id');
+    }
+
+    /**
+     * Relasi ke Wali Kelas (users) via slug
+     */
+    public function waliKelas()
+    {
+        return $this->belongsTo(User::class, 'wali_kelas_slug', 'slug');
+    }
 }

@@ -8,11 +8,19 @@ Route::get('/dashboard', function () {
     ]);
 });
 
-Route::get('/rombongan-belajar', function () {
+Route::get('/home/rombongan-belajar', function () {
     return view('contents.admin.rombel', [
         'title' => 'Data Rombongan Belajar',
     ]);
 });
+
+Route::get('/home/rombongan-belajar/detail/{id}', function ($id) {
+    return view('contents.admin.rombel-pelajar', [
+        'title' => 'Detil Rombongan Belajar',
+        'rombelId' => $id, // optional, bisa digunakan di view
+    ]);
+})->name('rombel.detail');
+
 
 Route::get('/sekolah/jurusan', function () {
     return view('contents.admin.jurusan', [

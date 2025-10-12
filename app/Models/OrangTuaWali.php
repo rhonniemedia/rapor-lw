@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Pelajar extends Model
+class OrangTuaWali extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $table = 'pelajars';
+    protected $table = 'orang_tua_walis';
     protected $guarded = ['id'];
 }
