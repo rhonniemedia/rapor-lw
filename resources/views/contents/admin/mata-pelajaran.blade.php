@@ -11,11 +11,6 @@
                 Akademik
             </span>
         </h3>
-        <div class="d-flex">
-            <button type="button" class="btn btn-labeled btn-info" onclick="Livewire.dispatch('createMapel')">
-                <span class="btn-label"><i class="mdi mdi-note-plus"></i></span>Tambah
-            </button>
-        </div>
     </div>
 
     <!-- Ekstrakurikuler -->
@@ -25,8 +20,67 @@
             <div class="card">
                 <div class="card-body">
 
+                    <!-- Nav Tabs -->
+                    <ul class="nav nav-tabs mb-3" id="academicTab" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" id="mapel-tab" data-bs-toggle="tab" data-bs-target="#mapel" type="button" role="tab">
+                                Mata Pelajaran
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="mapelGroup-tab" data-bs-toggle="tab" data-bs-target="#mapelGroup" type="button" role="tab">
+                                Kelompok Mata Pelajaran
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="kurikulum-tab" data-bs-toggle="tab" data-bs-target="#kurikulum" type="button" role="tab">
+                                Relasi Kurikulum
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="jurusan-tab" data-bs-toggle="tab" data-bs-target="#jurusan" type="button" role="tab">
+                                Relasi Jurusan
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Contents -->
+                    <div class="tab-content" id="academicTabContent">
+                        <!-- Mata Pelajaran -->
+                        <div class="tab-pane fade show active" id="mapel" role="tabpanel">
+
+                            <!-- Livewire Mata Pelajaran -->
+                            <livewire:data-mata-pelajaran />
+
+                        </div>
+
+                        <!-- Kelompok Mata Pelajaran -->
+                        <div class="tab-pane fade" id="mapelGroup" role="tabpanel">
+
+                            <!-- Livewire Kelompok Mata Pelajaran -->
+                            <livewire:data-kelompok-mapel />
+
+                        </div>
+
+                        <!-- Kurikulum -->
+                        <div class="tab-pane fade" id="kurikulum" role="tabpanel">
+
+                            <!-- Livewire Kurikulum -->
+                            <livewire:data-maping-kurikulum-mapel />
+
+                        </div>
+
+                        <!-- Jurusan -->
+                        <div class="tab-pane fade" id="jurusan" role="tabpanel">
+
+                            <!-- Livewire Jurusan -->
+                            <livewire:data-maping-jurusan-mapel />
+
+
+                        </div>
+                    </div>
+
                     <!-- LiveWire -->
-                    <livewire:data-mata-pelajaran />
 
                 </div>
             </div>

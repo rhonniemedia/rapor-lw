@@ -6,26 +6,29 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class KurikulumMataPelajaran extends Model
+class JurusanMataPelajaran extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $table = 'kurikulum_mata_pelajarans';
+    protected $table = 'jurusan_mata_pelajarans';
 
     protected $guarded = ['id'];
 
-    public function kurikulum()
+    // Relasi ke tabel jurusans
+    public function jurusan()
     {
-        return $this->belongsTo(Kurikulum::class, 'kurikulum_id');
+        return $this->belongsTo(Jurusan::class, 'jurusan_id');
     }
 
+    // Relasi ke tabel mata_pelajarans
     public function mataPelajaran()
     {
         return $this->belongsTo(MataPelajaran::class, 'mata_pelajaran_id');
     }
 
-    public function kelompok()
+    // Relasi opsional ke tabel kurikulums
+    public function kurikulum()
     {
-        return $this->belongsTo(MataPelajaranKelompok::class, 'kelompok_id');
+        return $this->belongsTo(Kurikulum::class, 'kurikulum_id');
     }
 }

@@ -10,9 +10,14 @@
             </select>
             <span>entries</span>
         </div>
-        <div>
-            <input type="text" class="form-control" placeholder="Cari Mata Pelajaran..."
-                wire:model.live.debounce.500ms="search" style="width:250px;">
+        <div class="d-flex align-items-center gap-2">
+            <div>
+                <input type="text" class="form-control" placeholder="Cari Mata Pelajaran..."
+                    wire:model.live.debounce.500ms="search" style="width:250px;">
+            </div>
+            <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center h-100" style="padding: 0 0.75rem;">
+                <i class="mdi mdi-plus"></i>
+            </button>
         </div>
     </div>
 
