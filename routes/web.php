@@ -16,8 +16,9 @@ Route::get('/home/rombongan-belajar', function () {
 
 Route::get('/home/rombongan-belajar/detail/{id}', function ($id) {
     return view('contents.admin.rombel-pelajar', [
+        'id' => $id,
         'title' => 'Detil Rombongan Belajar',
-        'rombelId' => $id, // optional, bisa digunakan di view
+        'rombelId' => $id, // opsional, bisa digunakan di Blade atau Livewire
     ]);
 })->name('rombel.detail');
 
