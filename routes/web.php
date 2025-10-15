@@ -8,6 +8,12 @@ Route::get('/dashboard', function () {
     ]);
 });
 
+Route::get('/home/master-data', function () {
+    return view('contents.admin.master-data', [
+        'title' => 'Master Data',
+    ]);
+});
+
 Route::get('/home/rombongan-belajar', function () {
     return view('contents.admin.rombel', [
         'title' => 'Data Rombongan Belajar',

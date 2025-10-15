@@ -31,6 +31,14 @@
             </a>
         </li>
 
+        <!-- Mater Data -->
+        <li class="nav-item">
+            <a class="nav-link {{ request()->url() === url('home/master-data') ? 'active' : '' }}" href="{{url('home/master-data')}}">
+                <i class="mdi mdi-file-compare menu-icon"></i>
+                <span class="menu-title">Master Data</span>
+            </a>
+        </li>
+
         <!-- Sekolah -->
         <li class="nav-item">
             <a class="nav-link {{ request()->is('sekolah*') ? 'active' : '' }}" data-toggle="collapse" href="#ui-school" aria-expanded="false" aria-controls="ui-school">

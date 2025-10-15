@@ -56,3 +56,9 @@
     /* Mengubah vertical alignment menjadi top */
     height: 35px;
 }
+
+/* resources/css/app.css */
+
+.text-yellow { color: #ffc107 !important; }
+.text-purple { color: #6f42c1 !important; }
+
