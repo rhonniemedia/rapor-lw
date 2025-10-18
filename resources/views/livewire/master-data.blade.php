@@ -88,7 +88,7 @@
     <div wire:ignore.self class="modal fade" id="syncronData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="sinkronDataLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-lg">
-            <form action="{{ url('main-data/synchronize') }}" class="needs-validation" novalidate method="post" enctype="multipart/form-data">
+            <form wire:submit.prevent="syncDataToDatabase">
                 @csrf
                 <div class="modal-content">
                     <div class="modal-header">
@@ -105,21 +105,13 @@
                         </div>
                         @endif
 
-                        @if ($isLoadingApi)
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2 text-muted">Mengambil data dari server...</p>
-                        </div>
-                        @else
-
                         <div class="alert alert-info d-flex align-items-center mb-4">
                             <i class="mdi mdi-information me-2 fs-4"></i>
                             <span>Perbandingan data lokal dengan data server</span>
                         </div>
 
                         <div class="row g-4">
+                            <!-- DATA LOKAL -->
                             <div class="col-lg-6">
                                 <h5 class="mb-3 text-primary"><i class="mdi mdi-database me-2"></i> Data Lokal</h5>
                                 <div class="row g-3">
@@ -128,7 +120,7 @@
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-danger bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-account-group fs-4 text-danger"></i>
+                                                        <i class="mdi mdi-account-group fs-4 text-white"></i>
                                                     </div>
                                                     <div>
                                                         <p class="mb-0 fw-medium">Data Rombel</p>
@@ -149,7 +141,7 @@
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-warning bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-table-large fs-4 text-warning"></i>
+                                                        <i class="mdi mdi-table-large fs-4 text-white"></i>
                                                     </div>
                                                     <div>
                                                         <p class="mb-0 fw-medium">Detail Rombel</p>
@@ -167,8 +159,8 @@
                                         <div class="border rounded p-3 bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-info bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-account-details fs-4 text-info"></i>
+                                                    <div class="bg-success bg-opacity-10 p-2 rounded me-3">
+                                                        <i class="mdi mdi-account-details fs-4 text-white"></i>
                                                     </div>
                                                     <div>
                                                         <p class="mb-0 fw-medium">Peserta Didik</p>
@@ -176,7 +168,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
-                                                    <h4 class="mb-0 text-primary fw-bold">
+                                                    <h4 class="mb-0 text-success fw-bold">
                                                         {{ number_format(\App\Models\Pelajar::count()) }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
@@ -188,8 +180,8 @@
                                         <div class="border rounded p-3 bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-human-greeting fs-4 text-primary"></i>
+                                                    <div class="bg-info bg-opacity-10 p-2 rounded me-3">
+                                                        <i class="mdi mdi-human-greeting fs-4 text-white"></i>
                                                     </div>
                                                     <div>
                                                         <p class="mb-0 fw-medium">Data Guru</p>
@@ -197,7 +189,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
-                                                    <h4 class="mb-0 text-primary fw-bold">
+                                                    <h4 class="mb-0 text-info fw-bold">
                                                         {{ number_format(\App\Models\User::count()) }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
@@ -214,15 +206,17 @@
                                 </div>
                             </div>
 
+                            <!-- DATA SERVER -->
                             <div class="col-lg-6">
                                 <h5 class="mb-3 text-success"><i class="mdi mdi-server me-2"></i> Data Server (API)</h5>
                                 <div class="row g-3">
+                                    <!-- Data Rombel -->
                                     <div class="col-md-12">
                                         <div class="border rounded p-3 bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-danger bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-account-group fs-4 text-danger"></i>
+                                                        <i class="mdi mdi-account-group fs-4 text-white"></i>
                                                     </div>
                                                     <div>
                                                         <p class="mb-0 fw-medium">Data Rombel</p>
@@ -230,20 +224,28 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
+                                                    @if($isLoadingRombel)
+                                                    <div class="spinner-border spinner-border-sm text-danger" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    @else
                                                     <h4 class="mb-0 text-danger fw-bold">
                                                         {{ is_array($apiDataRombel) ? number_format(count($apiDataRombel)) : 0 }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Detail Rombel -->
                                     <div class="col-md-12">
                                         <div class="border rounded p-3 bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-warning bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-table-large fs-4 text-warning"></i>
+                                                        <i class="mdi mdi-table-large fs-4 text-white"></i>
                                                     </div>
                                                     <div>
                                                         <p class="mb-0 fw-medium">Detail Rombel</p>
@@ -251,20 +253,28 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
+                                                    @if($isLoadingRombelDetail)
+                                                    <div class="spinner-border spinner-border-sm text-warning" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    @else
                                                     <h4 class="mb-0 text-warning fw-bold">
                                                         {{ is_array($apiDataRombelDetail) ? number_format(count($apiDataRombelDetail)) : 0 }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Peserta Didik -->
                                     <div class="col-md-12">
                                         <div class="border rounded p-3 bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-info bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-account-details fs-4 text-info"></i>
+                                                    <div class="bg-success bg-opacity-10 p-2 rounded me-3">
+                                                        <i class="mdi mdi-account-details fs-4 text-white"></i>
                                                     </div>
                                                     <div>
                                                         <p class="mb-0 fw-medium">Peserta Didik</p>
@@ -272,20 +282,28 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
-                                                    <h4 class="mb-0 text-info fw-bold">
+                                                    @if($isLoadingPesertaDidik)
+                                                    <div class="spinner-border spinner-border-sm text-success" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    @else
+                                                    <h4 class="mb-0 text-success fw-bold">
                                                         {{ is_array($apiDataPesertaDidik) ? number_format(count($apiDataPesertaDidik)) : 0 }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Data Guru -->
                                     <div class="col-md-12">
                                         <div class="border rounded p-3 bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-human-greeting fs-4 text-primary"></i>
+                                                    <div class="bg-info bg-opacity-10 p-2 rounded me-3">
+                                                        <i class="mdi mdi-human-greeting fs-4 text-white"></i>
                                                     </div>
                                                     <div>
                                                         <p class="mb-0 fw-medium">Data Guru</p>
@@ -293,22 +311,38 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
-                                                    <h4 class="mb-0 text-primary fw-bold">
+                                                    @if($isLoadingGuru)
+                                                    <div class="spinner-border spinner-border-sm text-info" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    @else
+                                                    <h4 class="mb-0 text-info fw-bold">
                                                         {{ is_array($apiDataGuru) ? number_format(count($apiDataGuru)) : 0 }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Total Server -->
                                 <div class="p-3 mt-3 bg-success bg-opacity-10 rounded border border-success text-center">
                                     <p class="mb-0 text-success fw-bold">Total Server</p>
+                                    @if($isLoadingRombel || $isLoadingRombelDetail || $isLoadingPesertaDidik || $isLoadingGuru)
+                                    <div class="spinner-border spinner-border-sm text-success mt-2" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    @else
                                     <h4 class="mb-0 text-success fw-bolder">{{ number_format($totalServerData) }}</h4>
+                                    @endif
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Status Koneksi -->
+                        @if(!$isLoadingRombel && !$isLoadingRombelDetail && !$isLoadingPesertaDidik && !$isLoadingGuru)
                         <div class="mt-4 p-3 rounded border border-success bg-success bg-opacity-10">
                             <div class="d-flex align-items-center">
                                 <i class="mdi mdi-check-circle fs-3 text-success me-3"></i>
@@ -324,8 +358,14 @@
                         <button type="button" class="btn btn-labeled btn-secondary" data-bs-dismiss="modal">
                             <span class="btn-label"><i class="fa fa-remove"></i></span>Batal
                         </button>
-                        <button type="submit" class="btn btn-labeled btn-warning" @if($isLoadingApi) disabled @endif>
-                            <span class="btn-label"><i class="mdi mdi-sync"></i></span>Tarik Data
+                        <button type="submit" class="btn btn-labeled btn-warning"
+                            @if($isLoadingRombel || $isLoadingRombelDetail || $isLoadingPesertaDidik || $isLoadingGuru) disabled @endif>
+                            <span class="btn-label"><i class="mdi mdi-sync"></i></span>
+                            @if($isLoadingRombel || $isLoadingRombelDetail || $isLoadingPesertaDidik || $isLoadingGuru)
+                            Memuat Data...
+                            @else
+                            Tarik Data
+                            @endif
                         </button>
                     </div>
                 </div>
@@ -341,6 +381,33 @@
             const modalElement = document.getElementById('syncronData');
             const modal = new bootstrap.Modal(modalElement);
             modal.show();
+
+            const component = window.Livewire.find('{{ $this->getId() }}');
+
+            setTimeout(() => {
+                component.call('fetchRombel').then(() => {
+                    setTimeout(() => {
+                        component.call('fetchRombelDetail').then(() => {
+                            setTimeout(() => {
+                                component.call('fetchPesertaDidik').then(() => {
+                                    setTimeout(() => {
+                                        component.call('fetchGuru');
+                                    }, 500);
+                                });
+                            }, 500);
+                        });
+                    }, 500);
+                });
+            }, 100);
+        });
+
+        // Event untuk close modal
+        Livewire.on('closeSyncModal', () => {
+            const modalElement = document.getElementById('syncronData');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
         });
     });
 </script>
