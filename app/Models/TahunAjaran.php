@@ -10,7 +10,11 @@ class TahunAjaran extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $guarded = ['id'];
+    public $incrementing = false;
+
+    protected $table = 'tahun_ajarans';
+    protected $keyType = 'string';
+    protected $fillable = ['id', 'nama', 'tgl_mulai', 'tgl_selesai', 'status'];
 
     public function tahunAjaranKurikulum()
     {

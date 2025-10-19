@@ -21,6 +21,7 @@ return new class extends Migration
 
             $table->string('nama');
             $table->string('hubungan'); // contoh: Ayah, Ibu, Wali
+            $table->enum('status', ['masih-hidup', 'sudah-meninggal'])->default('masih-hidup');
             $table->string('pekerjaan')->nullable();
             $table->string('telepon', 20)->nullable();
             $table->text('alamat')->nullable();

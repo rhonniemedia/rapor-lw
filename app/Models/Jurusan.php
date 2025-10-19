@@ -10,5 +10,7 @@ class Jurusan extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $guarded = ['id'];
+    protected $table = 'jurusans';
+    protected $keyType = 'string';
+    protected $fillable = ['id', 'nama', 'alias', 'kode', 'status'];
 }

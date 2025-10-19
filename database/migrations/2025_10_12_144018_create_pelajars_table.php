@@ -33,13 +33,12 @@ return new class extends Migration
             ])->nullable();
 
             $table->string('status_dalam_keluarga')->nullable();
-            $table->unsignedTinyInteger('anak_ke')->nullable();
+            $table->string('anak_ke')->nullable();
             $table->text('alamat')->nullable();
             $table->string('telepon', 20)->nullable();
             $table->string('sekolah_asal')->nullable();
 
-            $table->string('diterima_di_sekolah')->nullable();
-            $table->string('di_kelas')->nullable();
+            $table->string('diterima_di_kelas')->nullable();
             $table->date('pada_tanggal')->nullable();
 
             $table->timestamps();

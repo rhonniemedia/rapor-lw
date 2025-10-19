@@ -11,5 +11,6 @@ class RombelPelajar extends Model
     use HasFactory, HasUuids;
 
     protected $table = 'rombel_pelajars';
-    protected $guarded = ['id'];
+    protected $keyType = 'string';
+    protected $fillable = ['id', 'pelajar_id', 'rombel_id'];
 }

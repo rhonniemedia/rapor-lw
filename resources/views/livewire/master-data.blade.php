@@ -120,16 +120,16 @@
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-danger bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-account-group fs-4 text-white"></i>
+                                                        <i class="mdi mdi-calendar-range fs-4 text-white"></i>
                                                     </div>
                                                     <div>
-                                                        <p class="mb-0 fw-medium">Data Rombel</p>
-                                                        <small class="text-muted">Rombongan Belajar</small>
+                                                        <p class="mb-0 fw-medium">Data Tahun Ajaran</p>
+                                                        <small class="text-muted">Tahun Ajaran</small>
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
-                                                    <h4 class="mb-0 text-primary fw-bold">
-                                                        {{ number_format(\App\Models\Rombel::count()) }}
+                                                    <h4 class="mb-0 text-danger fw-bold">
+                                                        {{ number_format(\App\Models\TahunAjaran::count()) }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
                                                 </div>
@@ -141,15 +141,17 @@
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-warning bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-table-large fs-4 text-white"></i>
+                                                        <i class="mdi mdi-school fs-4 text-white"></i>
                                                     </div>
                                                     <div>
-                                                        <p class="mb-0 fw-medium">Detail Rombel</p>
-                                                        <small class="text-muted">Data Anggota Rombel</small>
+                                                        <p class="mb-0 fw-medium">Data Jurusan</p>
+                                                        <small class="text-muted">Konsentrasi Keahlian</small>
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
-                                                    <h4 class="mb-0 text-primary fw-bold">-</h4>
+                                                    <h4 class="mb-0 text-warning fw-bold">
+                                                        {{ number_format(\App\Models\Jurusan::count()) }}
+                                                    </h4>
                                                     <small class="text-muted">records</small>
                                                 </div>
                                             </div>
@@ -160,16 +162,16 @@
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-success bg-opacity-10 p-2 rounded me-3">
-                                                        <i class="mdi mdi-account-details fs-4 text-white"></i>
+                                                        <i class="mdi mdi-account-group fs-4 text-white"></i>
                                                     </div>
                                                     <div>
-                                                        <p class="mb-0 fw-medium">Peserta Didik</p>
-                                                        <small class="text-muted">Data Siswa</small>
+                                                        <p class="mb-0 fw-medium">Data Rombel</p>
+                                                        <small class="text-muted">Rombongan Belajar</small>
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
                                                     <h4 class="mb-0 text-success fw-bold">
-                                                        {{ number_format(\App\Models\Pelajar::count()) }}
+                                                        {{ number_format(\App\Models\Rombel::count()) }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
                                                 </div>
@@ -181,6 +183,46 @@
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-info bg-opacity-10 p-2 rounded me-3">
+                                                        <i class="mdi mdi-table-large fs-4 text-white"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="mb-0 fw-medium">Detail Rombel</p>
+                                                        <small class="text-muted">Data Anggota Rombel</small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end">
+                                                    <h4 class="mb-0 text-info fw-bold">-</h4>
+                                                    <small class="text-muted">records</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="border rounded p-3 bg-light">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                                                        <i class="mdi mdi-account-details fs-4 text-white"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="mb-0 fw-medium">Peserta Didik</p>
+                                                        <small class="text-muted">Data Siswa</small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end">
+                                                    <h4 class="mb-0 text-primary fw-bold">
+                                                        {{ number_format(\App\Models\Pelajar::count()) }}
+                                                    </h4>
+                                                    <small class="text-muted">records</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="border rounded p-3 bg-light">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-dark bg-opacity-10 p-2 rounded me-3">
                                                         <i class="mdi mdi-human-greeting fs-4 text-white"></i>
                                                     </div>
                                                     <div>
@@ -189,7 +231,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
-                                                    <h4 class="mb-0 text-info fw-bold">
+                                                    <h4 class="mb-0 text-dark fw-bold">
                                                         {{ number_format(\App\Models\User::count()) }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
@@ -210,12 +252,71 @@
                             <div class="col-lg-6">
                                 <h5 class="mb-3 text-success"><i class="mdi mdi-server me-2"></i> Data Server (API)</h5>
                                 <div class="row g-3">
-                                    <!-- Data Rombel -->
+
+                                    <!-- Data Tahun Ajaran -->
                                     <div class="col-md-12">
                                         <div class="border rounded p-3 bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-danger bg-opacity-10 p-2 rounded me-3">
+                                                        <i class="mdi mdi-calendar-range fs-4 text-white"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="mb-0 fw-medium">Data Tahun Ajaran</p>
+                                                        <small class="text-muted">API: /pintar/api/tahun-ajaran</small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end">
+                                                    @if($isLoadingTahunAjaran)
+                                                    <div class="spinner-border spinner-border-sm text-danger" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    @else
+                                                    <h4 class="mb-0 text-danger fw-bold">
+                                                        {{ is_array($apiTahunAjaran) ? number_format(count($apiTahunAjaran)) : 0 }}
+                                                    </h4>
+                                                    <small class="text-muted">records</small>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Data Jurusan -->
+                                    <div class="col-md-12">
+                                        <div class="border rounded p-3 bg-light">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-warning bg-opacity-10 p-2 rounded me-3">
+                                                        <i class="mdi mdi-school fs-4 text-white"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="mb-0 fw-medium">Data Jurusan</p>
+                                                        <small class="text-muted">API: /pintar/api/jurusan</small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end">
+                                                    @if($isLoadingJurusan)
+                                                    <div class="spinner-border spinner-border-sm text-warning" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    @else
+                                                    <h4 class="mb-0 text-warning fw-bold">
+                                                        {{ is_array($apiDataJurusan) ? number_format(count($apiDataJurusan)) : 0 }}
+                                                    </h4>
+                                                    <small class="text-muted">records</small>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Data Rombel -->
+                                    <div class="col-md-12">
+                                        <div class="border rounded p-3 bg-light">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-success bg-opacity-10 p-2 rounded me-3">
                                                         <i class="mdi mdi-account-group fs-4 text-white"></i>
                                                     </div>
                                                     <div>
@@ -225,11 +326,11 @@
                                                 </div>
                                                 <div class="text-end">
                                                     @if($isLoadingRombel)
-                                                    <div class="spinner-border spinner-border-sm text-danger" role="status">
+                                                    <div class="spinner-border spinner-border-sm text-success" role="status">
                                                         <span class="visually-hidden">Loading...</span>
                                                     </div>
                                                     @else
-                                                    <h4 class="mb-0 text-danger fw-bold">
+                                                    <h4 class="mb-0 text-success fw-bold">
                                                         {{ is_array($apiDataRombel) ? number_format(count($apiDataRombel)) : 0 }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
@@ -244,7 +345,7 @@
                                         <div class="border rounded p-3 bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-warning bg-opacity-10 p-2 rounded me-3">
+                                                    <div class="bg-info bg-opacity-10 p-2 rounded me-3">
                                                         <i class="mdi mdi-table-large fs-4 text-white"></i>
                                                     </div>
                                                     <div>
@@ -254,11 +355,11 @@
                                                 </div>
                                                 <div class="text-end">
                                                     @if($isLoadingRombelDetail)
-                                                    <div class="spinner-border spinner-border-sm text-warning" role="status">
+                                                    <div class="spinner-border spinner-border-sm text-info" role="status">
                                                         <span class="visually-hidden">Loading...</span>
                                                     </div>
                                                     @else
-                                                    <h4 class="mb-0 text-warning fw-bold">
+                                                    <h4 class="mb-0 text-info fw-bold">
                                                         {{ is_array($apiDataRombelDetail) ? number_format(count($apiDataRombelDetail)) : 0 }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
@@ -273,7 +374,7 @@
                                         <div class="border rounded p-3 bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-success bg-opacity-10 p-2 rounded me-3">
+                                                    <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
                                                         <i class="mdi mdi-account-details fs-4 text-white"></i>
                                                     </div>
                                                     <div>
@@ -283,11 +384,11 @@
                                                 </div>
                                                 <div class="text-end">
                                                     @if($isLoadingPesertaDidik)
-                                                    <div class="spinner-border spinner-border-sm text-success" role="status">
+                                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
                                                         <span class="visually-hidden">Loading...</span>
                                                     </div>
                                                     @else
-                                                    <h4 class="mb-0 text-success fw-bold">
+                                                    <h4 class="mb-0 text-primary fw-bold">
                                                         {{ is_array($apiDataPesertaDidik) ? number_format(count($apiDataPesertaDidik)) : 0 }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
@@ -302,7 +403,7 @@
                                         <div class="border rounded p-3 bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-info bg-opacity-10 p-2 rounded me-3">
+                                                    <div class="bg-dark bg-opacity-10 p-2 rounded me-3">
                                                         <i class="mdi mdi-human-greeting fs-4 text-white"></i>
                                                     </div>
                                                     <div>
@@ -312,11 +413,11 @@
                                                 </div>
                                                 <div class="text-end">
                                                     @if($isLoadingGuru)
-                                                    <div class="spinner-border spinner-border-sm text-info" role="status">
+                                                    <div class="spinner-border spinner-border-sm text-dark" role="status">
                                                         <span class="visually-hidden">Loading...</span>
                                                     </div>
                                                     @else
-                                                    <h4 class="mb-0 text-info fw-bold">
+                                                    <h4 class="mb-0 text-dark fw-bold">
                                                         {{ is_array($apiDataGuru) ? number_format(count($apiDataGuru)) : 0 }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
@@ -385,13 +486,21 @@
             const component = window.Livewire.find('{{ $this->getId() }}');
 
             setTimeout(() => {
-                component.call('fetchRombel').then(() => {
+                component.call('fetchTahunAjaran').then(() => {
                     setTimeout(() => {
-                        component.call('fetchRombelDetail').then(() => {
+                        component.call('fetchJurusan').then(() => {
                             setTimeout(() => {
-                                component.call('fetchPesertaDidik').then(() => {
+                                component.call('fetchRombel').then(() => {
                                     setTimeout(() => {
-                                        component.call('fetchGuru');
+                                        component.call('fetchRombelDetail').then(() => {
+                                            setTimeout(() => {
+                                                component.call('fetchPesertaDidik').then(() => {
+                                                    setTimeout(() => {
+                                                        component.call('fetchGuru');
+                                                    }, 500);
+                                                });
+                                            }, 500);
+                                        });
                                     }, 500);
                                 });
                             }, 500);

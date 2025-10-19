@@ -2,27 +2,25 @@
 
 namespace App\Livewire;
 
-use App\Models\User;
-use App\Models\Rombel;
-use App\Models\Jurusan;
-use App\Models\Pelajar;
 use Livewire\Component;
-use App\Models\Semester;
-use App\Models\Kurikulum;
-use App\Models\TahunAjaran;
-use App\Models\MataPelajaran;
-use App\Models\Ekstrakurikuler;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
+use App\Services\ApiSyncService;
+use App\Services\DataSyncService;
+use App\Services\MasterDataStatsService;
 
 class MasterData extends Component
 {
-    // Properti untuk menyimpan data hitungan
+    // Services
+    private ApiSyncService $apiService;
+    private DataSyncService $syncService;
+    private MasterDataStatsService $statsService;
+
+    // Properti untuk menyimpan data
     public $masterData = [];
 
     // Properti untuk data API
-    public $apiDataRombel = null;  // ubah dari [] jadi null
+    public $apiTahunAjaran = null;
+    public $apiDataJurusan = null;
+    public $apiDataRombel = null;
     public $apiDataRombelDetail = null;
     public $apiDataPesertaDidik = null;
     public $apiDataGuru = null;
@@ -31,265 +29,127 @@ class MasterData extends Component
     public $totalLocalData = 0;
     public $totalServerData = 0;
 
-    // Loading state untuk setiap API
-    public $isLoadingRombel = true;  // ubah dari false jadi true
+    // Loading states
+    public $isLoadingTahunAjaran = true;
+    public $isLoadingJurusan = true;
+    public $isLoadingRombel = true;
     public $isLoadingRombelDetail = true;
     public $isLoadingPesertaDidik = true;
     public $isLoadingGuru = true;
-
-    // Tentukan model-model yang akan dihitung dan labelnya
-    protected $dataMappings = [
-        'kurikulum' => ['model' => Kurikulum::class, 'label' => 'Data Kurikulum', 'icon' => 'mdi-book-multiple'],
-        'jurusan' => ['model' => Jurusan::class, 'label' => 'Data Jurusan', 'icon' => 'mdi-school'],
-        'tahun_ajaran' => ['model' => TahunAjaran::class, 'label' => 'Data Tahun Ajaran', 'icon' => 'mdi-calendar-range'],
-        'semester' => ['model' => Semester::class, 'label' => 'Data Semester', 'icon' => 'mdi-bookmark-multiple'],
-        'rombel' => ['model' => Rombel::class, 'label' => 'Data Rombongan Belajar', 'icon' => 'mdi-account-group'],
-        'mata_pelajaran' => ['model' => MataPelajaran::class, 'label' => 'Data Mata Pelajaran', 'icon' => 'mdi-book-open'],
-        'pendidik' => ['model' => User::class, 'label' => 'Data Pendidik', 'icon' => 'mdi mdi-human-greeting'],
-        'pelajar' => ['model' => Pelajar::class, 'label' => 'Data Pelajar', 'icon' => 'mdi-account-details'],
-        'ekstrakurikuler' => ['model' => Ekstrakurikuler::class, 'label' => 'Data Ekstrakurikuler', 'icon' => 'mdi-soccer'],
-    ];
 
     // Event listener
     protected $listeners = [
         'openSyncModal' => 'openSyncModal',
     ];
 
+    public function boot(
+        ApiSyncService $apiService,
+        DataSyncService $syncService,
+        MasterDataStatsService $statsService
+    ) {
+        $this->apiService = $apiService;
+        $this->syncService = $syncService;
+        $this->statsService = $statsService;
+    }
 
     public function mount()
     {
         $this->loadDataCounts();
     }
 
-    // Fungsi untuk mengambil hitungan data dan informasi lainnya
     public function loadDataCounts()
     {
-        $results = [];
-        $totalLocal = 0;
-
-        foreach ($this->dataMappings as $key => $mapping) {
-            $modelClass = $mapping['model'];
-
-            // Hitung total record
-            $count = $modelClass::count();
-            $totalLocal += $count;
-
-            // Ambil record terakhir yang dibuat
-            $latestCreated = $modelClass::latest('created_at')->first();
-
-            // Ambil record terakhir yang diperbarui
-            $latestUpdated = $modelClass::latest('updated_at')->first();
-
-            $results[] = [
-                'key' => $key,
-                'label' => $mapping['label'],
-                'icon' => $mapping['icon'],
-                'count' => $count,
-                'latest_created_at' => $latestCreated ? $latestCreated->created_at->format('d F Y') : 'N/A',
-                'latest_updated_at' => $latestUpdated ? $latestUpdated->updated_at->diffForHumans() : 'N/A',
-                'has_data' => $count > 0,
-                'status' => 'Tervalidasi',
-                'status_date' => now()->subDays(rand(1, 10))->format('d-m-Y'),
-            ];
-        }
-
-        $this->masterData = $results;
-        $this->totalLocalData = $totalLocal;
+        $stats = $this->statsService->getStats();
+        $this->masterData = $stats['data'];
+        $this->totalLocalData = $stats['total'];
     }
 
-    // Method untuk membuka modal tanpa load data API
     public function openSyncModal()
     {
         $this->dispatch('showSyncModal');
-
-        // Load data API secara paralel setelah modal ditampilkan
-        // $this->fetchRombel();
-        // $this->fetchRombelDetail();
-        // $this->fetchPesertaDidik();
-        // $this->fetchGuru();
     }
 
-    // Method untuk load semua data API - AKAN DIPANGGIL SATU PER SATU DARI JS
     public function loadApiData()
     {
-        $this->fetchRombel();
+        $this->fetchTahunAjaran();
     }
 
-    // Fungsi untuk mengambil data Rombel
+    public function fetchTahunAjaran()
+    {
+        $this->isLoadingTahunAjaran = true;
+        $this->apiTahunAjaran = $this->apiService->fetchTahunAjaran();
+        $this->isLoadingTahunAjaran = false;
+        $this->calculateServerData();
+    }
+
+    public function fetchJurusan()
+    {
+        $this->isLoadingJurusan = true;
+        $this->apiDataJurusan = $this->apiService->fetchJurusan();
+        $this->isLoadingJurusan = false;
+        $this->calculateServerData();
+    }
+
     public function fetchRombel()
     {
         $this->isLoadingRombel = true;
-        try {
-            $response = Http::timeout(30)->get('http://localhost/pintar/api/rombel');
-            if ($response->successful()) {
-                $json = $response->json();
-                $this->apiDataRombel = isset($json['data']) ? $json['data'] : [];
-            } else {
-                $this->apiDataRombel = [];
-            }
-        } catch (\Exception $e) {
-            Log::error('Error fetching Rombel data: ' . $e->getMessage());
-            $this->apiDataRombel = [];
-        }
+        $this->apiDataRombel = $this->apiService->fetchRombel();
         $this->isLoadingRombel = false;
         $this->calculateServerData();
-        // JANGAN panggil yang lain
     }
 
-    // Fungsi untuk mengambil data Rombel Detail
     public function fetchRombelDetail()
     {
         $this->isLoadingRombelDetail = true;
-        try {
-            $response = Http::timeout(30)->get('http://localhost/pintar/api/rombel-data');
-            if ($response->successful()) {
-                $json = $response->json();
-                $this->apiDataRombelDetail = isset($json['data']) ? $json['data'] : [];
-            } else {
-                $this->apiDataRombelDetail = [];
-            }
-        } catch (\Exception $e) {
-            Log::error('Error fetching Rombel Detail data: ' . $e->getMessage());
-            $this->apiDataRombelDetail = [];
-        }
+        $this->apiDataRombelDetail = $this->apiService->fetchRombelDetail();
         $this->isLoadingRombelDetail = false;
         $this->calculateServerData();
-        // JANGAN panggil yang lain
     }
 
-    // Fungsi untuk mengambil data Peserta Didik
     public function fetchPesertaDidik()
     {
         $this->isLoadingPesertaDidik = true;
-        try {
-            $response = Http::timeout(30)->get('http://localhost/pintar/api/data-peserta-didik');
-            if ($response->successful()) {
-                $json = $response->json();
-                $this->apiDataPesertaDidik = isset($json['data']) ? $json['data'] : [];
-            } else {
-                $this->apiDataPesertaDidik = [];
-            }
-        } catch (\Exception $e) {
-            Log::error('Error fetching Peserta Didik data: ' . $e->getMessage());
-            $this->apiDataPesertaDidik = [];
-        }
+        $this->apiDataPesertaDidik = $this->apiService->fetchPesertaDidik();
         $this->isLoadingPesertaDidik = false;
         $this->calculateServerData();
-        // JANGAN panggil yang lain
     }
 
-    // Fungsi untuk mengambil data Guru
     public function fetchGuru()
     {
         $this->isLoadingGuru = true;
-        try {
-            $response = Http::timeout(30)->get('http://localhost/simka/api/data-guru');
-            if ($response->successful()) {
-                $json = $response->json();
-                $this->apiDataGuru = isset($json['data']) ? $json['data'] : [];
-            } else {
-                $this->apiDataGuru = [];
-            }
-        } catch (\Exception $e) {
-            Log::error('Error fetching Guru data: ' . $e->getMessage());
-            $this->apiDataGuru = [];
-        }
+        $this->apiDataGuru = $this->apiService->fetchGuru();
         $this->isLoadingGuru = false;
         $this->calculateServerData();
     }
 
-    // Hitung total data dari server
     private function calculateServerData()
     {
-        $total = 0;
-
-        if (is_array($this->apiDataRombel)) {
-            $total += count($this->apiDataRombel);
-        }
-
-        if (is_array($this->apiDataRombelDetail)) {
-            $total += count($this->apiDataRombelDetail);
-        }
-
-        if (is_array($this->apiDataPesertaDidik)) {
-            $total += count($this->apiDataPesertaDidik);
-        }
-
-        if (is_array($this->apiDataGuru)) {
-            $total += count($this->apiDataGuru);
-        }
-
-        $this->totalServerData = $total;
+        $this->totalServerData = $this->apiService->calculateTotal([
+            $this->apiTahunAjaran,
+            $this->apiDataJurusan,
+            $this->apiDataRombel,
+            $this->apiDataRombelDetail,
+            $this->apiDataPesertaDidik,
+            $this->apiDataGuru,
+        ]);
     }
 
     public function syncDataToDatabase()
     {
         try {
-            DB::beginTransaction();
+            $this->syncService->syncAll([
+                'tahun_ajaran' => $this->apiTahunAjaran,
+                'jurusan' => $this->apiDataJurusan,
+                'rombel' => $this->apiDataRombel,
+                'rombel_detail' => $this->apiDataRombelDetail,
+                'peserta_didik' => $this->apiDataPesertaDidik,
+                'guru' => $this->apiDataGuru,
+            ]);
 
-            // 1. Sync Rombel
-            if (is_array($this->apiDataRombel)) {
-                foreach ($this->apiDataRombel as $item) {
-                    Rombel::updateOrCreate(
-                        ['id' => $item['id']], // atau kolom unique lainnya
-                        [
-                            'nama' => $item['nama'],
-                            'tahun_ajaran_id' => $item['tahun_ajaran_id'],
-                            // tambahkan field lainnya sesuai struktur tabel
-                        ]
-                    );
-                }
-            }
-
-            // 2. Sync Rombel Detail
-            if (is_array($this->apiDataRombelDetail)) {
-                foreach ($this->apiDataRombelDetail as $item) {
-                    // Model untuk RombelDetail jika ada
-                    // RombelDetail::updateOrCreate(...);
-                }
-            }
-
-            // 3. Sync Peserta Didik
-            if (is_array($this->apiDataPesertaDidik)) {
-                foreach ($this->apiDataPesertaDidik as $item) {
-                    Pelajar::updateOrCreate(
-                        ['nisn' => $item['nisn']], // atau 'id' => $item['id']
-                        [
-                            'nama' => $item['nama'],
-                            'nis' => $item['nis'],
-                            'tempat_lahir' => $item['tempat_lahir'],
-                            'tanggal_lahir' => $item['tanggal_lahir'],
-                            // tambahkan field lainnya
-                        ]
-                    );
-                }
-            }
-
-            // 4. Sync Guru
-            if (is_array($this->apiDataGuru)) {
-                foreach ($this->apiDataGuru as $item) {
-                    User::updateOrCreate(
-                        ['nip' => $item['nip']], // atau 'email' => $item['email']
-                        [
-                            'name' => $item['nama'],
-                            'email' => $item['email'],
-                            'nip' => $item['nip'],
-                            // tambahkan field lainnya
-                        ]
-                    );
-                }
-            }
-
-            DB::commit();
-
-            // Reload data counts
             $this->loadDataCounts();
-
             session()->flash('success', 'Data berhasil disinkronkan ke database!');
             $this->dispatch('closeSyncModal');
         } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Error syncing data to database: ' . $e->getMessage());
             session()->flash('error', 'Gagal menyinkronkan data: ' . $e->getMessage());
         }
     }

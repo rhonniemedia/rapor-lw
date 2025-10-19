@@ -14,6 +14,13 @@ return new class extends Migration
         Schema::create('rombels', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
+            // Relasi ke tabel tahun_ajarans
+            $table->uuid('tahun_ajaran_id');
+            $table->foreign('tahun_ajaran_id')
+                ->references('id')
+                ->on('tahun_ajarans')
+                ->onDelete('cascade');
+
             // Relasi ke tabel jurusans
             $table->uuid('jurusan_id');
             $table->foreign('jurusan_id')

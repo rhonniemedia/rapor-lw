@@ -11,5 +11,15 @@ class OrangTuaWali extends Model
     use HasFactory, HasUuids;
 
     protected $table = 'orang_tua_walis';
-    protected $guarded = ['id'];
+    protected $keyType = 'string';
+    protected $fillable = [
+        'id',
+        'pelajar_id',
+        'nama',
+        'hubungan',
+        'status',
+        'pekerjaan',
+        'telepon',
+        'alamat',
+    ];
 }
