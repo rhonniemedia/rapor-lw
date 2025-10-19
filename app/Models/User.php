@@ -62,20 +62,24 @@ class User extends Authenticatable
     protected static function booted()
     {
         static::creating(function ($user) {
-            $user->slug = static::generateSlug($user->nama);
+            // ✅ HANYA generate slug jika belum diisi
+            if (empty($user->slug)) {
+                $user->slug = static::generateSlug($user->name); // ✅ Ubah 'nama' jadi 'name'
+            }
         });
 
         static::updating(function ($user) {
-            if ($user->isDirty('nama')) {
-                $user->slug = static::generateSlug($user->nama, $user->id);
+            // ✅ HANYA generate slug jika name berubah DAN slug kosong
+            if ($user->isDirty('name') && empty($user->slug)) {
+                $user->slug = static::generateSlug($user->name, $user->id); // ✅ Ubah 'nama' jadi 'name'
             }
         });
     }
 
-    protected static function generateSlug($nama, $ignoreId = null)
+    protected static function generateSlug($name, $ignoreId = null)
     {
         // Buat slug dasar, hanya huruf, angka, strip
-        $slug = Str::slug($nama);
+        $slug = Str::slug($name);
 
         $originalSlug = $slug;
         $counter = 2;

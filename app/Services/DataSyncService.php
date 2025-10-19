@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Rombel;
 use App\Models\Jurusan;
 use App\Models\Pelajar;
+use App\Models\RoleUser;
 use App\Models\TahunAjaran;
 use App\Models\OrangTuaWali;
 use App\Models\RombelPelajar;
@@ -25,7 +27,7 @@ class DataSyncService
             $this->syncRombel($apiData['rombel'] ?? []);
             $this->syncPesertaDidik($apiData['peserta_didik'] ?? []);
             $this->syncRombelDetail($apiData['rombel_detail'] ?? []);
-            // $this->syncGuru($apiData['guru'] ?? []);
+            $this->syncGuru($apiData['guru'] ?? []);
 
             DB::commit();
         } catch (\Exception $e) {
@@ -200,24 +202,70 @@ class DataSyncService
 
     private function syncGuru(array $data): void
     {
-        foreach ($data as $item) {
-            $user = User::where('nip', $item['nip'])->first();
+        // LOG RAW DATA DARI API
+        Log::info('=== RAW DATA FROM API ===', [
+            'total' => count($data),
+            'first_3_items' => array_slice($data, 0, 3)
+        ]);
 
-            $userData = [
-                'name' => $item['nama'],
-                'slug' => $item['ptk_slug'],
-                'email' => $item['email'],
-                'nip' => $item['nip'],
-                'telephone' => $item['telepon'] ?? null,
-                'status' => 'aktif',
-            ];
+        $roleGuru = Role::where('nama_role', 'guru')->first();
 
-            if ($user) {
-                $user->update($userData);
-            } else {
-                $passwordPlain = 'Pass' . ($item['telepon'] ?? '12345') . '*';
-                $userData['password'] = Hash::make($passwordPlain);
-                User::create($userData);
+        foreach ($data as $index => $item) {
+            // LOG SETIAP ITEM
+            Log::info("Item #{$index}", [
+                'ptk_slug' => $item['ptk_slug'] ?? 'MISSING',
+                'nama' => $item['nama'] ?? 'MISSING',
+                'email' => $item['email'] ?? 'MISSING',
+            ]);
+
+            // SKIP JIKA SLUG ANGKA MINUS
+            if (isset($item['ptk_slug']) && preg_match('/^-?\d+$/', $item['ptk_slug'])) {
+                Log::error("INVALID SLUG DETECTED - SKIPPED", [
+                    'slug' => $item['ptk_slug'],
+                    'nama' => $item['nama']
+                ]);
+                continue; // SKIP data ini
+            }
+
+            if (empty($item['nama']) || empty($item['email']) || empty($item['ptk_slug'])) {
+                Log::warning('Data guru tidak lengkap, skip:', $item);
+                continue;
+            }
+
+            try {
+                DB::transaction(function () use ($item, $roleGuru) {
+                    $user = User::where('slug', $item['ptk_slug'])->first();
+
+                    $userData = [
+                        'name' => $item['nama'],
+                        'email' => $item['email'],
+                        'slug' => $item['ptk_slug'],
+                        'nip' => !empty($item['nip']) ? $item['nip'] : null,
+                        'telephone' => $item['telepon'] ?? null,
+                        'status' => 'aktif',
+                    ];
+
+                    if ($user) {
+                        $user->update($userData);
+                        Log::info('Updated user', ['slug' => $item['ptk_slug']]);
+                    } else {
+                        if (User::where('email', $item['email'])->exists()) {
+                            Log::warning('Email already exists, skip', ['email' => $item['email']]);
+                            return;
+                        }
+
+                        $userData['password'] = Hash::make('Pass' . ($item['telepon'] ?? '12345') . '*');
+                        $user = User::create($userData);
+                        Log::info('Created new user', ['slug' => $item['ptk_slug']]);
+                    }
+
+                    RoleUser::firstOrCreate([
+                        'user_id' => $user->id,
+                        'role_id' => $roleGuru->id,
+                    ]);
+                });
+            } catch (\Exception $e) {
+                Log::error('Error syncing guru: ' . $e->getMessage(), ['item' => $item]);
             }
         }
     }

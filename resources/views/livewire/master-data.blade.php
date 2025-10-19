@@ -191,7 +191,9 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-end">
-                                                    <h4 class="mb-0 text-info fw-bold">-</h4>
+                                                    <h4 class="mb-0 text-info fw-bold">
+                                                        {{ number_format(\App\Models\RombelPelajar::count()) }}
+                                                    </h4>
                                                     <small class="text-muted">records</small>
                                                 </div>
                                             </div>

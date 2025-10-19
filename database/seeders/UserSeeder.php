@@ -22,34 +22,10 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Super Admin',
                 'slug' => 'super-admin',
-                'email' => 'superadmin@example.com',
+                'email' => 'superadmin@gmail.com',
                 'password' => Hash::make('Password123!'),
                 'status' => 'aktif',
                 'role' => 'superadmin',
-            ],
-            [
-                'name' => 'Admin Satu',
-                'slug' => 'admin-satu',
-                'email' => 'admin@example.com',
-                'password' => Hash::make('Password123!'),
-                'status' => 'aktif',
-                'role' => 'admin',
-            ],
-            [
-                'name' => 'Guru Satu',
-                'slug' => 'guru-satu',
-                'email' => 'guru@example.com',
-                'password' => Hash::make('Password123!'),
-                'status' => 'aktif',
-                'role' => 'guru',
-            ],
-            [
-                'name' => 'Wali Kelas',
-                'slug' => 'wali-kelas',
-                'email' => 'walikelas@example.com',
-                'password' => Hash::make('Password123!'),
-                'status' => 'aktif',
-                'role' => 'walikelas',
             ],
         ];
 
