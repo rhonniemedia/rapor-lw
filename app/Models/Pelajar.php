@@ -70,6 +70,13 @@ class Pelajar extends Model
         );
     }
 
+    public function getTanggalLahirFormattedAttribute()
+    {
+        return $this->tanggal_lahir
+            ? Carbon::parse($this->tanggal_lahir)->translatedFormat('d F Y')
+            : null;
+    }
+
     protected static function booted()
     {
         static::saving(function ($model) {
@@ -82,5 +89,33 @@ class Pelajar extends Model
     public function orangTuaWalis()
     {
         return $this->hasMany(OrangTuaWali::class);
+    }
+
+    public function rombels()
+    {
+        return $this->belongsToMany(
+            Rombel::class,
+            'rombel_pelajar',
+            'pelajar_id',
+            'rombel_id'
+        )->withTimestamps();
+    }
+
+    public function getIconAttribute()
+    {
+        return match ($this->jenis_kelamin) {
+            'L' => asset('assets/images/icons/male.png'),
+            'P' => asset('assets/images/icons/female.png'),
+            default => asset('assets/images/icons/unknown.png'),
+        };
+    }
+
+    public function getJenisKelaminLabelAttribute()
+    {
+        return match ($this->jenis_kelamin) {
+            'L' => 'Laki-laki',
+            'P' => 'Perempuan',
+            default => 'Tidak diketahui',
+        };
     }
 }

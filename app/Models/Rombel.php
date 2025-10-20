@@ -50,4 +50,43 @@ class Rombel extends Model
     {
         return $this->belongsTo(User::class, 'wali_kelas_slug', 'slug');
     }
+
+    public function pelajars()
+    {
+        return $this->belongsToMany(
+            Pelajar::class,
+            'rombel_pelajar',  // nama tabel pivot
+            'rombel_id',       // foreign key di tabel pivot untuk rombel
+            'pelajar_id'       // foreign key di tabel pivot untuk pelajar
+        )->withTimestamps(); // opsional, jika tabel pivot punya created_at & updated_at
+    }
+
+    public function rombelPelajars()
+    {
+        return $this->hasMany(RombelPelajar::class, 'rombel_id');
+    }
+
+    // Total semua pelajar
+    public function getTotalPelajarAttribute()
+    {
+        return $this->rombelPelajars()->count();
+    }
+
+    // Total laki-laki
+    public function getTotalLakiAttribute()
+    {
+        return $this->rombelPelajars()
+            ->whereHas('pelajar', function ($q) {
+                $q->where('jenis_kelamin', 'L');
+            })->count();
+    }
+
+    // Total perempuan
+    public function getTotalPerempuanAttribute()
+    {
+        return $this->rombelPelajars()
+            ->whereHas('pelajar', function ($q) {
+                $q->where('jenis_kelamin', 'P');
+            })->count();
+    }
 }

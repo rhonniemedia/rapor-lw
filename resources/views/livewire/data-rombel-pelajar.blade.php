@@ -10,8 +10,8 @@
     {{-- Info Rombel --}}
     <div class="card mb-3">
         <div class="card-body">
-            <p class="mb-1"><strong>Tingkat & Jurusan:</strong> Kelas {{ $rombel->tingkat ?? '-' }} - {{ $rombel->jurusan->nama ?? 'Tidak Dikenal' }}</p>
-            <p class="mb-1"><strong>Wali Kelas:</strong> {{ $rombel->walikelas_name ?? 'Belum Ditentukan' }}</p>
+            <p class="mb-1"><strong>Tingkat & Jurusan:</strong> Kelas {{ $rombel->tingkat ?? '-' }} - {{ $rombel->jurusan->alias ?? 'Tidak Dikenal' }}</p>
+            <p class="mb-1"><strong>Wali Kelas:</strong> {{ $rombel->waliKelas->name ?? 'Belum Ditentukan' }}</p>
             <p class="mb-0"><strong>Kurikulum:</strong>
                 @if ($rombel->tahunAjaranKurikulum)
                 {{ $rombel->tahunAjaranKurikulum->tahunAjaran->nama ?? '?' }} ({{ $rombel->tahunAjaranKurikulum->kurikulum->nama ?? '?' }})
@@ -23,37 +23,70 @@
     </div>
 
     {{-- Input Search & Per Page --}}
-    <div class="d-flex justify-content-end mb-3">
-        <input type="text" wire:model.live.debounce.300ms="search" class="form-control w-50" placeholder="Cari Nama atau NISN Pelajar...">
+    <div class="d-flex justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <span>Show</span>
+            <select class="form-select form-select-sm" wire:model.live="perPage">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <span>entries</span>
+        </div>
+        <div>
+            <input type="text" class="form-control" placeholder="Cari..."
+                wire:model.live.debounce.500ms="search" style="width:250px;">
+        </div>
     </div>
 
     <table class="table table-hover mb-0">
         <thead class="bg-light">
             <tr>
-                <th style="width: 10%;">#</th>
-                <th style="width: 40%;">
-                    <p class="mb-0">Nama Pelajar</p>
+                <th style="width: 36%;">
+                    <p class="mb-0">Peserta Didik</p>
+                    <small>Nama | Jenis Kelamin</small>
                 </th>
-                <th style="width: 40%;">
-                    <p class="mb-0">NISN / NIS</p>
+                <th style="width: 27%;">
+                    <p class="mb-0">Kelahiran</p>
+                    <small>Tempat | Tanggal</small>
+                </th>
+                <th style="width: 27%;">
+                    <p class="mb-0">Nomor Induk Siswa</p>
+                    <small>Sekolah | Nasional</small>
                 </th>
                 <th style="width: 10%;">
                     <p class="mb-0">Aksi</p>
+                    <small>Edit | Delete</small>
                 </th>
             </tr>
         </thead>
         <tbody>
             @forelse ($rombelPelajars as $index => $data)
             <tr>
-                <td>{{ $rombelPelajars->firstItem() + $index }}</td>
-                <td>{{ $data->pelajar->nama_lengkap ?? '-' }}</td>
-                <td>{{ $data->pelajar->nisn ?? 'N/A' }} / {{ $data->pelajar->nis ?? 'N/A' }}</td>
                 <td>
-                    {{-- Tombol hapus (keluarkan dari rombel) --}}
-                    <button type="button" class="border-0 bg-transparent" title="Keluarkan" wire:click="confirmDeleteRombelPelajar('{{ $data->id }}')">
-                        <img src="{{ asset('assets/images/icons/delete.png') }}" width="30" height="30" alt="Delete">
-                    </button>
+                    <a class="hyper-link text-decoration-none" href="">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ $data->pelajar->icon }}" alt="image">
+                            <div class="table-user-name ml-3">
+                                <p class="mb-0 font-weight-medium"> {{ $data->pelajar->nama_lengkap ?? '-' }} </p>
+                                <small class="text-muted font-weight-medium"> {{ $data->pelajar->jenis_kelamin_label ?? 'N/A' }} </small>
+                            </div>
+                        </div>
+                    </a>
                 </td>
+                <td>
+                    <p class="mb-0 font-weight-medium">{{ $data->pelajar->tempat_lahir ?? 'N/A' }}</p>
+                    <small class="text-muted"><strong> Tanggal </strong>{{ $data->pelajar->tanggal_lahir_formatted ?? 'N/A' }}</small>
+                </td>
+                <td>
+
+                    <div class="badge badge-inverse-success mr-1">{{ $data->pelajar->nomor_induk ?? 'N/A' }}</div>
+
+                    <div class="badge badge-inverse-warning">{{ $data->pelajar->nisn ?? 'N/A' }}</div>
+
+                </td>
+                <td></td>
             </tr>
             @empty
             <tr>

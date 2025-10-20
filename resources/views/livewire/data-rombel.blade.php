@@ -48,26 +48,25 @@
                                 alt="image" />
                             <div class="table-user-name ml-3">
                                 <p class="mb-0 font-weight-medium"> {{ $rombel->nama }} </p>
-                                <small> Tingkat <strong>{{ $rombel->tingkat }} (KM)</strong></small>
+                                <small>{{ $rombel->jurusan->nama }} (KM)</small>
                             </div>
                         </div>
                     </a>
                 </td>
                 <td>
-                    {{-- 🚨 Diperbarui: Menggunakan walikelas_name dari hasil join --}}
-                    <p class="mb-0">Wali: **{{ $rombel->walikelas_name ?? 'Belum Ditentukan' }}**</p>
-                    NIP
+                    <p class="mb-0 font-weight-medium">{{ $rombel->walikelas_name ?? 'Belum Ditentukan' }}</p>
+                    <small>NIP {{ $rombel->waliKelas->nip ?? '~' }}</small>
                 </td>
                 <td>
                     <div class="d-flex gap-1 align-items-center">
-                        <span class="badge badge-inverse-success d-flex align-items-center gap-1">
-                            <i class="mdi mdi-plus"></i><strong>36</strong>
+                        <span class="badge badge-inverse-dark d-flex align-items-center gap-1">
+                            <i class="mdi mdi-plus"></i><strong>{{ $rombel->total_pelajar ?? 0 }}</strong>
                         </span>
                         <span class="badge badge-inverse-primary d-flex align-items-center gap-1">
-                            <i class="mdi mdi-gender-male"></i><strong>10</strong>
+                            <i class="mdi mdi-gender-male"></i><strong>{{ $rombel->total_laki ?? 0 }}</strong>
                         </span>
                         <span class="badge badge-inverse-danger d-flex align-items-center gap-1">
-                            <i class="mdi mdi-gender-female"></i><strong>15</strong>
+                            <i class="mdi mdi-gender-female"></i><strong>{{ $rombel->total_perempuan ?? 0 }}</strong>
                         </span>
                     </div>
                 </td>

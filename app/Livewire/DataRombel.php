@@ -5,7 +5,8 @@ namespace App\Livewire;
 use App\Models\Rombel;
 use App\Models\Jurusan;
 use App\Models\TahunAjaranKurikulum;
-use App\Models\User; // Asumsi model User untuk Wali Kelas
+use App\Models\User;
+use App\Models\Pelajar; // 🔹 Tambahkan import model Pelajar
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -24,9 +25,9 @@ class DataRombel extends Component
     // 🔹 Field form
     public $rombel_id;
     public $jurusan_id;
-    public $tahun_ajaran_kurikulum_id; // nullable
-    public $wali_kelas_slug; // 🚨 Diperbarui: Menggunakan slug (string)
-    public $tingkat; // unsignedTinyInteger (10, 11, 12)
+    public $tahun_ajaran_kurikulum_id;
+    public $wali_kelas_slug;
+    public $tingkat;
     public $nama;
 
     public $isEdit = false;
@@ -34,7 +35,7 @@ class DataRombel extends Component
     // Data dropdown
     public $jurusanList = [];
     public $tahunAjaranKurikulumList = [];
-    public $walikelasList = []; // Asumsi ini adalah daftar guru/staf
+    public $walikelasList = [];
 
     // 🔹 Event listener
     protected $listeners = [
@@ -44,7 +45,6 @@ class DataRombel extends Component
 
     public function mount()
     {
-        // Muat data untuk dropdown saat komponen diinisialisasi
         $this->jurusanList = Jurusan::orderBy('nama', 'asc')->get();
 
         $this->tahunAjaranKurikulumList = TahunAjaranKurikulum::with(['kurikulum', 'tahunAjaran'])
@@ -54,8 +54,6 @@ class DataRombel extends Component
                 return $item;
             });
 
-        // Ambil daftar guru/user dan pastikan slug/ID yang dibutuhkan tersedia
-        // Asumsi kolom yang digunakan untuk relasi adalah 'slug' dan kolom tampilan adalah 'name'
         $this->walikelasList = User::orderBy('name', 'asc')
             ->select('id', 'slug', 'name')
             ->get();
@@ -65,7 +63,6 @@ class DataRombel extends Component
     protected $baseRules = [
         'jurusan_id' => 'required|uuid|exists:jurusans,id',
         'tahun_ajaran_kurikulum_id' => 'nullable|uuid|exists:tahun_ajaran_kurikulums,id',
-        // 🚨 Diperbarui: Validasi slug harus ada di tabel users (atau tabel guru)
         'wali_kelas_slug' => 'nullable|string|exists:users,slug',
         'tingkat' => 'required|integer|in:10,11,12',
         'nama' => 'required|string|min:2',
@@ -82,7 +79,6 @@ class DataRombel extends Component
     {
         $rules = $this->baseRules;
 
-        // Rule 'nama' harus unik di dalam Tingkat dan Jurusan yang sama
         $uniqueRule = Rule::unique('rombels', 'nama')
             ->where(fn($query) => $query->where('tingkat', $this->tingkat)
                 ->where('jurusan_id', $this->jurusan_id));
@@ -112,7 +108,6 @@ class DataRombel extends Component
         Rombel::create([
             'jurusan_id' => $this->jurusan_id,
             'tahun_ajaran_kurikulum_id' => $this->tahun_ajaran_kurikulum_id ?: null,
-            // 🚨 Diperbarui
             'wali_kelas_slug' => $this->wali_kelas_slug ?: null,
             'tingkat' => $this->tingkat,
             'nama' => $this->nama,
@@ -134,7 +129,6 @@ class DataRombel extends Component
         $this->rombel_id = $data->id;
         $this->jurusan_id = $data->jurusan_id;
         $this->tahun_ajaran_kurikulum_id = $data->tahun_ajaran_kurikulum_id;
-        // 🚨 Diperbarui
         $this->wali_kelas_slug = $data->wali_kelas_slug;
         $this->tingkat = $data->tingkat;
         $this->nama = $data->nama;
@@ -153,7 +147,6 @@ class DataRombel extends Component
         $data->update([
             'jurusan_id' => $this->jurusan_id,
             'tahun_ajaran_kurikulum_id' => $this->tahun_ajaran_kurikulum_id ?: null,
-            // 🚨 Diperbarui
             'wali_kelas_slug' => $this->wali_kelas_slug ?: null,
             'tingkat' => $this->tingkat,
             'nama' => $this->nama,
@@ -195,7 +188,6 @@ class DataRombel extends Component
         $this->rombel_id = null;
         $this->jurusan_id = '';
         $this->tahun_ajaran_kurikulum_id = '';
-        // 🚨 Diperbarui
         $this->wali_kelas_slug = '';
         $this->tingkat = '';
         $this->nama = '';
@@ -205,37 +197,47 @@ class DataRombel extends Component
     // 🔹 Render tabel data
     public function render()
     {
-        // Query dengan eager loading relasi
-        // Perlu menambahkan relasi ke User (wali kelas) berdasarkan slug, jika menggunakan Eloquent.
-        // Karena relasi menggunakan slug (string), perlu definisi relasi khusus di model Rombel.
-        // Di sini kita asumsikan relasi bernama 'waliKelasBySlug' sudah ada di model Rombel.
+        // 🔹 Base query rombel
+        $query = Rombel::with([
+            'jurusan',
+            'tahunAjaranKurikulum.kurikulum',
+            'tahunAjaranKurikulum.tahunAjaran'
+        ])
+            ->withCount([
+                'pelajars as total_pelajar', // Total semua pelajar
+                'pelajars as total_laki' => function ($q) {
+                    $q->where('pelajars.jenis_kelamin', 'L');
+                },
+                'pelajars as total_perempuan' => function ($q) {
+                    $q->where('pelajars.jenis_kelamin', 'P');
+                }
+            ]);
 
-        $query = Rombel::with(['jurusan', 'tahunAjaranKurikulum.kurikulum', 'tahunAjaranKurikulum.tahunAjaran']);
-
-        // Melakukan join manual untuk walikelas agar bisa difilter/ditampilkan dengan mudah
-        // Jika tidak ada relasi di model, ambil data user di view dengan find(slug) atau buat relasi hasOne/belongsTo di model Rombel.
-        // Untuk saat ini, kita akan melakukan join/filter pada users secara eksplisit di render.
-
+        // 🔹 Join untuk wali kelas
         $query->leftJoin('users as u', 'u.slug', '=', 'rombels.wali_kelas_slug');
 
-        // Filter pencarian
+        // 🔹 Filter pencarian
         if (!empty($this->search)) {
-            $query->where('rombels.nama', 'like', '%' . $this->search . '%')
-                ->orWhere('rombels.tingkat', 'like', '%' . $this->search . '%')
-                ->orWhereHas('jurusan', function ($q) {
-                    $q->where('nama', 'like', '%' . $this->search . '%');
-                })
-                ->orWhere('u.name', 'like', '%' . $this->search . '%'); // Filter berdasarkan nama wali kelas
+            $query->where(function ($q) {
+                $q->where('rombels.nama', 'like', '%' . $this->search . '%')
+                    ->orWhere('rombels.tingkat', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('jurusan', function ($subQ) {
+                        $subQ->where('nama', 'like', '%' . $this->search . '%');
+                    })
+                    ->orWhere('u.name', 'like', '%' . $this->search . '%');
+            });
         }
 
+        // 🔹 Gunakan select() tanpa menimpa hasil withCount()
+        $rombels = $query
+            ->select('rombels.*', 'u.name as walikelas_name')
+            ->orderBy('rombels.tingkat', 'asc')
+            ->orderBy('rombels.nama', 'asc')
+            ->paginate($this->perPage);
+
+        // 🔹 Kirim ke view
         return view('livewire.data-rombel', [
-            'rombels' => $query
-                ->join('jurusans as j', 'j.id', '=', 'rombels.jurusan_id')
-                ->select('rombels.*', 'u.name as walikelas_name') // Ambil nama walikelas dari join
-                ->orderBy('rombels.tingkat', 'asc')
-                ->orderBy('j.nama', 'asc')
-                ->orderBy('rombels.nama', 'asc')
-                ->paginate($this->perPage),
+            'rombels' => $rombels,
         ]);
     }
 }
