@@ -148,7 +148,7 @@ class DataSyncService
                         'nomor_induk'   => $item['nis'] ?? null,
                         'nisn'          => $item['nisn'] ?? null,
                         'tempat_lahir'  => $item['tempat_lahir'] ?? null,
-                        'tanggal_lahir' => $item['tgl_lahir'] ?? null,
+                        'tanggal_lahir' => !empty($item['tgl_lahir']) ? $item['tgl_lahir'] : null,
                         'jenis_kelamin' => $item['jk'] ?? null,
                         'agama'         => $item['agama'] ?? null,
                         'status_dalam_keluarga' => 'anak-kandung' ?? null,
@@ -157,7 +157,9 @@ class DataSyncService
                         'telepon'       => $item['alamat']['telepon'] ?? null,
                         'sekolah_asal'  => $item['sekolah_asal']['nama'] ?? null,
                         'diterima_di_kelas' => $item['penempatan']['kelas'] ?? null,
-                        'pada_tanggal'  => $item['penempatan']['tgl_masuk'] ?? null,
+                        'pada_tanggal'  => !empty($item['penempatan']['tgl_masuk'])
+                            ? $item['penempatan']['tgl_masuk']
+                            : null,
                     ]
                 );
 
@@ -202,44 +204,45 @@ class DataSyncService
 
     private function syncGuru(array $data): void
     {
-        // LOG RAW DATA DARI API
-        Log::info('=== RAW DATA FROM API ===', [
-            'total' => count($data),
-            'first_3_items' => array_slice($data, 0, 3)
-        ]);
+        // Log ringkasan awal data
+        Log::info('START syncGuru', ['total_data' => count($data)]);
 
         $roleGuru = Role::where('nama_role', 'guru')->first();
 
-        foreach ($data as $index => $item) {
-            // LOG SETIAP ITEM
-            Log::info("Item #{$index}", [
-                'ptk_slug' => $item['ptk_slug'] ?? 'MISSING',
-                'nama' => $item['nama'] ?? 'MISSING',
-                'email' => $item['email'] ?? 'MISSING',
-            ]);
+        // Periksa apakah peran 'guru' ada
+        if (!$roleGuru) {
+            Log::error("Role 'guru' not found. Aborting sync.");
+            return;
+        }
 
-            // SKIP JIKA SLUG ANGKA MINUS
-            if (isset($item['ptk_slug']) && preg_match('/^-?\d+$/', $item['ptk_slug'])) {
-                Log::error("INVALID SLUG DETECTED - SKIPPED", [
-                    'slug' => $item['ptk_slug'],
-                    'nama' => $item['nama']
+        foreach ($data as $index => $item) {
+            $ptkSlug = $item['ptk_slug'] ?? null;
+            $nama = $item['nama'] ?? null;
+            $email = $item['email'] ?? null;
+
+            // SKIP JIKA SLUG ADALAH ANGKA MINUS (atau format angka lainnya yang tidak valid untuk slug)
+            if ($ptkSlug && preg_match('/^-?\d+$/', $ptkSlug)) {
+                Log::warning("Skipped: Invalid slug format (looks like number)", [
+                    'slug' => $ptkSlug,
+                    'nama' => $nama
                 ]);
-                continue; // SKIP data ini
+                continue;
             }
 
-            if (empty($item['nama']) || empty($item['email']) || empty($item['ptk_slug'])) {
-                Log::warning('Data guru tidak lengkap, skip:', $item);
+            // SKIP JIKA DATA WAJIB TIDAK LENGKAP
+            if (empty($nama) || empty($email) || empty($ptkSlug)) {
+                Log::warning('Skipped: Incomplete required data (name, email, or slug missing)', $item);
                 continue;
             }
 
             try {
-                DB::transaction(function () use ($item, $roleGuru) {
-                    $user = User::where('slug', $item['ptk_slug'])->first();
+                DB::transaction(function () use ($item, $roleGuru, $ptkSlug, $email) {
+                    $user = User::where('slug', $ptkSlug)->first();
 
                     $userData = [
                         'name' => $item['nama'],
                         'email' => $item['email'],
-                        'slug' => $item['ptk_slug'],
+                        'slug' => $ptkSlug,
                         'nip' => !empty($item['nip']) ? $item['nip'] : null,
                         'telephone' => $item['telepon'] ?? null,
                         'status' => 'aktif',
@@ -247,16 +250,16 @@ class DataSyncService
 
                     if ($user) {
                         $user->update($userData);
-                        Log::info('Updated user', ['slug' => $item['ptk_slug']]);
+                        // Log::info('Updated user', ['slug' => $ptkSlug]); // Log detail ini dihilangkan
                     } else {
-                        if (User::where('email', $item['email'])->exists()) {
-                            Log::warning('Email already exists, skip', ['email' => $item['email']]);
+                        if (User::where('email', $email)->exists()) {
+                            Log::warning('Skipped: Email already exists for a different user', ['email' => $email, 'slug' => $ptkSlug]);
                             return;
                         }
 
                         $userData['password'] = Hash::make('Pass' . ($item['telepon'] ?? '12345') . '*');
                         $user = User::create($userData);
-                        Log::info('Created new user', ['slug' => $item['ptk_slug']]);
+                        // Log::info('Created new user', ['slug' => $ptkSlug]); // Log detail ini dihilangkan
                     }
 
                     RoleUser::firstOrCreate([
@@ -265,8 +268,15 @@ class DataSyncService
                     ]);
                 });
             } catch (\Exception $e) {
-                Log::error('Error syncing guru: ' . $e->getMessage(), ['item' => $item]);
+                // Log kesalahan serius saat memproses item
+                Log::error('FATAL Error processing guru data', [
+                    'message' => $e->getMessage(),
+                    'slug' => $ptkSlug,
+                    'email' => $email,
+                ]);
             }
         }
+
+        Log::info('END syncGuru');
     }
 }

@@ -13,4 +13,20 @@ class RombelPelajar extends Model
     protected $table = 'rombel_pelajars';
     protected $keyType = 'string';
     protected $fillable = ['id', 'pelajar_id', 'rombel_id'];
+
+    // Relasi ke Rombel
+    public function rombel()
+    {
+        return $this->belongsTo(Rombel::class, 'rombel_id');
+    }
+
+    public function pelajar()
+    {
+        return $this->belongsTo(Pelajar::class, 'pelajar_id');
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(TahunAjaran::class, 'tahun_ajaran_id');
+    }
 }

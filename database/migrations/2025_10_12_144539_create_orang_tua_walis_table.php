@@ -19,11 +19,11 @@ return new class extends Migration
                 ->constrained('pelajars')
                 ->onDelete('cascade');
 
-            $table->string('nama');
+            $table->text('nama');
             $table->string('hubungan'); // contoh: Ayah, Ibu, Wali
             $table->enum('status', ['masih-hidup', 'sudah-meninggal'])->default('masih-hidup');
             $table->string('pekerjaan')->nullable();
-            $table->string('telepon', 20)->nullable();
+            $table->text('telepon')->nullable();
             $table->text('alamat')->nullable();
 
             $table->timestamps();

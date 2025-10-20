@@ -22,4 +22,10 @@ class OrangTuaWali extends Model
         'telepon',
         'alamat',
     ];
+
+    protected $casts = [
+        'nama'    => 'encrypted',
+        'telepon' => 'encrypted',
+        'alamat'  => 'encrypted',
+    ];
 }

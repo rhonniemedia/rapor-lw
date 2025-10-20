@@ -16,26 +16,27 @@ return new class extends Migration
 
             $table->string('nama_lengkap');
             $table->string('nomor_induk')->nullable()->unique();
-            $table->string('nisn')->nullable()->unique();
+
+            // Gunakan TEXT agar cukup untuk hasil enkripsi (panjang bisa 255+ karakter)
+            $table->text('nisn')->nullable();
+
+            // Hash untuk menjaga nilai unik tanpa mengganggu enkripsi
+            $table->string('nisn_hash', 64)->nullable()->unique();
+
             $table->string('tempat_lahir')->nullable();
-            $table->date('tanggal_lahir')->nullable();
+            $table->text('tanggal_lahir')->nullable();
 
             $table->enum('jenis_kelamin', ['L', 'P'])->nullable(); // L = Laki-laki, P = Perempuan
 
-            $table->enum('agama', [
-                'islam',
-                'kristen',
-                'katolik',
-                'hindu',
-                'buddha',
-                'konghucu',
-                'lainnya'
-            ])->nullable();
+            $table->text('agama')->nullable();
 
             $table->string('status_dalam_keluarga')->nullable();
             $table->string('anak_ke')->nullable();
+
+            // Alamat dan telepon juga dienkripsi, jadi ubah ke TEXT agar cukup panjang
             $table->text('alamat')->nullable();
-            $table->string('telepon', 20)->nullable();
+            $table->text('telepon')->nullable();
+
             $table->string('sekolah_asal')->nullable();
 
             $table->string('diterima_di_kelas')->nullable();
