@@ -234,7 +234,7 @@
                                                 </div>
                                                 <div class="text-end">
                                                     <h4 class="mb-0 text-dark fw-bold">
-                                                        {{ number_format(\App\Models\User::count()) }}
+                                                        {{ number_format(\App\Models\User::where('is_teacher', true)->orWhereNull('is_teacher')->count()) }}
                                                     </h4>
                                                     <small class="text-muted">records</small>
                                                 </div>

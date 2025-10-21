@@ -59,11 +59,19 @@ class MasterDataStatsService
 
         foreach ($this->dataMappings as $key => $mapping) {
             $modelClass = $mapping['model'];
-            $count = $modelClass::count();
-            $totalLocal += $count;
 
-            $latestCreated = $modelClass::latest('created_at')->first();
-            $latestUpdated = $modelClass::latest('updated_at')->first();
+            // 🔹 Filter khusus untuk pendidik
+            if ($key === 'pendidik') {
+                $count = $modelClass::where('is_teacher', true)->count();
+                $latestCreated = $modelClass::where('is_teacher', true)->latest('created_at')->first();
+                $latestUpdated = $modelClass::where('is_teacher', true)->latest('updated_at')->first();
+            } else {
+                $count = $modelClass::count();
+                $latestCreated = $modelClass::latest('created_at')->first();
+                $latestUpdated = $modelClass::latest('updated_at')->first();
+            }
+
+            $totalLocal += $count;
 
             $results[] = [
                 'key' => $key,

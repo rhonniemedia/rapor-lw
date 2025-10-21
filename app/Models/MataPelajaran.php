@@ -11,4 +11,9 @@ class MataPelajaran extends Model
     use HasFactory, HasUuids;
 
     protected $guarded = ['id'];
+
+    public function kurikulumMataPelajarans()
+    {
+        return $this->hasMany(KurikulumMataPelajaran::class, 'mata_pelajaran_id');
+    }
 }

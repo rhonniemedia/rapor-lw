@@ -6,7 +6,7 @@ use App\Models\Rombel;
 use App\Models\Jurusan;
 use App\Models\TahunAjaranKurikulum;
 use App\Models\User;
-use App\Models\Pelajar; // 🔹 Tambahkan import model Pelajar
+use App\Models\Pelajar;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -18,11 +18,9 @@ class DataRombel extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    // 🔹 Properti pencarian & pagination
     public $search = '';
     public $perPage = 10;
 
-    // 🔹 Field form
     public $rombel_id;
     public $jurusan_id;
     public $tahun_ajaran_kurikulum_id;
@@ -32,34 +30,42 @@ class DataRombel extends Component
 
     public $isEdit = false;
 
-    // Data dropdown
-    public $jurusanList = [];
-    public $tahunAjaranKurikulumList = [];
-    public $walikelasList = [];
+    // Data dropdown - akan diakses via computed property
 
-    // 🔹 Event listener
     protected $listeners = [
         'deleteConfirmedRombel' => 'deleteConfirmedRombel',
         'createRombel' => 'create',
     ];
 
+    // ✅ Ubah mount() menjadi lebih ringan atau hapus sama sekali
     public function mount()
     {
-        $this->jurusanList = Jurusan::orderBy('nama', 'asc')->get();
+        // Kosongkan atau hapus method ini
+    }
 
-        $this->tahunAjaranKurikulumList = TahunAjaranKurikulum::with(['kurikulum', 'tahunAjaran'])
+    // ✅ Buat computed property untuk dropdown data
+    public function getJurusanListProperty()
+    {
+        return Jurusan::orderBy('nama', 'asc')->get();
+    }
+
+    public function getTahunAjaranKurikulumListProperty()
+    {
+        return TahunAjaranKurikulum::with(['kurikulum', 'tahunAjaran'])
             ->get()
             ->map(function ($item) {
                 $item->display_name = $item->tahunAjaran->nama . ' (' . ($item->kurikulum->nama ?? 'Tanpa Kurikulum') . ')';
                 return $item;
             });
+    }
 
-        $this->walikelasList = User::orderBy('name', 'asc')
+    public function getWalikelasListProperty()
+    {
+        return User::orderBy('name', 'asc')
             ->select('id', 'slug', 'name')
             ->get();
     }
 
-    // 🔹 Validasi dasar
     protected $baseRules = [
         'jurusan_id' => 'required|uuid|exists:jurusans,id',
         'tahun_ajaran_kurikulum_id' => 'nullable|uuid|exists:tahun_ajaran_kurikulums,id',
@@ -68,13 +74,11 @@ class DataRombel extends Component
         'nama' => 'required|string|min:2',
     ];
 
-    // 🔹 Reset pagination saat search berubah
     public function updatingSearch()
     {
         $this->resetPage();
     }
 
-    // 🔹 Rules dinamis (saat edit & unique constraint)
     public function getRules()
     {
         $rules = $this->baseRules;
@@ -92,7 +96,6 @@ class DataRombel extends Component
         return $rules;
     }
 
-    // 🔹 Buka modal tambah
     public function create()
     {
         $this->resetForm();
@@ -100,7 +103,6 @@ class DataRombel extends Component
         $this->dispatch('openModalRombel');
     }
 
-    // 🔹 Simpan data baru
     public function store()
     {
         $this->validate($this->getRules());
@@ -121,7 +123,6 @@ class DataRombel extends Component
         ]);
     }
 
-    // 🔹 Edit data
     public function edit($id)
     {
         $data = Rombel::findOrFail($id);
@@ -137,7 +138,6 @@ class DataRombel extends Component
         $this->dispatch('openModalRombel');
     }
 
-    // 🔹 Update data
     public function update()
     {
         $this->validate($this->getRules());
@@ -160,7 +160,6 @@ class DataRombel extends Component
         ]);
     }
 
-    // 🔹 Konfirmasi hapus
     public function confirmDeleteRombel($id)
     {
         $this->dispatch('swal:confirm', [
@@ -171,7 +170,6 @@ class DataRombel extends Component
         ]);
     }
 
-    // 🔹 Hapus data
     public function deleteConfirmedRombel($id)
     {
         Rombel::findOrFail($id)->delete();
@@ -182,7 +180,6 @@ class DataRombel extends Component
         ]);
     }
 
-    // 🔹 Reset form input
     private function resetForm()
     {
         $this->rombel_id = null;
@@ -194,17 +191,15 @@ class DataRombel extends Component
         $this->resetErrorBag();
     }
 
-    // 🔹 Render tabel data
     public function render()
     {
-        // 🔹 Base query rombel
         $query = Rombel::with([
             'jurusan',
             'tahunAjaranKurikulum.kurikulum',
             'tahunAjaranKurikulum.tahunAjaran'
         ])
             ->withCount([
-                'pelajars as total_pelajar', // Total semua pelajar
+                'pelajars as total_pelajar',
                 'pelajars as total_laki' => function ($q) {
                     $q->where('pelajars.jenis_kelamin', 'L');
                 },
@@ -213,10 +208,8 @@ class DataRombel extends Component
                 }
             ]);
 
-        // 🔹 Join untuk wali kelas
         $query->leftJoin('users as u', 'u.slug', '=', 'rombels.wali_kelas_slug');
 
-        // 🔹 Filter pencarian
         if (!empty($this->search)) {
             $query->where(function ($q) {
                 $q->where('rombels.nama', 'like', '%' . $this->search . '%')
@@ -228,16 +221,17 @@ class DataRombel extends Component
             });
         }
 
-        // 🔹 Gunakan select() tanpa menimpa hasil withCount()
         $rombels = $query
             ->select('rombels.*', 'u.name as walikelas_name')
             ->orderBy('rombels.tingkat', 'asc')
             ->orderBy('rombels.nama', 'asc')
             ->paginate($this->perPage);
 
-        // 🔹 Kirim ke view
         return view('livewire.data-rombel', [
             'rombels' => $rombels,
+            'jurusanList' => $this->jurusanList,
+            'tahunAjaranKurikulumList' => $this->tahunAjaranKurikulumList,
+            'walikelasList' => $this->walikelasList,
         ]);
     }
 }

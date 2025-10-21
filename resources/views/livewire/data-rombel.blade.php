@@ -140,7 +140,6 @@
                         <label for="wali_kelas_slug" class="form-label">Wali Kelas (Opsional)</label>
                         <select id="wali_kelas_slug" class="form-select" wire:model="wali_kelas_slug">
                             <option value="" disabled>-- Belum Ditentukan --</option>
-                            {{-- 🚨 Diperbarui: Menggunakan slug sebagai value --}}
                             @foreach ($walikelasList as $user)
                             <option value="{{ $user->slug }}">{{ $user->name }}</option>
                             @endforeach
@@ -152,7 +151,7 @@
                     <div class="mb-3">
                         <label for="tahun_ajaran_kurikulum_id" class="form-label">Kurikulum Rombel (Opsional)</label>
                         <select id="tahun_ajaran_kurikulum_id" class="form-select" wire:model="tahun_ajaran_kurikulum_id">
-                            <option value="">-- Gunakan Kurikulum Global --</option>
+                            <option value="">-- Pilih Kurikulum --</option>
                             @foreach ($tahunAjaranKurikulumList as $tak)
                             <option value="{{ $tak->id }}">{{ $tak->display_name }}</option>
                             @endforeach

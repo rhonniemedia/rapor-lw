@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('nip')->nullable()->unique();
             $table->string('telephone')->nullable();
+            $table->boolean('is_teacher')->default(false);
             $table->enum('status', ['aktif', 'nonaktif']);
             $table->rememberToken();
             $table->timestamps();

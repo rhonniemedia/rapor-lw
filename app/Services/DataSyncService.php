@@ -245,6 +245,7 @@ class DataSyncService
                         'slug' => $ptkSlug,
                         'nip' => !empty($item['nip']) ? $item['nip'] : null,
                         'telephone' => $item['telepon'] ?? null,
+                        'is_teacher' => true,
                         'status' => 'aktif',
                     ];
 

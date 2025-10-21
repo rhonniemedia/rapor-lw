@@ -43,7 +43,24 @@ class ApiSyncService
 
     public function fetchGuru(): array
     {
-        return $this->fetch('guru', 'Guru');
+        $data = $this->fetch('guru', 'Guru');
+
+        $filtered = collect($data)
+            ->filter(
+                fn($item) =>
+                isset($item['jptk_id']) &&
+                    ((int)$item['jptk_id'] === 1)
+            )
+            ->values()
+            ->all();
+
+        // Ringkasan singkat (tidak verbose)
+        Log::info('Guru fetched', [
+            'total' => count($data),
+            'valid' => count($filtered),
+        ]);
+
+        return $filtered;
     }
 
     private function fetch(string $key, string $name): array

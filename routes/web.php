@@ -20,6 +20,12 @@ Route::get('/home/rombongan-belajar', function () {
     ]);
 });
 
+Route::get('/home/pendidik', function () {
+    return view('contents.admin.pendidik', [
+        'title' => 'Data Pendidik',
+    ]);
+});
+
 Route::get('/home/rombongan-belajar/detail/{id}', function ($id) {
     return view('contents.admin.rombel-pelajar', [
         'id' => $id,
