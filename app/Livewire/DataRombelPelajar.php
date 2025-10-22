@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\JurusanMataPelajaran;
 use Log;
 use App\Models\User;
 use App\Models\Rombel;
@@ -97,15 +98,13 @@ class DataRombelPelajar extends Component
         }
 
         // Step 3: Ambil ID mapel khusus jurusan
-        $mapelJurusanIds = \DB::table('jurusan_mata_pelajarans')
-            ->where('jurusan_id', $jurusanId)
+        $mapelJurusanIds = JurusanMataPelajaran::where('jurusan_id', $jurusanId)
             ->where('kurikulum_id', $kurikulumId)
             ->pluck('mata_pelajaran_id')
             ->toArray();
 
         // Step 4: Ambil SEMUA mapel yang ada pembatasan jurusan (untuk filtering)
-        $semuaMapelDenganJurusan = \DB::table('jurusan_mata_pelajarans')
-            ->where('kurikulum_id', $kurikulumId)
+        $semuaMapelDenganJurusan = JurusanMataPelajaran::where('kurikulum_id', $kurikulumId)
             ->pluck('mata_pelajaran_id')
             ->unique()
             ->toArray();
