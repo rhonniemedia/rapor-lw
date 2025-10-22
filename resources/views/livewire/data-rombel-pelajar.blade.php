@@ -1,27 +1,54 @@
 <div>
-    <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-3">
-        <h6 class="fw-bold mb-0">👥 Manajemen Rombel: {{ $rombel->nama ?? 'N/A' }}</h6>
-        @if($activeTab === 'mapel')
-        <button type="button" wire:click="createMapel" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center">
-            <i class="mdi mdi-plus"></i> Tambah Mata Pelajaran
-        </button>
-        @endif
+    <div class="page-header pb-3 mb-4 border-bottom">
+        <div class="d-flex align-items-center">
+            <div class="icon-wrapper position-relative">
+                <span class="bg-gradient-primary p-3 rounded-3 shadow-sm me-3 d-inline-flex align-items-center justify-content-center">
+                    <i class="mdi mdi-account-group mdi-24px text-white"></i>
+                </span>
+            </div>
+
+            <div>
+                <h4 class="mb-1 text-dark fw-bold">Manajemen Rombongan Belajar</h4>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-warning bg-opacity-10 text-white border border-warning border-opacity-25 px-3 py-2 rounded-pill fw-semibold">
+                        <i class="mdi mdi-bookmark me-1"></i>
+                        {{ $rombel->nama ?? 'N/A' }}
+                    </span>
+                    <small class="text-muted">Kelola data rombongan belajar</small>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- Info Rombel --}}
-    <div class="card mb-3">
-        <div class="card-body">
-            <p class="mb-1"><strong>Tingkat & Jurusan:</strong> Kelas {{ $rombel->tingkat ?? '-' }} - {{ $rombel->jurusan->alias ?? 'Tidak Dikenal' }}</p>
-            <p class="mb-1"><strong>Wali Kelas:</strong> {{ $rombel->waliKelas->name ?? 'Belum Ditentukan' }}</p>
-            <p class="mb-0"><strong>Kurikulum:</strong>
-                @if ($rombel->tahunAjaranKurikulum)
-                {{ $rombel->tahunAjaranKurikulum->tahunAjaran->nama ?? '?' }} ({{ $rombel->tahunAjaranKurikulum->kurikulum->nama ?? '?' }})
-                @else
-                Global
-                @endif
-            </p>
+
+    <div class="alert alert-success py-2" role="alert">
+        <div class="row align-items-center">
+
+            <div class="col-sm-4 py-3">
+                <small class="text-muted d-block">Tingkat & Jurusan:</small>
+                <p class="mb-0 font-weight-bold">Kelas {{ $rombel->tingkat ?? '-' }} - {{ $rombel->jurusan->alias ?? 'Tidak Dikenal' }}</p>
+            </div>
+
+            <div class="col-sm-4 py-3">
+                <small class="text-muted d-block">Wali Kelas:</small>
+                <p class="mb-0 font-weight-bold">{{ $rombel->waliKelas->name ?? 'Belum Ditentukan' }}</p>
+            </div>
+
+            <div class="col-sm-4 py-3">
+                <small class="text-muted d-block">Kurikulum:</small>
+                <p class="mb-0 font-weight-bold">
+                    @if ($rombel->tahunAjaranKurikulum)
+                    {{ $rombel->tahunAjaranKurikulum->tahunAjaran->nama ?? '?' }} ({{ $rombel->tahunAjaranKurikulum->kurikulum->nama ?? '?' }})
+                    @else
+                    Global
+                    @endif
+                </p>
+            </div>
+
         </div>
     </div>
+
 
     {{-- Tab Navigation --}}
     <ul class="nav nav-tabs mb-3" role="tablist">
@@ -69,7 +96,7 @@
         </div>
     </div>
 
-    {{-- Tab Content: Daftar Pelajar --}}
+    <!-- Tab Content: Daftar Pelajar -->
     @if($activeTab === 'pelajar')
     <table class="table table-hover mb-0">
         <thead class="bg-light">
@@ -108,7 +135,7 @@
                 </td>
                 <td>
                     <p class="mb-0 font-weight-medium">{{ $item->pelajar->tempat_lahir ?? 'N/A' }}</p>
-                    <small class="text-muted"><strong> Tanggal </strong>{{ $item->pelajar->tanggal_lahir_formatted ?? 'N/A' }}</small>
+                    <small class="text-muted"><span class="font-weight-medium"> Tanggal </span>{{ $item->pelajar->tanggal_lahir_formatted ?? 'N/A' }}</small>
                 </td>
                 <td>
                     <div class="badge badge-inverse-success mr-1">{{ $item->pelajar->nomor_induk ?? 'N/A' }}</div>
@@ -130,23 +157,18 @@
     </table>
     @endif
 
-    {{-- Tab Content: Mata Pelajaran & Pengajar --}}
+    <!-- Tab Content: Mata Pelajaran & Pengajar -->
     @if($activeTab === 'mapel')
     <table class="table table-hover mb-0">
         <thead class="bg-light">
             <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 35%;">
+                <th style="width: 40%;">
                     <p class="mb-0">Mata Pelajaran</p>
                     <small>Nama Mapel</small>
                 </th>
-                <th style="width: 35%;">
+                <th style="width: 40%;">
                     <p class="mb-0">Pengajar</p>
                     <small>Nama Guru</small>
-                </th>
-                <th style="width: 15%;">
-                    <p class="mb-0">Jam Pelajaran</p>
-                    <small>Per Minggu</small>
                 </th>
                 <th style="width: 10%;">
                     <p class="mb-0">Aksi</p>
@@ -157,26 +179,20 @@
         <tbody>
             @forelse ($data as $index => $item)
             <tr>
-                <td>{{ $data->firstItem() + $index }}</td>
-                <td>
-                    <p class="mb-0 font-weight-medium">{{ $item->mataPelajaran->nama ?? '-' }}</p>
-                    <small class="text-muted">{{ $item->mataPelajaran->kode ?? '' }}</small>
-                </td>
                 <td>
                     <div class="d-flex align-items-center">
-                        <img src="{{ $item->guru->icon ?? asset('images/default-avatar.png') }}" alt="guru" style="width: 32px; height: 32px; object-fit: cover; border-radius: 50%;">
-                        <div class="ml-3">
-                            <p class="mb-0 font-weight-medium">{{ $item->guru->name ?? '-' }}</p>
-                            <small class="text-muted">{{ $item->guru->email ?? '' }}</small>
+                        <img src="{{ $item->guru->icon ?? asset('assets/images/icons/icon_13.png') }}" alt="guru" style="width: 32px; height: 32px; object-fit: cover;">
+                        <div class="table-user-name ml-3">
+                            <p class="mb-0 font-weight-medium">{{ $item->mataPelajaran->nama ?? '-' }}</p>
+                            <small class="text-muted">{{ $item->mataPelajaran->kode ?? '' }}</small>
                         </div>
                     </div>
                 </td>
                 <td>
-                    @if($item->jam_pelajaran)
-                    <span class="badge badge-inverse-info">{{ $item->jam_pelajaran }} JP</span>
-                    @else
-                    <span class="text-muted">-</span>
-                    @endif
+                    <div class="align-items-center">
+                        <p class="mb-0 font-weight-medium">{{ $item->guru->name ?? '-' }}</p>
+                        <small class="text-muted"><span class="font-weight-medium"> Telp. </span>{{ $item->guru->telephone ?? 'N/A' }}</small>
+                    </div>
                 </td>
                 <td>
                     <button wire:click="editMapel('{{ $item->id }}')"
@@ -224,23 +240,44 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="guru_id" class="form-label">Guru Pengajar <span class="text-danger">*</span></label>
-                        <select id="guru_id" class="form-select" wire:model="guru_id">
-                            <option value="">-- Pilih Guru --</option>
-                            @foreach($guruList as $guru)
-                            <option value="{{ $guru->id }}">{{ $guru->name }}</option>
-                            @endforeach
-                        </select>
+                        <label for="guru_search" class="form-label">Guru Pengajar <span class="text-danger">*</span></label>
+
+                        <div class="position-relative">
+                            @if($selectedGuruName)
+                            <div class="form-control d-flex align-items-center justify-content-between" style="background-color: #f8f9fa;">
+                                <span>
+                                    {{ $selectedGuruName }}
+                                </span>
+                                <button type="button" class="btn btn-sm px-2 py-0" wire:click="clearGuru" style="font-size: 0.75rem;">
+                                    <i class="mdi mdi-close"></i>
+                                </button>
+                            </div>
+                            @else
+                            <input
+                                type="text"
+                                id="guru_search"
+                                class="form-control"
+                                wire:model.live.debounce.300ms="guruSearch"
+                                placeholder="Ketik nama guru..."
+                                autocomplete="off">
+
+                            @if(!empty($guruSearch) && count($filteredGuruList) > 0)
+                            <ul class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; max-height: 200px; overflow-y: auto; margin-top: 2px;">
+                                @foreach($filteredGuruList as $guru)
+                                <li class="list-group-item list-group-item-action d-flex align-items-center"
+                                    style="cursor: pointer;"
+                                    wire:click="selectGuru('{{ $guru->id }}')">
+                                    <span>{{ $guru->name }}</span>
+                                </li>
+                                @endforeach
+                            </ul>
+                            @endif
+                            @endif
+                        </div>
+
                         @error('guru_id') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="mb-3">
-                        <label for="jam_pelajaran" class="form-label">Jam Pelajaran (Opsional)</label>
-                        <input type="number" id="jam_pelajaran" class="form-control"
-                            wire:model="jam_pelajaran" placeholder="Contoh: 4" min="1" max="10">
-                        <small class="text-muted">Jumlah jam pelajaran per minggu</small>
-                        @error('jam_pelajaran') <small class="text-danger d-block">{{ $message }}</small> @enderror
-                    </div>
                 </div>
 
                 <div class="modal-footer">

@@ -2,16 +2,18 @@
 
 namespace App\Livewire;
 
+use Log;
+use App\Models\User;
 use App\Models\Rombel;
 use App\Models\Pelajar;
-use App\Models\RombelPelajar;
-use App\Models\RombelPengajar;
-use App\Models\MataPelajaran;
-use App\Models\User;
-
 use Livewire\Component;
 use Livewire\WithPagination;
+
+use App\Models\MataPelajaran;
+use App\Models\RombelPelajar;
+use App\Models\RombelPengajar;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class DataRombelPelajar extends Component
 {
@@ -29,6 +31,10 @@ class DataRombelPelajar extends Component
     public $guru_id;
     public $jam_pelajaran;
     public $isEdit = false;
+
+    // Properti untuk autocomplete guru
+    public $guruSearch = '';
+    public $selectedGuruName = '';
 
     // Properti pencarian & pagination
     public $search = '';
@@ -50,32 +56,69 @@ class DataRombelPelajar extends Component
     }
 
     // Computed properties untuk dropdown
+    // public function getMataPelajaranListProperty()
+    // {
+    //     $tahunAjaranKurikulum = $this->rombel->tahunAjaranKurikulum;
+
+    //     if (!$tahunAjaranKurikulum) {
+    //         return collect();
+    //     }
+
+    //     $kurikulumId = $tahunAjaranKurikulum->kurikulum_id;
+    //     $tingkat = $this->rombel->tingkat;
+
+    //     return MataPelajaran::whereHas('kurikulumMataPelajarans', function ($query) use ($kurikulumId, $tingkat) {
+    //         $query->where('kurikulum_id', $kurikulumId)
+    //             ->where('tingkat', $tingkat);
+    //     })
+    //         ->orderBy('nama', 'asc')
+    //         ->get();
+    // }
+
     public function getMataPelajaranListProperty()
     {
-        // 1. Ambil ID kurikulum dari Rombel
-        // Kolom 'tahun_ajaran_kurikulum_id' ada di tabel 'rombels'.
-        // Anda perlu relasi ke model TahunAjaranKurikulum untuk mendapatkan kurikulum_id.
-        // Jika relasi Rombel -> TahunAjaranKurikulum tidak ada, Anda perlu mencarinya.
-        // Asumsi: Anda memiliki model Rombel dengan relasi yang memadai (misalnya, through TahunAjaranKurikulum).
-
-        // Berdasarkan Diagram, Rombel memiliki kolom:
-        // tahun_ajaran_kurikulum_id -> tahun_ajaran_kurikulums.id
-        $tahunAjaranKurikulum = $this->rombel->tahunAjaranKurikulum; // Asumsi relasi sudah ada
-
-        if (!$tahunAjaranKurikulum) {
-            return collect(); // Mengembalikan koleksi kosong jika relasi tidak ditemukan
-        }
+        $tahunAjaranKurikulum = $this->rombel->tahunAjaranKurikulum;
+        if (!$tahunAjaranKurikulum) return collect();
 
         $kurikulumId = $tahunAjaranKurikulum->kurikulum_id;
-        $tingkat = $this->rombel->tingkat; // Asumsi kolom 'tingkat' ada di tabel 'rombels'
+        $tingkat = $this->rombel->tingkat;
+        $jurusanId = $this->rombel->jurusan_id;
 
-        // 2. Query MataPelajaran melalui tabel pivot kurikulum_mata_pelajarans
-        return MataPelajaran::whereHas('kurikulumMataPelajarans', function ($query) use ($kurikulumId, $tingkat) {
+        // Step 1: Ambil ID mapel dari kurikulum_mata_pelajarans (mapel umum)
+        $mapelUmumIds = MataPelajaran::whereHas('kurikulumMataPelajarans', function ($query) use ($kurikulumId, $tingkat) {
             $query->where('kurikulum_id', $kurikulumId)
                 ->where('tingkat', $tingkat);
-        })
-            ->orderBy('nama', 'asc')
-            ->get();
+        })->pluck('id')->toArray();
+
+        // Step 2: Jika tidak ada jurusan, return mapel umum saja
+        if (!$jurusanId) {
+            return MataPelajaran::whereIn('id', $mapelUmumIds)
+                ->orderBy('nama')->get();
+        }
+
+        // Step 3: Ambil ID mapel khusus jurusan
+        $mapelJurusanIds = \DB::table('jurusan_mata_pelajarans')
+            ->where('jurusan_id', $jurusanId)
+            ->where('kurikulum_id', $kurikulumId)
+            ->pluck('mata_pelajaran_id')
+            ->toArray();
+
+        // Step 4: Ambil SEMUA mapel yang ada pembatasan jurusan (untuk filtering)
+        $semuaMapelDenganJurusan = \DB::table('jurusan_mata_pelajarans')
+            ->where('kurikulum_id', $kurikulumId)
+            ->pluck('mata_pelajaran_id')
+            ->unique()
+            ->toArray();
+
+        // Step 5: Filter mapel umum - hapus yang punya pembatasan jurusan tapi bukan untuk jurusan ini
+        $mapelUmumFiltered = array_diff($mapelUmumIds, $semuaMapelDenganJurusan);
+
+        // Step 6: Gabungkan mapel umum (yang sudah difilter) + mapel khusus jurusan ini
+        $finalIds = array_merge($mapelUmumFiltered, $mapelJurusanIds);
+
+        // Step 7: Ambil data mata pelajaran dan return
+        return MataPelajaran::whereIn('id', $finalIds)
+            ->orderBy('nama')->get();
     }
 
     public function getGuruListProperty()
@@ -83,6 +126,37 @@ class DataRombelPelajar extends Component
         return User::where('is_teacher', true)
             ->orderBy('name', 'asc')
             ->get();
+    }
+
+    // Computed property untuk filtered guru list (autocomplete)
+    public function getFilteredGuruListProperty()
+    {
+        if (empty($this->guruSearch)) {
+            return collect();
+        }
+
+        return User::where('is_teacher', true)
+            ->where('name', 'like', '%' . $this->guruSearch . '%')
+            ->orderBy('name', 'asc')
+            ->limit(10)
+            ->get();
+    }
+
+    // Method untuk select guru dari autocomplete
+    public function selectGuru($guruId)
+    {
+        $guru = User::findOrFail($guruId);
+        $this->guru_id = $guruId;
+        $this->selectedGuruName = $guru->name;
+        $this->guruSearch = '';
+    }
+
+    // Method untuk clear selected guru
+    public function clearGuru()
+    {
+        $this->guru_id = null;
+        $this->selectedGuruName = '';
+        $this->guruSearch = '';
     }
 
     // Reset pagination saat search berubah
@@ -135,6 +209,12 @@ class DataRombelPelajar extends Component
         $this->mata_pelajaran_id = $data->mata_pelajaran_id;
         $this->guru_id = $data->guru_id;
         $this->jam_pelajaran = $data->jam_pelajaran;
+
+        // Set selected guru name untuk ditampilkan
+        if ($this->guru_id) {
+            $guru = User::find($this->guru_id);
+            $this->selectedGuruName = $guru ? $guru->name : '';
+        }
 
         $this->isEdit = true;
         $this->dispatch('openModalRombelPengajar');
@@ -212,6 +292,8 @@ class DataRombelPelajar extends Component
         $this->mata_pelajaran_id = '';
         $this->guru_id = '';
         $this->jam_pelajaran = '';
+        $this->guruSearch = '';
+        $this->selectedGuruName = '';
         $this->resetErrorBag();
     }
 
@@ -276,6 +358,7 @@ class DataRombelPelajar extends Component
             'data' => $data,
             'mataPelajaranList' => $this->mataPelajaranList,
             'guruList' => $this->guruList,
+            'filteredGuruList' => $this->filteredGuruList,
         ]);
     }
 }

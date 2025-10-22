@@ -62,3 +62,6 @@
 .text-yellow { color: #ffc107 !important; }
 .text-purple { color: #6f42c1 !important; }
 
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #db97f4 0%, #8f60bd 100%) !important;
+}

@@ -16,4 +16,9 @@ class MataPelajaran extends Model
     {
         return $this->hasMany(KurikulumMataPelajaran::class, 'mata_pelajaran_id');
     }
+
+    public function jurusanMataPelajarans()
+    {
+        return $this->hasMany(JurusanMataPelajaran::class, 'mata_pelajaran_id');
+    }
 }
