@@ -1,90 +1,254 @@
-/* Import Google font - Poppins */
-@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
-*{
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Rubik', sans-serif;
+body {
+    background: linear-gradient(135deg, #0c2461 0%, #1e3799 50%, #4a69bd 100%);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+    overflow: hidden;
 }
-body{
-  min-height: 100vh;
-  width: 100%;
-  background: #423A8E;
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,128L48,117.3C96,107,192,85,288,112C384,139,480,213,576,218.7C672,224,768,160,864,138.7C960,117,1056,139,1152,149.3C1248,160,1344,160,1392,160L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+    background-size: cover;
+    background-position: bottom;
+    opacity: 0.2;
 }
-.container{
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%);
-  max-width: 430px;
-  width: 100%;
-  background: #fff;
-  border-radius: 7px;
-  box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+
+.login-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 15px;
+    z-index: 1;
 }
-.container .registration{
-  display: none;
+
+.login-card {
+    background: #fff;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    border-radius: 0px;
 }
-#check:checked ~ .registration{
-  display: block;
+
+.login-header {
+    background-color: #ffffff;
+    padding: 5px 25px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
 }
-#check:checked ~ .login{
-  display: none;
+
+.header-icon {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: left;
+    justify-content: left;
+    margin: 0 auto 10px;
 }
-#check{
-  display: none;
+
+.header-icon i {
+    font-size: 40px;
+    color: #4a90e2;
 }
-.container .form{
-  padding: 2rem;
+
+.login-header h2 {
+    font-weight: 500;
+    font-size: 36px;
+    margin-bottom: 5px;
+    margin-top: 20px;
+    background: linear-gradient(135deg, #0c2461 0%, #1e3799 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
-.form header{
-  font-size: 2rem;
-  font-weight: 500;
-  text-align: center;
-  margin-bottom: 1.5rem;
+
+.login-header p {
+    font-size: 14px;
+    color: #95a5a6;
+    opacity: 1;
 }
- .form input{
-   height: 60px;
-   width: 100%;
-   padding: 0 15px;
-   font-size: 17px;
-   margin-bottom: 1.3rem;
-   border: 1px solid #ddd;
-   border-radius: 6px;
-   outline: none;
- }
- .form input:focus{
-   box-shadow: 0 1px 0 rgba(0,0,0,0.2);
- }
-.form a{
-  font-size: 16px;
-  color: #423A8E;
-  text-decoration: none;
+
+.login-body {
+    padding: 30px 25px 20px;
+    position: relative;
+    z-index: 2;
 }
-.form a:hover{
-  text-decoration: underline;
+
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
 }
-.form input.button{
-  color: #fff;
-  background: #423A8E;
-  font-size: 1.2rem;
-  font-weight: 500;
-  letter-spacing: 1px;
-  margin-top: 1.7rem;
-  cursor: pointer;
-  transition: 0.4s;
+
+.input-container {
+    display: flex;
+    margin-bottom: 5px;
+    position: relative;
 }
-.form input.button:hover{
-  background: #2d285f;
+
+.password-container {
+    display: flex;
+    align-items: center;
+    /* Perbaikan ini */
+    width: 100%;
 }
-.signup{
-  font-size: 17px;
-  text-align: center;
+
+.input-icon {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-right: none;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    border-radius: 8px 0 0 8px;
 }
-.signup label{
-  color: #423A8E;
-  cursor: pointer;
+
+.input-field {
+    border: 1px solid #e9ecef;
+    padding: 12px 15px;
+    width: 100%;
+    transition: all 0.3s;
+    border-radius: 0 8px 8px 0;
+    font-size: 15px;
 }
-.signup label:hover{
-  text-decoration: underline;
+
+.input-field:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(12, 36, 97, 0.15);
+    border-color: #0c2461;
+}
+
+.password-toggle {
+    position: absolute;
+    /* Ganti dari 'static' menjadi 'absolute' */
+    right: 15px;
+    top: 50%;
+    /* Atur posisi ke tengah */
+    transform: translateY(-50%);
+    /* Geser ke atas 50% dari tinggi elemen */
+    cursor: pointer;
+    color: #95a5a6;
+    background: #fff;
+    padding: 5px;
+    border-radius: 50%;
+    z-index: 3;
+}
+
+.password-toggle:hover {
+    color: #0c2461;
+}
+
+.btn-login {
+    background: linear-gradient(135deg, #0c2461 0%, #1e3799 100%);
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-top: 15px;
+    width: 100%;
+    color: white;
+    transition: all 0.3s;
+    font-size: 16px;
+    box-shadow: 0 4px 15px rgba(12, 36, 97, 0.3);
+}
+
+.btn-login:hover {
+    background: linear-gradient(135deg, #1a3a8f 0%, #2a4cc0 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(12, 36, 97, 0.4);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    /* Tambahkan baris ini untuk jarak 5px */
+}
+
+.form-check-input:checked {
+    background-color: #0c2461;
+    border-color: #0c2461;
+}
+
+.forgot-password {
+    color: #0c2461;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.forgot-password:hover {
+    color: #1e3799;
+    text-decoration: underline;
+}
+
+.login-footer {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+}
+
+.login-footer a {
+    color: #0c2461;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+.mdi {
+    font-size: 20px;
+    color: #7f8c8d;
+}
+
+.input-hint {
+    font-size: 13px;
+    color: #6c757d;
+    margin-top: 5px;
+    padding-left: 10px;
+    display: none;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 15px;
+}
+
+.validation-message {
+    font-size: 13px;
+    color: #dc3545;
+    margin-top: 5px;
+    display: none;
+    padding-left: 10px;
+}
+
+.input-error {
+    border-color: #dc3545;
+}
+
+.input-success {
+    border-color: #198754;
 }

@@ -1,39 +1,50 @@
-@extends('layouts.auth.auth')
+<?php
 
-@section('content')
-<div class="card shadow-sm">
-    <div class="card-body">
-        <h4 class="text-center mb-4">Login ke Sistem Rapor</h4>
+namespace App\Livewire\Auth;
 
-        @if ($errorMessage)
-        <div class="alert alert-danger">{{ $errorMessage }}</div>
-        @endif
+use App\Models\User;
+use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
-        <form wire:submit.prevent="login">
-            <div class="mb-3">
-                <label for="identifier" class="form-label">Email atau NIP</label>
-                <input type="text" id="identifier" wire:model.defer="identifier"
-                    class="form-control" placeholder="Masukkan email atau NIP">
-                @error('identifier') <span class="text-danger small">{{ $message }}</span> @enderror
-            </div>
+class Login extends Component
+{
+    public $username;
+    public $password;
+    public $remember = false;
 
-            <div class="mb-3">
-                <label for="password" class="form-label">Kata Sandi</label>
-                <input type="password" id="password" wire:model.defer="password"
-                    class="form-control" placeholder="Masukkan kata sandi">
-                @error('password') <span class="text-danger small">{{ $message }}</span> @enderror
-            </div>
+    protected $rules = [
+        'username' => 'required|string',
+        'password' => 'required|string|min:8',
+    ];
 
-            <div class="form-check mb-3">
-                <input type="checkbox" id="remember" wire:model="remember" class="form-check-input">
-                <label class="form-check-label" for="remember">Ingat saya</label>
-            </div>
+    public function login()
+    {
+        $this->validate();
 
-            <button type="submit" class="btn btn-primary w-100">
-                <span wire:loading.remove>Masuk</span>
-                <span wire:loading>Memproses...</span>
-            </button>
-        </form>
-    </div>
-</div>
-@endsection
+        // Cari user berdasarkan email atau NIP
+        $user = User::where(function ($query) {
+            if (filter_var($this->username, FILTER_VALIDATE_EMAIL)) {
+                $query->where('email', $this->username);
+            } else {
+                $query->where('nip', $this->username);
+            }
+        })->first();
+
+        // Cek user ada dan password cocok
+        if ($user && Hash::check($this->password, $user->password)) {
+            Auth::login($user, $this->remember);
+            session()->regenerate();
+
+            // Redirect Livewire-safe (hindari CSRF refresh)
+            return redirect()->intended(route('dashboard'));
+        }
+
+        $this->addError('auth', 'Nama pengguna atau kata sandi yang Anda inputkan salah!');
+    }
+
+    public function render()
+    {
+        return view('livewire.auth.login');
+    }
+}

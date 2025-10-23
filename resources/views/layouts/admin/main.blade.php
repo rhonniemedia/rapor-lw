@@ -76,9 +76,11 @@
                             <div class="dropdown-menu navbar-dropdown w-100" aria-labelledby="profileDropdown">
                                 <button type="submit" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalProfile">
                                     <i class="mdi mdi-account-badge mr-2 text-success"></i>Profil </button>
-                                <form action="" method="post">
+                                <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="dropdown-item"><i class="mdi mdi-logout mr-2 text-primary"></i> Signout</button>
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="mdi mdi-logout mr-2 text-primary"></i> Signout
+                                    </button>
                                 </form>
                             </div>
                         </li>
