@@ -30,7 +30,6 @@ class DataRombelPelajar extends Component
     public $rombel_pengajar_id;
     public $mata_pelajaran_id;
     public $guru_id;
-    public $jam_pelajaran;
     public $isEdit = false;
 
     // Properti untuk autocomplete guru
@@ -189,7 +188,6 @@ class DataRombelPelajar extends Component
             'rombel_id' => $this->rombelId,
             'mata_pelajaran_id' => $this->mata_pelajaran_id,
             'guru_id' => $this->guru_id,
-            'jam_pelajaran' => $this->jam_pelajaran ?: null,
         ]);
 
         $this->dispatch('closeModalRombelPengajar');
@@ -207,7 +205,6 @@ class DataRombelPelajar extends Component
         $this->rombel_pengajar_id = $data->id;
         $this->mata_pelajaran_id = $data->mata_pelajaran_id;
         $this->guru_id = $data->guru_id;
-        $this->jam_pelajaran = $data->jam_pelajaran;
 
         // Set selected guru name untuk ditampilkan
         if ($this->guru_id) {
@@ -228,7 +225,6 @@ class DataRombelPelajar extends Component
         $data->update([
             'mata_pelajaran_id' => $this->mata_pelajaran_id,
             'guru_id' => $this->guru_id,
-            'jam_pelajaran' => $this->jam_pelajaran ?: null,
         ]);
 
         $this->dispatch('closeModalRombelPengajar');
@@ -268,7 +264,6 @@ class DataRombelPelajar extends Component
                 'exists:mata_pelajarans,id',
             ],
             'guru_id' => 'required|uuid|exists:users,id',
-            'jam_pelajaran' => 'nullable|integer|min:1|max:10',
         ];
 
         // Unique validation untuk kombinasi rombel + mata pelajaran
@@ -290,7 +285,6 @@ class DataRombelPelajar extends Component
         $this->rombel_pengajar_id = null;
         $this->mata_pelajaran_id = '';
         $this->guru_id = '';
-        $this->jam_pelajaran = '';
         $this->guruSearch = '';
         $this->selectedGuruName = '';
         $this->resetErrorBag();

@@ -1,6 +1,24 @@
 <?php
 
+use App\Livewire\Auth\Login;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/login', Login::class)->name('login')->middleware('guest');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard/admin', fn() => view('dashboard.admin'))->name('dashboard.admin');
+    Route::get('/dashboard/guru', fn() => view('dashboard.guru'))->name('dashboard.guru');
+    Route::get('/dashboard/siswa', fn() => view('dashboard.siswa'))->name('dashboard.siswa');
+    Route::get('/dashboard', fn() => view('dashboard.default'))->name('dashboard.default');
+
+    Route::post('/logout', function () {
+        Auth::logout();
+        session()->invalidate();
+        session()->regenerateToken();
+        return redirect()->route('login');
+    })->name('logout');
+});
 
 Route::get('/dashboard', function () {
     return view('contents.admin.dashboard', [
@@ -29,7 +47,7 @@ Route::get('/home/pendidik', function () {
 Route::get('/home/rombongan-belajar/detail/{id}', function ($id) {
     return view('contents.admin.rombel-pelajar', [
         'id' => $id,
-        'title' => 'Detil Rombongan Belajar',
+        'title' => 'Rombongan Belajar',
         'rombelId' => $id, // opsional, bisa digunakan di Blade atau Livewire
     ]);
 })->name('rombel.detail');

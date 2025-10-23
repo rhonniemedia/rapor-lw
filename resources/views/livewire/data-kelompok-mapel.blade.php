@@ -1,9 +1,24 @@
 <div>
-    <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-3">
-        <h6 class="fw-bold mb-0">📚 Daftar Kelompok Mata Pelajaran</h6>
-        <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center">
-            <i class="mdi mdi-plus"></i>
-        </button>
+    <div class="d-flex justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <span>Show</span>
+            <select class="form-select form-select-sm" wire:model.live="perPage">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <span>entries</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div>
+                <input type="text" class="form-control" placeholder="Cari..."
+                    wire:model.live.debounce.500ms="search" style="width:250px;">
+            </div>
+            <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center h-100" style="padding: 0 0.75rem;">
+                <i class="mdi mdi-plus"></i>
+            </button>
+        </div>
     </div>
 
     <table class="table table-hover mb-0">

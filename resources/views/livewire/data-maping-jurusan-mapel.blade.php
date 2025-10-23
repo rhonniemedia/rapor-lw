@@ -1,21 +1,36 @@
 <div>
-    <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-3">
-        <h6 class="fw-bold mb-0">🏷️ Mata Pelajaran per Jurusan</h6>
-        <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center">
-            <i class="mdi mdi-plus"></i>
-        </button>
+    <div class="d-flex justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <span>Show</span>
+            <select class="form-select form-select-sm" wire:model.live="perPage">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <span>entries</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div>
+                <input type="text" class="form-control" placeholder="Cari..."
+                    wire:model.live.debounce.500ms="search" style="width:250px;">
+            </div>
+            <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center h-100" style="padding: 0 0.75rem;">
+                <i class="mdi mdi-plus"></i>
+            </button>
+        </div>
     </div>
 
     <table class="table table-hover mb-0">
         <thead class="bg-light">
             <tr>
                 <th style="width: 30%;">
-                    <p class="mb-0">Jurusan</p>
-                    <small>Konsentrasi Keahlian</small>
-                </th>
-                <th style="width: 30%;">
                     <p class="mb-0">Mata Pelajaran</p>
                     <small>Mata Pelajaran Jurusan</small>
+                </th>
+                <th style="width: 30%;">
+                    <p class="mb-0">Jurusan</p>
+                    <small>Konsentrasi Keahlian</small>
                 </th>
                 <th style="width: 30%;">
                     <p class="mb-0">Kurikulum & Status</p>
@@ -30,9 +45,18 @@
         <tbody>
             @forelse ($jurusanMataPelajaran as $data)
             <tr>
-                <td>{{ $data->jurusan->nama ?? '-' }}</td>
                 <td>
-                    <strong>{{ $data->mataPelajaran->nama ?? '-' }}</strong>
+                    <div class="d-flex align-items-center">
+                        <img src="{{ asset('assets/images/icons/icon_13.png') }}" alt="guru" style="width: 32px; height: 32px; object-fit: cover;">
+                        <div class="table-user-name ml-3">
+                            <p class="mb-0 font-weight-medium">{{ $data->mataPelajaran->nama ?? '-' }}</p>
+                            <small class="text-muted">{{ $data->mataPelajaran->kode ?? '-' }}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <p class="mb-0 font-weight-medium">{{ $data->jurusan->alias ?? '-' }}</p>
+                    <small class="text-muted">{{ $data->jurusan->nama ?? '-' }}</small>
                 </td>
                 <td>
                     <span class="badge bg-{{ $data->status === 'wajib' ? 'success' : 'primary' }}">{{ ucfirst($data->status) }}</span><br>

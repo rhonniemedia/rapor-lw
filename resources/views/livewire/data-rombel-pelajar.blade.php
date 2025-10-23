@@ -2,7 +2,7 @@
     <div class="page-header pb-3 mb-4 border-bottom">
         <div class="d-flex align-items-center">
             <div class="icon-wrapper position-relative">
-                <span class="bg-gradient-primary p-3 rounded-3 shadow-sm me-3 d-inline-flex align-items-center justify-content-center">
+                <span class="bg-gradient-primary p-2 rounded-3 shadow-sm me-3 d-inline-flex align-items-center justify-content-center">
                     <i class="mdi mdi-account-group mdi-24px text-white"></i>
                 </span>
             </div>
@@ -10,10 +10,6 @@
             <div>
                 <h4 class="mb-1 text-dark fw-bold">Manajemen Rombongan Belajar</h4>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-warning bg-opacity-10 text-white border border-warning border-opacity-25 px-3 py-2 rounded-pill fw-semibold">
-                        <i class="mdi mdi-bookmark me-1"></i>
-                        {{ $rombel->nama ?? 'N/A' }}
-                    </span>
                     <small class="text-muted">Kelola data rombongan belajar</small>
                 </div>
             </div>
@@ -68,7 +64,18 @@
                 📖 Mata Pelajaran & Pengajar
             </button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button
+                class="nav-link {{ $activeTab === 'nilai' ? 'active' : '' }}"
+                wire:click="switchTab('nilai')"
+                type="button">
+                📝 Input Nilai
+            </button>
+        </li>
     </ul>
+
+    <!-- Tab Content: Daftar Pelajar -->
+    @if($activeTab === 'pelajar')
 
     {{-- Input Search & Per Page --}}
     <div class="d-flex justify-content-between mb-3">
@@ -96,8 +103,6 @@
         </div>
     </div>
 
-    <!-- Tab Content: Daftar Pelajar -->
-    @if($activeTab === 'pelajar')
     <table class="table table-hover mb-0">
         <thead class="bg-light">
             <tr>
@@ -155,10 +160,42 @@
             @endforelse
         </tbody>
     </table>
+
+    <div class="mt-3">
+        {{ $data->links() }}
+    </div>
+
     @endif
 
     <!-- Tab Content: Mata Pelajaran & Pengajar -->
     @if($activeTab === 'mapel')
+
+    {{-- Input Search & Per Page --}}
+    <div class="d-flex justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <span>Show</span>
+            <select class="form-select form-select-sm" wire:model.live="perPage">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <span>entries</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div>
+                <input type="text" class="form-control"
+                    placeholder="{{ $activeTab === 'mapel' ? 'Cari Mata Pelajaran/Guru...' : 'Cari Pelajar...' }}"
+                    wire:model.live.debounce.500ms="search" style="width:250px;">
+            </div>
+            @if($activeTab === 'mapel')
+            <button type="button" wire:click="createMapel" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center h-100" style="padding: 0 0.75rem;">
+                <i class="mdi mdi-plus"></i>
+            </button>
+            @endif
+        </div>
+    </div>
+
     <table class="table table-hover mb-0">
         <thead class="bg-light">
             <tr>
@@ -212,11 +249,20 @@
             @endforelse
         </tbody>
     </table>
-    @endif
 
     <div class="mt-3">
         {{ $data->links() }}
     </div>
+
+    @endif
+
+    {{-- Tab Content: Input Nilai (BARU) --}}
+    {{-- Tambahkan setelah tab content Mata Pelajaran & Pengajar --}}
+
+    @if($activeTab === 'nilai')
+    @livewire('input-nilai-rombel', ['rombelId' => $rombel->id], key('input-nilai-'.$rombel->id))
+    @endif
+
 
     {{-- Modal Form Mata Pelajaran & Pengajar --}}
     <div wire:ignore.self class="modal fade" id="modalRombelPengajar" tabindex="-1" aria-hidden="true">

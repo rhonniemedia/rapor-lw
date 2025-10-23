@@ -92,11 +92,13 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{url('home/rombongan-belajar')}}">
+            <a class="nav-link {{ request()->is('home/rombongan-belajar*') ? 'active' : '' }}"
+                href="{{ url('home/rombongan-belajar') }}">
                 <i class="mdi mdi-ungroup menu-icon"></i>
                 <span class="menu-title">Rombongan Belajar</span>
             </a>
         </li>
+
 
         <!-- Pengguna -->
         <li class="nav-item">

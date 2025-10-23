@@ -16,7 +16,6 @@ return new class extends Migration
             $table->uuid('rombel_id');
             $table->uuid('mata_pelajaran_id');
             $table->uuid('guru_id');
-            $table->unsignedTinyInteger('jam_pelajaran')->nullable();
             $table->timestamps();
 
             // Foreign keys
