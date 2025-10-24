@@ -4,17 +4,24 @@
         <div class="col-md-4">
             <div class="form-group">
                 <label for="mapelSelect">Pilih Mata Pelajaran:</label>
-                <select wire:model.live="selectedRombelPengajarId" id="mapelSelect" class="form-control">
+                <select wire:model.live="selectedRombelPengajarId" id="mapelSelect" class="form-select">
+                    {{-- Option default yang selalu tampil --}}
                     <option value="">-- Pilih Mata Pelajaran --</option>
-                    @foreach ($mataPelajaranList as $item)
+
+                    @forelse ($mataPelajaranList as $item)
                     <option value="{{ $item->id }}">
                         {{ $item->mataPelajaran->nama }}
                     </option>
-                    @endforeach
+                    @empty
+                    <option value="" disabled>Tidak ada mata pelajaran</option>
+                    @endforelse
                 </select>
-                {{-- Pastikan hanya muncul jika ada mapel terpilih DAN guruName sudah dimuat --}}
-                @if ($selectedRombelPengajarId)
-                <small class="form-text text-muted">Guru Pengajar: **{{ $guruName ?? 'Memuat...' }}**</small>
+
+                {{-- Tampilkan nama guru jika sudah pilih mata pelajaran --}}
+                @if ($selectedRombelPengajarId && $guruName)
+                <small class="form-text text-muted">
+                    Guru Pengajar: <strong>{{ $guruName }}</strong>
+                </small>
                 @endif
             </div>
         </div>
@@ -23,7 +30,7 @@
         <div class="col-md-4 offset-md-4">
             <div class="form-group">
                 <label for="searchPelajar">Cari Pelajar:</label>
-                <input wire:model.live.debounce.300ms="searchPelajar" type="text" id="searchPelajar" class="form-control" placeholder="Nama atau NISN Pelajar...">
+                <input wire:model.live.debounce.300ms="searchPelajar" type="text" id="searchPelajar" class="form-control" placeholder="Nama atau Nomor Induk Pelajar...">
             </div>
         </div>
     </div>

@@ -8,7 +8,10 @@ use App\Models\Rombel;
 use App\Models\RombelPengajar;
 use App\Models\Nilai;
 use App\Models\RombelPelajar;
+use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class InputNilaiRombel extends Component
 {
@@ -22,7 +25,7 @@ class InputNilaiRombel extends Component
 
     // 🔹 Properti pencarian & pagination
     public $searchPelajar = '';
-    public $perPagePelajar = '';
+    public $perPagePelajar = 1000; // Tampilkan semua (max 1000 untuk safety)
 
     // 🔹 Data dropdown & display
     public $mataPelajaranList = [];
@@ -44,20 +47,29 @@ class InputNilaiRombel extends Component
         'resetNilaiConfirmed' => 'resetNilai',
     ];
 
+    // 🔹 Validation rules
+    protected $rules = [
+        'nilaiInput.*' => 'nullable|numeric|min:0|max:100',
+    ];
+
+    protected $messages = [
+        'nilaiInput.*.numeric' => 'Nilai harus berupa angka',
+        'nilaiInput.*.min' => 'Nilai minimal adalah 0',
+        'nilaiInput.*.max' => 'Nilai maksimal adalah 100',
+    ];
+
     public function mount($rombelId)
     {
         $this->rombelId = $rombelId;
 
         // Eager load relasi untuk menghindari N+1 query
-        $this->rombel = Rombel::with('tahunAjaranKurikulum')->findOrFail($rombelId);
+        $this->rombel = Rombel::with(['tahunAjaranKurikulum.tahunAjaran'])->findOrFail($rombelId);
 
         // Load data mata pelajaran
         $this->loadMataPelajaran();
 
-        // Set default mata pelajaran pertama jika belum ada yang dipilih
-        if (!empty($this->mataPelajaranList) && !$this->selectedRombelPengajarId) {
-            $this->selectedRombelPengajarId = $this->mataPelajaranList->first()->id ?? null;
-        }
+        // JANGAN set default mata pelajaran, biarkan kosong
+        // User harus memilih mata pelajaran secara manual
 
         // Load data pelajar jika sudah ada mata pelajaran terpilih
         if ($this->selectedRombelPengajarId) {
@@ -108,8 +120,12 @@ class InputNilaiRombel extends Component
 
         $this->guruName = $rombelPengajar->guru->name ?? 'N/A';
 
+        // Ambil tahun ajaran semester aktif
+        $tahunAjaranSemesterId = $this->getTahunAjaranSemesterId();
+
         // Ambil nilai yang sudah ada
         $nilaiExist = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+            ->where('tahun_ajaran_semester_id', $tahunAjaranSemesterId)
             ->pluck('nilai_angka', 'pelajar_id');
 
         // Reset array input nilai
@@ -119,6 +135,36 @@ class InputNilaiRombel extends Component
         foreach ($nilaiExist as $pelajarId => $nilai) {
             $this->nilaiInput[$pelajarId] = $nilai;
         }
+    }
+
+    // 🔹 Get tahun ajaran semester ID
+    private function getTahunAjaranSemesterId()
+    {
+        // Cek dari session terlebih dahulu
+        $sessionSemesterId = session('tahun_ajaran_semester_id');
+
+        if ($sessionSemesterId) {
+            return $sessionSemesterId;
+        }
+
+        // Jika tidak ada di session, ambil yang aktif
+        $activeSemester = TahunAjaranSemester::where('status', 'aktif')->first();
+
+        if ($activeSemester) {
+            return $activeSemester->id;
+        }
+
+        // Fallback: cari berdasarkan tahun ajaran dari rombel
+        if ($this->rombel && $this->rombel->tahunAjaranKurikulum) {
+            $semester = TahunAjaranSemester::where('tahun_ajaran_id', $this->rombel->tahunAjaranKurikulum->tahun_ajaran_id)
+                ->first();
+
+            if ($semester) {
+                return $semester->id;
+            }
+        }
+
+        return null;
     }
 
     // 🔹 Get query data pelajar dengan filter
@@ -150,11 +196,28 @@ class InputNilaiRombel extends Component
             return;
         }
 
+        // Validasi input
+        $this->validate();
+
         $this->dispatch('swal:confirm', [
             'title' => 'Simpan Nilai?',
             'text' => 'Semua nilai yang diinput akan disimpan.',
             'nextEvent' => 'saveNilaiConfirmed',
         ]);
+    }
+
+    // 🔹 Hitung predikat berdasarkan nilai
+    private function hitungPredikat($nilai)
+    {
+        if ($nilai >= 90) {
+            return 'A';
+        } elseif ($nilai >= 75) {
+            return 'B';
+        } elseif ($nilai >= 60) {
+            return 'C';
+        } else {
+            return 'D';
+        }
     }
 
     // 🔹 Simpan nilai
@@ -164,47 +227,74 @@ class InputNilaiRombel extends Component
             return;
         }
 
-        $rombelPengajar = RombelPengajar::findOrFail($this->selectedRombelPengajarId);
+        // Ambil data rombel pengajar
+        $rombelPengajar = RombelPengajar::with('mataPelajaran')->findOrFail($this->selectedRombelPengajarId);
         $mataPelajaran = $rombelPengajar->mataPelajaran->nama;
         $mataPelajaranId = $rombelPengajar->mata_pelajaran_id;
         $guruId = $rombelPengajar->guru_id;
 
         // Ambil tahun ajaran semester ID
-        $tahunAjaranSemesterId = $this->rombel->tahun_ajaran_semester_id
-            ?? $this->rombel->tahunAjaranKurikulum->tahun_ajaran_semester_id
-            ?? $this->rombel->tahunAjaranKurikulum->id;
+        $tahunAjaranSemesterId = $this->getTahunAjaranSemesterId();
+
+        if (!$tahunAjaranSemesterId) {
+            $this->dispatch('swal:error', [
+                'title' => 'Error!',
+                'text' => 'Tidak dapat menemukan tahun ajaran semester yang aktif.',
+            ]);
+            return;
+        }
 
         DB::beginTransaction();
         try {
             $savedCount = 0;
 
             foreach ($this->nilaiInput as $pelajarId => $nilai) {
-                // Validasi dan bersihkan nilai
-                $nilaiBersih = is_numeric($nilai) ? (int)$nilai : null;
+                // Skip jika nilai kosong atau null
+                if ($nilai === null || $nilai === '') {
+                    continue;
+                }
 
-                if ($nilaiBersih !== null && ($nilaiBersih < 0 || $nilaiBersih > 100)) {
+                // Validasi dan bersihkan nilai
+                $nilaiBersih = is_numeric($nilai) ? floatval($nilai) : null;
+
+                if ($nilaiBersih === null || $nilaiBersih < 0 || $nilaiBersih > 100) {
                     continue; // Skip nilai yang tidak valid
                 }
 
-                // Update atau create nilai
-                Nilai::updateOrCreate(
-                    [
-                        'rombel_pengajar_id' => $this->selectedRombelPengajarId,
-                        'pelajar_id' => $pelajarId,
-                    ],
-                    [
-                        'nilai_angka' => $nilaiBersih,
-                        'guru_id' => $guruId,
-                        'tingkat' => $this->rombel->tingkat,
-                        'semester' => $this->rombel->tahunAjaranKurikulum->semester,
-                        'mata_pelajaran_id' => $mataPelajaranId,
-                        'tahun_ajaran_semester_id' => $tahunAjaranSemesterId,
-                    ]
-                );
+                // Hitung predikat
+                $predikat = $this->hitungPredikat($nilaiBersih);
 
-                if ($nilaiBersih !== null) {
-                    $savedCount++;
+                // Cek apakah nilai sudah ada
+                $nilaiExist = Nilai::where('pelajar_id', $pelajarId)
+                    ->where('mata_pelajaran_id', $mataPelajaranId)
+                    ->where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+                    ->where('tahun_ajaran_semester_id', $tahunAjaranSemesterId)
+                    ->first();
+
+                if ($nilaiExist) {
+                    // Update nilai yang sudah ada
+                    $nilaiExist->update([
+                        'nilai_angka' => $nilaiBersih,
+                        'predikat' => $predikat,
+                        'updated_by' => Auth::id(),
+                    ]);
+                } else {
+                    // Buat nilai baru
+                    Nilai::create([
+                        'id' => Str::uuid(),
+                        'pelajar_id' => $pelajarId,
+                        'mata_pelajaran_id' => $mataPelajaranId,
+                        'rombel_pengajar_id' => $this->selectedRombelPengajarId,
+                        'tahun_ajaran_semester_id' => $tahunAjaranSemesterId,
+                        'guru_id' => $guruId,
+                        'nilai_angka' => $nilaiBersih,
+                        'predikat' => $predikat,
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                    ]);
                 }
+
+                $savedCount++;
             }
 
             DB::commit();
@@ -253,8 +343,12 @@ class InputNilaiRombel extends Component
         $pelajarData = collect();
 
         if ($this->selectedRombelPengajarId) {
+            // Ambil tahun ajaran semester aktif
+            $tahunAjaranSemesterId = $this->getTahunAjaranSemesterId();
+
             // Ambil nilai yang sudah tersimpan di database
             $nilaiExist = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+                ->where('tahun_ajaran_semester_id', $tahunAjaranSemesterId)
                 ->pluck('nilai_angka', 'pelajar_id');
 
             // Query pelajar dengan pagination

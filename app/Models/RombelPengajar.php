@@ -16,11 +16,6 @@ class RombelPengajar extends Model
         'rombel_id',
         'mata_pelajaran_id',
         'guru_id',
-        'jam_pelajaran',
-    ];
-
-    protected $casts = [
-        'jam_pelajaran' => 'integer',
     ];
 
     // Relasi ke Rombel
