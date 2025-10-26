@@ -107,9 +107,10 @@ class User extends Authenticatable
     }
 
     // Cek apakah user punya role tertentu
-    public function hasRole($role)
+    public function hasRole($roles)
     {
-        return $this->roles()->where('nama_role', $role)->exists();
+        $roles = (array) $roles;
+        return $this->roles()->whereIn('nama_role', $roles)->exists();
     }
 
     public function assignRole($roleId)

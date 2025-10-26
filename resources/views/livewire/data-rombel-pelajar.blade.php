@@ -72,6 +72,30 @@
                 📝 Input Nilai
             </button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button
+                class="nav-link {{ $activeTab === 'kehadiran' ? 'active' : '' }}"
+                wire:click="switchTab('kehadiran')"
+                type="button">
+                📝 Input Kehadiran
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button
+                class="nav-link {{ $activeTab === 'catatan' ? 'active' : '' }}"
+                wire:click="switchTab('catatan')"
+                type="button">
+                📝 Catatan Wali Kelas
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button
+                class="nav-link {{ $activeTab === 'ekskul' ? 'active' : '' }}"
+                wire:click="switchTab('ekskul')"
+                type="button">
+                🎨 Nilai Ekstrakurikuler
+            </button>
+        </li>
     </ul>
 
     <!-- Tab Content: Daftar Pelajar -->
@@ -256,11 +280,34 @@
 
     @endif
 
-    {{-- Tab Content: Input Nilai (BARU) --}}
-    {{-- Tambahkan setelah tab content Mata Pelajaran & Pengajar --}}
+    <!-- Tab Content: Input Nilai (BARU) -->
+    <!-- Tambahkan setelah tab content Mata Pelajaran & Pengajar -->
 
     @if($activeTab === 'nilai')
     @livewire('input-nilai-rombel', ['rombelId' => $rombel->id], key('input-nilai-'.$rombel->id))
+    @endif
+
+    <!-- Tab Content: Input Kehadiran (BARU) -->
+    <!-- Tambahkan setelah tab content input Nilai -->
+
+    @if($activeTab === 'kehadiran')
+    @livewire('input-kehadiran-rombel', ['rombelId' => $rombel->id], key('input-kehadiran-'.$rombel->id))
+    @endif
+
+    <!-- Tab Content: Input Catatan Wali Kelas (BARU) -->
+    <!-- Tambahkan setelah tab content input Catatan Wali Kelas -->
+
+    {{-- Tab Content: Catatan Wali Kelas --}}
+    @if($activeTab === 'catatan')
+    @livewire('input-catatan-wali-kelas', ['rombelId' => $rombel->id], key('input-catatan-'.$rombel->id))
+    @endif
+
+    <!-- Tab Content: Input Ekstrakurikuler (BARU) -->
+    <!-- Tambahkan setelah tab content input Ekstrakurikuler -->
+
+    {{-- Tab Content: Nilai Ekstrakurikuler --}}
+    @if($activeTab === 'ekskul')
+    @livewire('input-nilai-ekskul', ['rombelId' => $rombel->id], key('input-ekskul-'.$rombel->id))
     @endif
 
 
