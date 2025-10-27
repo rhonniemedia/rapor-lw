@@ -81,6 +81,10 @@ Route::middleware('auth')->group(function () {
         ]);
     });
 
+    // // Tidak perlu parameter rombelId lagi
+    // Route::get('/input-nilai', App\Livewire\InputNilaiRombel::class)
+    //     ->name('input-nilai.index');
+
     Route::post('/logout', function () {
         Auth::logout();
         session()->invalidate();
