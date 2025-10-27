@@ -51,19 +51,19 @@ Route::middleware('auth')->group(function () {
     })->name('rombel.detail');
 
 
-    Route::get('/sekolah/jurusan', function () {
+    Route::get('/akademik/jurusan', function () {
         return view('contents.admin.jurusan', [
             'title' => 'Data Kompetensi Keahlian',
         ]);
     });
 
-    Route::get('/sekolah/ekstrakurikuler', function () {
+    Route::get('/akademik/ekstrakurikuler', function () {
         return view('contents.admin.ekstrakurikuler', [
             'title' => 'Data Ekstrakurikuler',
         ]);
     });
 
-    Route::get('/akademik/data-akademik', function () {
+    Route::get('/akademik/tahun-ajaran', function () {
         return view('contents.admin.akademik', [
             'title' => 'Data Akademik',
         ]);
