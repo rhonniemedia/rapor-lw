@@ -94,10 +94,11 @@ class InputCatatanWaliKelas extends Component
     private function loadCatatanPelajar()
     {
         $tahunAjaranSemesterId = $this->getTahunAjaranSemesterId();
+        $guruId = $this->getGuruIdForQuery(); // 👈 Gunakan helper
 
         // Ambil catatan terakhir untuk setiap pelajar
         $catatanExist = CatatanWaliKelas::where('tahun_ajaran_semester_id', $tahunAjaranSemesterId)
-            ->where('guru_id', Auth::id())
+            ->where('guru_id', $guruId) // 👈 Gunakan $guruId yang benar
             ->whereIn('pelajar_id', function ($query) {
                 $query->select('pelajar_id')
                     ->from('rombel_pelajars')
@@ -163,6 +164,27 @@ class InputCatatanWaliKelas extends Component
         return $query;
     }
 
+    private function getGuruIdForQuery()
+    {
+        $user = Auth::user();
+
+        // Ambil roles langsung dari database
+        $userRoleNames = DB::table('role_users')
+            ->join('roles', 'role_users.role_id', '=', 'roles.id')
+            ->where('role_users.user_id', $user->id)
+            ->pluck('roles.nama_role')
+            ->toArray();
+
+        $isAdmin = in_array('admin', $userRoleNames) || in_array('superadmin', $userRoleNames);
+
+        // Jika admin, gunakan ID wali kelas; jika bukan, gunakan ID user
+        if ($isAdmin && $this->rombel->waliKelas) {
+            return $this->rombel->waliKelas->id;
+        }
+
+        return $user->id;
+    }
+
     public function confirmSaveCatatan()
     {
         $this->validate();
@@ -186,10 +208,40 @@ class InputCatatanWaliKelas extends Component
             return;
         }
 
-        // Tentukan guru_id: gunakan wali kelas jika admin yang input
-        $guruId = Auth::user()->hasRole(['admin', 'superadmin'])
-            ? $this->rombel->wali_kelas_id  // Gunakan ID wali kelas
-            : Auth::id();                    // Gunakan ID user yang login
+        $user = Auth::user();
+
+        // Ambil roles langsung dari database
+        $userRoleNames = DB::table('role_users')
+            ->join('roles', 'role_users.role_id', '=', 'roles.id')
+            ->where('role_users.user_id', $user->id)
+            ->pluck('roles.nama_role')
+            ->toArray();
+
+        $isAdmin = in_array('admin', $userRoleNames) || in_array('superadmin', $userRoleNames);
+        $isWaliKelas = $this->rombel->wali_kelas_slug === $user->slug;
+
+        if (!$isAdmin && !$isWaliKelas) {
+            $this->dispatch('swal:error', [
+                'title' => 'Akses Ditolak!',
+                'text' => 'Anda bukan wali kelas dari rombel ini.',
+            ]);
+            return;
+        }
+
+        // Tentukan guru_id
+        if ($isAdmin) {
+            // Validasi wali kelas ada
+            if (!$this->rombel->waliKelas) {
+                $this->dispatch('swal:error', [
+                    'title' => 'Wali Kelas Belum Ditentukan!',
+                    'text' => 'Silakan tetapkan wali kelas untuk rombel ini terlebih dahulu.',
+                ]);
+                return;
+            }
+            $guruId = $this->rombel->waliKelas->id;
+        } else {
+            $guruId = $user->id;
+        }
 
         DB::beginTransaction();
         try {
@@ -207,7 +259,7 @@ class InputCatatanWaliKelas extends Component
                 CatatanWaliKelas::create([
                     'id' => Str::uuid(),
                     'pelajar_id' => $pelajarId,
-                    'guru_id' => $guruId,  // 👈 Menggunakan $guruId yang sudah disesuaikan
+                    'guru_id' => $guruId,
                     'tahun_ajaran_semester_id' => $tahunAjaranSemesterId,
                     'jenis_catatan' => $catatan['jenis_catatan'],
                     'catatan' => $catatan['catatan'],
@@ -262,10 +314,11 @@ class InputCatatanWaliKelas extends Component
     public function render()
     {
         $tahunAjaranSemesterId = $this->getTahunAjaranSemesterId();
+        $guruId = $this->getGuruIdForQuery(); // 👈 Gunakan helper
 
         // Ambil catatan terakhir untuk setiap pelajar
         $catatanExist = CatatanWaliKelas::where('tahun_ajaran_semester_id', $tahunAjaranSemesterId)
-            ->where('guru_id', Auth::id())
+            ->where('guru_id', $guruId) // 👈 Gunakan $guruId yang benar
             ->whereIn('pelajar_id', function ($query) {
                 $query->select('pelajar_id')
                     ->from('rombel_pelajars')

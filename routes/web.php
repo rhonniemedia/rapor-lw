@@ -75,6 +75,12 @@ Route::middleware('auth')->group(function () {
         ]);
     });
 
+    Route::get('/pembelajaran/nilai-akhir', function () {
+        return view('contents.admin.nilai-akhir', [
+            'title' => 'Input Data Nilai',
+        ]);
+    });
+
     Route::post('/logout', function () {
         Auth::logout();
         session()->invalidate();

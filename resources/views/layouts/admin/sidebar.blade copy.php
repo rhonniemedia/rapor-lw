@@ -149,6 +149,43 @@
             </div>
         </li>
 
+        <li class="nav-item">
+            <a class="nav-link {{ request()->url() === url('home/nilai-akhir') ? 'active' : '' }}" href="{{url('home/nilai-akhir')}}">
+                <i class="mdi mdi-finance menu-icon"></i>
+                <span class="menu-title">Nilai Akhir</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->url() === url('home/nilai-akhir') ? 'active' : '' }}" href="{{url('home/nilai-akhir')}}">
+                <i class="mdi mdi-finance menu-icon"></i>
+                <span class="menu-title">Nilai Akhir</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->url() === url('home/kokurikuler') ? 'active' : '' }}" href="{{url('home/kokurikuler')}}">
+                <i class="mdi mdi-school-outline menu-icon"></i>
+                <span class="menu-title">Kokurikuler</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->url() === url('home/keharidan') ? 'active' : '' }}" href="{{url('home/keharidan')}}">
+                <i class="mdi mdi-calendar-text-outline menu-icon"></i>
+                <span class="menu-title">Kehadiran</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->url() === url('home/catatan-wali-kelas') ? 'active' : '' }}" href="{{url('home/catatan-wali-kelas')}}">
+                <i class="mdi mdi-note-text-outline menu-icon"></i>
+                <span class="menu-title">Catatan Wali Kelas</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->url() === url('home/esktrakurikuler') ? 'active' : '' }}" href="{{url('home/esktrakurikuler')}}">
+                <i class="mdi mdi-basketball menu-icon"></i>
+                <span class="menu-title">Ekstrakurikuler</span>
+            </a>
+        </li>
+
         <!-- Pembelajaran -->
         <li class="nav-item">
             <span class="nav-link mt-4">
