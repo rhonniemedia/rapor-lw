@@ -83,7 +83,13 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/pembelajaran/kehadiran', function () {
         return view('contents.admin.kehadiran', [
-            'title' => 'Data Kehadiran Pelajar',
+            'title' => 'Data Kehadiran',
+        ]);
+    });
+
+    Route::get('/pembelajaran/catatan-wali-kelas', function () {
+        return view('contents.admin.catatan-walas', [
+            'title' => 'Catatan Wali Kelas',
         ]);
     });
 

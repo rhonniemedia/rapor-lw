@@ -2,9 +2,9 @@
 
 namespace App\Livewire;
 
+use Carbon\Carbon;
 use App\Models\Rombel;
 use Livewire\Component;
-use App\Models\Kehadiran;
 use App\Models\TahunAjaran;
 use Livewire\WithPagination;
 use App\Models\RombelPelajar;
@@ -12,9 +12,10 @@ use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Models\CatatanWaliKelas;
 use Illuminate\Database\Eloquent\Builder;
 
-class InputKehadiran extends Component
+class InputCatatanWalas extends Component
 {
     use WithPagination;
 
@@ -24,12 +25,12 @@ class InputKehadiran extends Component
     public $tahunAjaranId = null;
     public $semesterId = null;
     public $rombelId = null;
-    public $selectedRombelPengajarId = null; // Untuk kompatibilitas dengan blade
+    public $selectedRombelPengajarId = null;
 
     // 🔹 Properti utama
     public $rombel;
 
-    // 🔹 Properti pencarian & pagination
+    // 🔹 Properti pencarian
     public $searchPelajar = '';
     public $perPagePelajar = 50;
 
@@ -38,11 +39,21 @@ class InputKehadiran extends Component
     public $semesterList = [];
     public $rombelList = [];
 
-    // 🔹 Input data kehadiran
-    public $kehadiranInput = [];
+    // 🔹 Input data catatan
+    public $catatanInput = [];
+
+    // 🔹 Opsi jenis catatan
+    public $jenisCatatanOptions = [
+        'perkembangan' => 'Perkembangan',
+        'prestasi' => 'Prestasi',
+        'perilaku' => 'Perilaku',
+        'akademik' => 'Akademik',
+        'non_akademik' => 'Non-Akademik',
+        'umum' => 'Umum',
+    ];
 
     // 🔹 Cache untuk optimasi
-    private $cachedKehadiranExist = null;
+    private $cachedCatatanExist = null;
 
     // 🔹 Query string untuk persistensi state
     protected $queryString = [
@@ -54,27 +65,19 @@ class InputKehadiran extends Component
 
     // 🔹 Event listener
     protected $listeners = [
-        'saveKehadiranConfirmed' => 'saveKehadiran',
-        'resetKehadiranConfirmed' => 'resetKehadiran',
+        'saveCatatanConfirmed' => 'saveCatatan',
+        'resetCatatanConfirmed' => 'resetCatatan',
     ];
 
     // 🔹 Validation rules
     protected $rules = [
-        'kehadiranInput.*.sakit' => 'nullable|integer|min:0|max:999',
-        'kehadiranInput.*.izin' => 'nullable|integer|min:0|max:999',
-        'kehadiranInput.*.tanpa_keterangan' => 'nullable|integer|min:0|max:999',
+        'catatanInput.*.jenis_catatan' => 'nullable|string|in:perkembangan,prestasi,perilaku,akademik,non_akademik,umum',
+        'catatanInput.*.catatan' => 'nullable|string|max:1000',
     ];
 
     protected $messages = [
-        'kehadiranInput.*.sakit.integer' => 'Jumlah sakit harus berupa angka',
-        'kehadiranInput.*.sakit.min' => 'Jumlah sakit minimal adalah 0',
-        'kehadiranInput.*.sakit.max' => 'Jumlah sakit maksimal adalah 999',
-        'kehadiranInput.*.izin.integer' => 'Jumlah izin harus berupa angka',
-        'kehadiranInput.*.izin.min' => 'Jumlah izin minimal adalah 0',
-        'kehadiranInput.*.izin.max' => 'Jumlah izin maksimal adalah 999',
-        'kehadiranInput.*.tanpa_keterangan.integer' => 'Jumlah tanpa keterangan harus berupa angka',
-        'kehadiranInput.*.tanpa_keterangan.min' => 'Jumlah tanpa keterangan minimal adalah 0',
-        'kehadiranInput.*.tanpa_keterangan.max' => 'Jumlah tanpa keterangan maksimal adalah 999',
+        'catatanInput.*.jenis_catatan.in' => 'Jenis catatan tidak valid',
+        'catatanInput.*.catatan.max' => 'Catatan maksimal 1000 karakter',
     ];
 
     public function mount()
@@ -106,10 +109,10 @@ class InputKehadiran extends Component
             $this->loadRombel();
         }
 
-        // Load data rombel dan kehadiran jika rombel sudah dipilih
+        // Load data rombel dan catatan jika rombel sudah dipilih
         if ($this->rombelId && $this->semesterId) {
             $this->loadRombelData();
-            $this->loadKehadiranPelajar();
+            $this->loadCatatanPelajar();
         }
     }
 
@@ -140,7 +143,7 @@ class InputKehadiran extends Component
             return;
         }
 
-        $this->rombelList = Rombel::whereHas('tahunAjaran', function ($q) {
+        $this->rombelList = Rombel::whereHas('tahunAjaranKurikulum', function ($q) {
             $q->where('tahun_ajaran_id', $this->tahunAjaranId);
         })
             ->orderBy('tingkat', 'asc')
@@ -202,9 +205,9 @@ class InputKehadiran extends Component
         $this->rombelId = null;
         $this->selectedRombelPengajarId = null;
         $this->rombelList = [];
-        $this->kehadiranInput = [];
+        $this->catatanInput = [];
         $this->rombel = null;
-        $this->cachedKehadiranExist = null;
+        $this->cachedCatatanExist = null;
 
         $this->loadRombel();
         $this->resetPage();
@@ -213,12 +216,12 @@ class InputKehadiran extends Component
     // 🔹 Handler saat rombel berubah
     public function updatedRombelId(): void
     {
-        $this->kehadiranInput = [];
-        $this->cachedKehadiranExist = null;
+        $this->catatanInput = [];
+        $this->cachedCatatanExist = null;
 
         if ($this->rombelId && $this->semesterId) {
             $this->loadRombelData();
-            $this->loadKehadiranPelajar();
+            $this->loadCatatanPelajar();
         } else {
             $this->rombel = null;
             $this->selectedRombelPengajarId = null;
@@ -241,37 +244,37 @@ class InputKehadiran extends Component
         $this->selectedRombelPengajarId = null;
         $this->semesterList = [];
         $this->rombelList = [];
-        $this->kehadiranInput = [];
+        $this->catatanInput = [];
         $this->rombel = null;
-        $this->cachedKehadiranExist = null;
+        $this->cachedCatatanExist = null;
     }
 
-    // 🔹 Load data kehadiran pelajar
-    private function loadKehadiranPelajar(): void
+    // 🔹 Load catatan terakhir untuk setiap pelajar
+    private function loadCatatanPelajar(): void
     {
         if (!$this->rombelId || !$this->semesterId) {
-            $this->kehadiranInput = [];
-            $this->cachedKehadiranExist = null;
+            $this->catatanInput = [];
+            $this->cachedCatatanExist = null;
             return;
         }
 
-        // Cache kehadiran untuk menghindari query duplikat
-        $this->cachedKehadiranExist = Kehadiran::where('rombel_id', $this->rombelId)
+        // Cache catatan terakhir untuk setiap pelajar
+        $this->cachedCatatanExist = CatatanWaliKelas::where('rombel_id', $this->rombelId)
             ->where('tahun_ajaran_semester_id', $this->semesterId)
+            ->whereIn('pelajar_id', function ($query) {
+                $query->select('pelajar_id')
+                    ->from('rombel_pelajars')
+                    ->where('rombel_id', $this->rombelId);
+            })
+            ->orderBy('tanggal_input', 'desc')
             ->get()
-            ->keyBy('pelajar_id');
+            ->groupBy('pelajar_id')
+            ->map(function ($catatanGroup) {
+                return $catatanGroup->first(); // Ambil catatan terbaru
+            });
 
-        // Reset array input kehadiran
-        $this->kehadiranInput = [];
-
-        // Populate kehadiran input dengan data existing
-        foreach ($this->cachedKehadiranExist as $pelajarId => $kehadiran) {
-            $this->kehadiranInput[$pelajarId] = [
-                'sakit' => $kehadiran->jumlah_sakit ?? 0,
-                'izin' => $kehadiran->jumlah_izin ?? 0,
-                'tanpa_keterangan' => $kehadiran->jumlah_tanpa_keterangan ?? 0,
-            ];
-        }
+        // Reset array input catatan
+        $this->catatanInput = [];
     }
 
     // 🔹 Get query data pelajar dengan filter
@@ -297,8 +300,8 @@ class InputKehadiran extends Component
         return $query;
     }
 
-    // 🔹 Konfirmasi simpan kehadiran
-    public function confirmSaveKehadiran(): void
+    // 🔹 Konfirmasi simpan catatan
+    public function confirmSaveCatatan(): void
     {
         if (!$this->rombelId || !$this->semesterId) {
             $this->dispatch('swal:error', [
@@ -311,15 +314,32 @@ class InputKehadiran extends Component
         // Validasi input
         $this->validate();
 
+        // Cek apakah ada catatan yang diisi
+        $hasInput = false;
+        foreach ($this->catatanInput as $input) {
+            if (!empty($input['catatan']) && !empty($input['jenis_catatan'])) {
+                $hasInput = true;
+                break;
+            }
+        }
+
+        if (!$hasInput) {
+            $this->dispatch('swal:warning', [
+                'title' => 'Peringatan!',
+                'text' => 'Tidak ada catatan yang diisi.',
+            ]);
+            return;
+        }
+
         $this->dispatch('swal:confirm', [
-            'title' => 'Simpan Kehadiran?',
-            'text' => 'Semua data kehadiran yang diinput akan disimpan.',
-            'nextEvent' => 'saveKehadiranConfirmed',
+            'title' => 'Simpan Catatan?',
+            'text' => 'Catatan akan tersimpan sebagai history dan tidak menimpa catatan sebelumnya.',
+            'nextEvent' => 'saveCatatanConfirmed',
         ]);
     }
 
-    // 🔹 Simpan kehadiran
-    public function saveKehadiran(): void
+    // 🔹 Simpan catatan
+    public function saveCatatan(): void
     {
         if (!$this->rombelId || !$this->semesterId) {
             return;
@@ -343,43 +363,35 @@ class InputKehadiran extends Component
         DB::beginTransaction();
         try {
             $savedCount = 0;
+            $currentDate = Carbon::now();
 
-            foreach ($this->kehadiranInput as $pelajarId => $kehadiran) {
+            foreach ($this->catatanInput as $pelajarId => $catatan) {
                 // Security check: pastikan pelajar ada di rombel ini
                 if (!in_array($pelajarId, $validPelajarIds)) {
                     continue;
                 }
 
-                // Skip jika semua nilai kosong atau null
-                if (empty($kehadiran['sakit']) && empty($kehadiran['izin']) && empty($kehadiran['tanpa_keterangan'])) {
+                // Skip jika catatan atau jenis catatan kosong
+                if (empty($catatan['catatan']) || empty($catatan['jenis_catatan'])) {
                     continue;
                 }
 
-                // Validasi dan bersihkan data
-                $sakit = is_numeric($kehadiran['sakit']) ? intval($kehadiran['sakit']) : 0;
-                $izin = is_numeric($kehadiran['izin']) ? intval($kehadiran['izin']) : 0;
-                $tanpaKeterangan = is_numeric($kehadiran['tanpa_keterangan']) ? intval($kehadiran['tanpa_keterangan']) : 0;
-
-                // Validasi range
-                if ($sakit < 0 || $sakit > 999 || $izin < 0 || $izin > 999 || $tanpaKeterangan < 0 || $tanpaKeterangan > 999) {
+                // Validasi jenis catatan
+                if (!array_key_exists($catatan['jenis_catatan'], $this->jenisCatatanOptions)) {
                     continue;
                 }
 
-                // Use updateOrCreate for cleaner code
-                Kehadiran::updateOrCreate(
-                    [
-                        'pelajar_id' => $pelajarId,
-                        'rombel_id' => $this->rombelId,
-                        'tahun_ajaran_semester_id' => $this->semesterId,
-                    ],
-                    [
-                        'jumlah_sakit' => $sakit,
-                        'jumlah_izin' => $izin,
-                        'jumlah_tanpa_keterangan' => $tanpaKeterangan,
-                        'updated_by' => Auth::id(),
-                        'created_by' => Auth::id(), // Only set on creation
-                    ]
-                );
+                // Simpan catatan baru (tidak update, tapi create baru sebagai history)
+                CatatanWaliKelas::create([
+                    'pelajar_id' => $pelajarId,
+                    'rombel_id' => $this->rombelId,
+                    'tahun_ajaran_semester_id' => $this->semesterId,
+                    'jenis_catatan' => $catatan['jenis_catatan'],
+                    'catatan' => trim($catatan['catatan']),
+                    'tanggal_input' => $currentDate,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                ]);
 
                 $savedCount++;
             }
@@ -388,63 +400,47 @@ class InputKehadiran extends Component
 
             $this->dispatch('swal:success', [
                 'title' => 'Berhasil!',
-                'text' => "Berhasil menyimpan {$savedCount} data kehadiran untuk {$rombel->nama}.",
+                'text' => "Berhasil menyimpan {$savedCount} catatan untuk {$rombel->nama}.",
             ]);
 
             // Clear cache dan reload data
-            $this->cachedKehadiranExist = null;
-            $this->loadKehadiranPelajar();
+            $this->cachedCatatanExist = null;
+            $this->catatanInput = [];
+            $this->loadCatatanPelajar();
         } catch (\Exception $e) {
             DB::rollback();
 
-            Log::error('Error saving kehadiran: ' . $e->getMessage(), [
+            Log::error('Error saving catatan wali kelas: ' . $e->getMessage(), [
                 'rombel_id' => $this->rombelId,
                 'semester_id' => $this->semesterId,
             ]);
 
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'Gagal menyimpan kehadiran. Silakan coba lagi.',
+                'text' => 'Gagal menyimpan catatan. Silakan coba lagi.',
             ]);
         }
     }
 
-    // 🔹 Konfirmasi reset kehadiran
-    public function confirmResetKehadiran(): void
+    // 🔹 Konfirmasi reset catatan
+    public function confirmResetCatatan(): void
     {
         $this->dispatch('swal:confirm', [
-            'title' => 'Reset Input Kehadiran?',
-            'text' => 'Semua input kehadiran akan dikosongkan (belum disimpan).',
-            'nextEvent' => 'resetKehadiranConfirmed',
+            'title' => 'Reset Input Catatan?',
+            'text' => 'Semua input catatan akan dikosongkan (belum disimpan).',
+            'nextEvent' => 'resetCatatanConfirmed',
         ]);
     }
 
-    // 🔹 Reset semua input kehadiran
-    public function resetKehadiran(): void
+    // 🔹 Reset semua input catatan
+    public function resetCatatan(): void
     {
-        foreach ($this->kehadiranInput as $pelajarId => $data) {
-            $this->kehadiranInput[$pelajarId] = [
-                'sakit' => 0,
-                'izin' => 0,
-                'tanpa_keterangan' => 0,
-            ];
-        }
+        $this->catatanInput = [];
 
         $this->dispatch('swal:info', [
             'title' => 'Direset!',
-            'text' => 'Semua kolom input kehadiran telah dikosongkan.',
+            'text' => 'Semua kolom input catatan telah dikosongkan.',
         ]);
-    }
-
-    // 🔹 Helper untuk menghitung total ketidakhadiran
-    public function getTotalKetidakhadiran($pelajarId): int
-    {
-        if (!isset($this->kehadiranInput[$pelajarId])) {
-            return 0;
-        }
-
-        $data = $this->kehadiranInput[$pelajarId];
-        return ($data['sakit'] ?? 0) + ($data['izin'] ?? 0) + ($data['tanpa_keterangan'] ?? 0);
     }
 
     // 🔹 Render view dengan data pelajar
@@ -453,27 +449,17 @@ class InputKehadiran extends Component
         $pelajarData = collect();
 
         if ($this->rombelId && $this->semesterId) {
-            // Use cached kehadiran instead of querying again
-            $kehadiranExist = $this->cachedKehadiranExist ?? collect();
+            // Use cached catatan instead of querying again
+            $catatanExist = $this->cachedCatatanExist ?? collect();
 
             // Query pelajar dengan pagination
             $pelajarPaginated = $this->getPelajarQuery()
                 ->orderBy('id', 'asc')
                 ->paginate($this->perPagePelajar);
 
-            // Map data pelajar dengan kehadiran mereka
-            $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($kehadiranExist) {
+            // Map data pelajar dengan catatan terakhir mereka
+            $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($catatanExist) {
                 $pelajarId = $rombelPelajar->pelajar_id;
-
-                // Inisialisasi input kehadiran jika belum ada
-                if (!isset($this->kehadiranInput[$pelajarId])) {
-                    $existingKehadiran = $kehadiranExist->get($pelajarId);
-                    $this->kehadiranInput[$pelajarId] = [
-                        'sakit' => $existingKehadiran->jumlah_sakit ?? 0,
-                        'izin' => $existingKehadiran->jumlah_izin ?? 0,
-                        'tanpa_keterangan' => $existingKehadiran->jumlah_tanpa_keterangan ?? 0,
-                    ];
-                }
 
                 return (object) [
                     'rombel_pelajar_id' => $rombelPelajar->id,
@@ -481,13 +467,12 @@ class InputKehadiran extends Component
                     'nama_lengkap' => $rombelPelajar->pelajar->nama_lengkap,
                     'nomor_induk' => $rombelPelajar->pelajar->nomor_induk,
                     'nisn' => $rombelPelajar->pelajar->nisn,
-                    'kehadiran_sekarang' => $kehadiranExist->get($pelajarId),
-                    'total_ketidakhadiran' => $this->getTotalKetidakhadiran($pelajarId),
+                    'catatan_terakhir' => $catatanExist->get($pelajarId),
                 ];
             });
         }
 
-        return view('livewire.input-kehadiran', [
+        return view('livewire.input-catatan-walas', [
             'pelajarData' => $pelajarData,
         ]);
     }

@@ -140,7 +140,7 @@
                         <a class="nav-link {{ request()->is('pembelajaran/kehadiran') ? 'active' : '' }}" href="{{url('pembelajaran/kehadiran')}}">Kehadiran</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('pembelajaran/catatan-wali-kelas') ? 'active' : '' }}" href="{{url('pembelajaran/mata-pelajaran')}}">Catatan Wali Kelas</a>
+                        <a class="nav-link {{ request()->is('pembelajaran/catatan-wali-kelas') ? 'active' : '' }}" href="{{url('pembelajaran/catatan-wali-kelas')}}">Catatan Wali Kelas</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('pembelajaran/ekstrakurikuler') ? 'active' : '' }}" href="{{url('pembelajaran/ekstrakurikuler')}}">Ekstrakurikuler</a>
