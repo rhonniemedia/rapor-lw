@@ -77,7 +77,13 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/pembelajaran/nilai-akhir', function () {
         return view('contents.admin.nilai-akhir', [
-            'title' => 'Input Data Nilai',
+            'title' => 'Data Nilai Akhir',
+        ]);
+    });
+
+    Route::get('/pembelajaran/kehadiran', function () {
+        return view('contents.admin.kehadiran', [
+            'title' => 'Data Kehadiran Pelajar',
         ]);
     });
 

@@ -14,7 +14,7 @@
     </div>
 
     <!-- LiveWire -->
-    <livewire:input-nilai-akhir />
+    <livewire:input-kehadiran />
 
 </div>
 

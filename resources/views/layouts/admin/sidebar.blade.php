@@ -125,7 +125,7 @@
         <li class="nav-item">
             <a class="nav-link {{ request()->is('pembelajaran*') ? 'active' : '' }}" data-toggle="collapse" href="#ui-pembelajaran" aria-expanded="false" aria-controls="ui-pembelajaran">
                 <i class="mdi mdi-finance menu-icon menu-icon"></i>
-                <span class="menu-title">Input Data</span>
+                <span class="menu-title">Entri Data</span>
                 <i class="menu-arrow"></i>
             </a>
             <div class="collapse {{ request()->is('pembelajaran*') ? 'show' : '' }}" id="ui-pembelajaran">
@@ -137,7 +137,7 @@
                         <a class="nav-link {{ request()->is('pembelajaran/kokurikuler') ? 'active' : '' }}" href="{{url('pembelajaran/kokurikuler')}}">Kokurikuler</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('pembelajaran/kehadiran') ? 'active' : '' }}" href="{{url('pembelajaran/jurusan')}}">Kehadiran</a>
+                        <a class="nav-link {{ request()->is('pembelajaran/kehadiran') ? 'active' : '' }}" href="{{url('pembelajaran/kehadiran')}}">Kehadiran</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('pembelajaran/catatan-wali-kelas') ? 'active' : '' }}" href="{{url('pembelajaran/mata-pelajaran')}}">Catatan Wali Kelas</a>
