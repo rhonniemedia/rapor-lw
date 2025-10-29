@@ -101,6 +101,12 @@ class Pelajar extends Model
         )->withTimestamps();
     }
 
+    public function kokurikuler()
+    {
+        return $this->hasMany(Kokurikuler::class);
+    }
+
+
     public function getIconAttribute()
     {
         return match ($this->jenis_kelamin) {

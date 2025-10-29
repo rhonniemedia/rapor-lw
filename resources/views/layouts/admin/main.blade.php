@@ -71,7 +71,7 @@
                         <li class="nav-item nav-profile dropdown border-0">
                             <a class="nav-link dropdown-toggle" id="profileDropdown" href="#" data-toggle="dropdown">
                                 <img class="nav-profile-img mr-2" alt="" src="{{ asset('assets/images/icons/smile.png') }}" />
-                                <span class="profile-name">Administrator</span>
+                                <span class="profile-name">{{ Auth::user()->name ?? '' }}</span>
                             </a>
                             <div class="dropdown-menu navbar-dropdown w-100" aria-labelledby="profileDropdown">
                                 <button type="submit" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalProfile">

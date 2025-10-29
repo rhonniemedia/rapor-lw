@@ -166,7 +166,7 @@
                                 <input type="text"
                                     wire:model.live.debounce.300ms="searchPelajar"
                                     class="form-control"
-                                    placeholder="Cari nama, NIS, atau NISN...">
+                                    placeholder="Cari nama, atau nomor induk...">
                                 @if($searchPelajar)
                                 <div class="input-group-append">
                                     <button type="button"
@@ -287,7 +287,7 @@
 
                             {{-- Teks tombol normal --}}
                             <span class="text-normal" wire:loading.class="d-none" wire:target="confirmSaveCatatan">
-                                Simpan Catatan
+                                Simpan
                             </span>
 
                             {{-- Teks saat loading --}}
@@ -304,8 +304,8 @@
     @else
     <div class="row">
         <div class="col-12">
-            <div class="alert alert-danger text-center mt-3" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
+            <div class="alert alert-danger text-center" role="alert">
+                <i class="mdi mdi-information-outline me-2"></i>
                 <strong>Silakan pilih Tahun Ajaran, Semester, dan Rombel/Kelas untuk mulai menginput data catatan wali kelas.</strong>
             </div>
         </div>

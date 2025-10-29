@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             KurikulumSeeder::class,
             // TahunAjaranSeeder::class,
             SemesterSeeder::class,
-            // MataPelajaranSeeder::class,
+            MataPelajaranSeeder::class,
             // MataPelajaranKelompokSeeder::class,
         ]);
     }

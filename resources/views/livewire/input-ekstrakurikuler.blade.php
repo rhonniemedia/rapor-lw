@@ -14,7 +14,7 @@
                         <div class="col-lg-12">
                             <div class="mb-3 row">
                                 <!-- Filter Tahun Ajaran -->
-                                <div class="col-sm-4">
+                                <div class="col-sm-3">
                                     <label class="form-label">Tahun Ajaran</label>
                                     <select wire:model.live="tahunAjaranId" class="form-select">
                                         <option value="">-- Pilih Tahun Ajaran --</option>
@@ -28,7 +28,7 @@
                                 </div>
 
                                 <!-- Filter Semester -->
-                                <div class="col-sm-4">
+                                <div class="col-sm-3">
                                     <label class="form-label">Semester</label>
                                     <select wire:model.live="semesterId" class="form-select"
                                         @if(!$tahunAjaranId) disabled @endif>
@@ -43,7 +43,7 @@
                                 </div>
 
                                 <!-- Filter Rombel -->
-                                <div class="col-sm-4">
+                                <div class="col-sm-3">
                                     <label class="form-label">Rombongan Belajar</label>
                                     <select wire:model.live="rombelId" class="form-select"
                                         @if(!$semesterId) disabled @endif>
@@ -55,12 +55,26 @@
                                         @endforeach
                                     </select>
                                 </div>
+
+                                <!-- Filter Ekstrakurikuler -->
+                                <div class="col-sm-3">
+                                    <label class="form-label">Ekstrakurikuler</label>
+                                    <select wire:model.live="ekstrakurikulerId" class="form-select"
+                                        @if(!$rombelId) disabled @endif>
+                                        <option value="">-- Pilih Ekstrakurikuler --</option>
+                                        @foreach($ekstrakurikulerList as $ekskul)
+                                        <option value="{{ $ekskul->id }}">
+                                            {{ $ekskul->nama }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Info Rombel --}}
-                    @if($rombel && $selectedRombelPengajarId)
+                    {{-- Info Rombel & Ekstrakurikuler --}}
+                    @if($rombel && $selectedRombelPengajarId && $selectedEkstrakurikuler)
                     <div class="alert alert-success py-3 mt-3" role="alert">
                         <div class="row g-4">
                             <!-- Kolom 1 -->
@@ -130,16 +144,30 @@
 
                             <!-- Kolom 3 -->
                             <div class="col-md-4">
-                                <!-- Total Ekstrakurikuler Aktif -->
+                                <!-- Ekstrakurikuler -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
                                         <i class="mdi mdi-trophy text-white fs-5"></i>
                                     </div>
                                     <div class="ms-3 d-flex flex-column justify-content-center">
-                                        <small class="text-muted lh-2">Ekstrakurikuler Tersedia</small>
+                                        <small class="text-muted lh-2">Ekstrakurikuler</small>
                                         <p class="fw-bold mb-0 text-dark lh-sm">
-                                            {{ count($ekstrakurikulerList) }} Pilihan
+                                            {{ $selectedEkstrakurikuler->nama }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Pembina -->
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
+                                        style="width: 36px; height: 36px;">
+                                        <i class="mdi mdi-account-star text-white fs-5"></i>
+                                    </div>
+                                    <div class="ms-3 d-flex flex-column justify-content-center">
+                                        <small class="text-muted lh-2">Pembina</small>
+                                        <p class="fw-bold mb-0 text-dark lh-sm">
+                                            {{ $selectedEkstrakurikuler->pembina->name ?? 'Belum Ada' }}
                                         </p>
                                     </div>
                                 </div>
@@ -152,21 +180,21 @@
         </div>
     </div>
 
-    @if($rombelId && $semesterId)
+    @if($rombelId && $semesterId && $ekstrakurikulerId)
     <div class="row mt-1">
         <div class="col-xl-12 col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
                     <div class="row mb-3 align-items-center">
                         <div class="col-lg-6">
-                            <h5 class="text-dark"><i class="mdi mdi-trophy me-2"></i> Input Data Ekstrakurikuler Pelajar</h5>
+                            <h5 class="text-dark"><i class="mdi mdi-trophy me-2"></i> Entri Data Ekstrakurikuler Pelajar</h5>
                         </div>
                         <div class="col-lg-6 d-flex justify-content-end">
                             <div class="input-group w-50">
                                 <input type="text"
                                     wire:model.live.debounce.300ms="searchPelajar"
                                     class="form-control"
-                                    placeholder="Cari nama, NIS, atau NISN...">
+                                    placeholder="Cari nama, atau nomor induk...">
                                 @if($searchPelajar)
                                 <div class="input-group-append">
                                     <button type="button"
@@ -186,11 +214,10 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th class="text-center" style="width: 5%;">#</th>
-                                    <th style="width: 20%;">Nama Pelajar/NIS/NISN</th>
-                                    <th class="text-center" style="width: 20%;">Ekstrakurikuler</th>
-                                    <th class="text-center" style="width: 10%;">Nilai</th>
-                                    <th class="text-center" style="width: 25%;">Keterangan</th>
-                                    <th style="width: 20%;" class="text-center">Data Tersimpan</th>
+                                    <th style="width: 25%;">Nama Pelajar/NIS/NISN</th>
+                                    <th class="text-center" style="width: 15%;">Nilai</th>
+                                    <th class="text-center" style="width: 30%;">Deskripsi</th>
+                                    <th style="width: 25%;" class="text-center">Data Tersimpan</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -202,51 +229,38 @@
                                         <small class="text-muted">{{ $pelajar->nomor_induk }} | {{ $pelajar->nisn }}</small>
                                     </td>
                                     <td>
-                                        <select
-                                            wire:model.defer="ekstrakurikulerInput.{{ $pelajar->pelajar_id }}.ekstrakurikuler_id"
-                                            class="form-select form-select-sm @error('ekstrakurikulerInput.'.$pelajar->pelajar_id.'.ekstrakurikuler_id') is-invalid @enderror">
-                                            <option value="">-- Pilih Ekstrakurikuler --</option>
-                                            @foreach($ekstrakurikulerList as $ekskul)
-                                            <option value="{{ $ekskul->id }}">{{ $ekskul->nama }}</option>
+                                        <select wire:model.defer="ekstrakurikulerInput.{{ $pelajar->pelajar_id }}.nilai"
+                                            class="form-select form-select-sm @error('ekstrakurikulerInput.'.$pelajar->pelajar_id.'.nilai') is-invalid @enderror">
+                                            <option value="">-- Pilih Nilai --</option>
+                                            @foreach($nilaiOptions as $key => $label)
+                                            <option value="{{ $key }}">{{ $key }} - {{ $label }}</option>
                                             @endforeach
                                         </select>
-                                        @error('ekstrakurikulerInput.'.$pelajar->pelajar_id.'.ekstrakurikuler_id')
-                                        <small class="text-danger d-block">{{ $message }}</small>
-                                        @enderror
-                                    </td>
-                                    <td>
-                                        <input type="number"
-                                            wire:model.defer="ekstrakurikulerInput.{{ $pelajar->pelajar_id }}.nilai"
-                                            class="form-control form-control-sm text-center @error('ekstrakurikulerInput.'.$pelajar->pelajar_id.'.nilai') is-invalid @enderror"
-                                            min="0"
-                                            max="100"
-                                            placeholder="0-100">
                                         @error('ekstrakurikulerInput.'.$pelajar->pelajar_id.'.nilai')
                                         <small class="text-danger d-block">{{ $message }}</small>
                                         @enderror
                                     </td>
                                     <td>
-                                        <input type="text"
-                                            wire:model.defer="ekstrakurikulerInput.{{ $pelajar->pelajar_id }}.keterangan"
-                                            class="form-control form-control-sm @error('ekstrakurikulerInput.'.$pelajar->pelajar_id.'.keterangan') is-invalid @enderror"
-                                            placeholder="Misal: Baik, Cukup, dll"
-                                            maxlength="500">
-                                        @error('ekstrakurikulerInput.'.$pelajar->pelajar_id.'.keterangan')
+                                        <textarea
+                                            wire:model.defer="ekstrakurikulerInput.{{ $pelajar->pelajar_id }}.deskripsi"
+                                            class="form-control form-control-sm @error('ekstrakurikulerInput.'.$pelajar->pelajar_id.'.deskripsi') is-invalid @enderror"
+                                            placeholder="Masukkan deskripsi..."
+                                            rows="2"
+                                            maxlength="500"></textarea>
+                                        @error('ekstrakurikulerInput.'.$pelajar->pelajar_id.'.deskripsi')
                                         <small class="text-danger d-block">{{ $message }}</small>
                                         @enderror
                                     </td>
                                     <td class="align-middle">
                                         @if($pelajar->ekstrakurikuler_existing)
                                         <div class="small">
-                                            <span class="badge badge-info mb-1">
-                                                {{ $pelajar->ekstrakurikuler_existing->ekstrakurikuler->nama ?? '-' }}
+                                            <span class="badge badge-success mb-1">
+                                                {{ $pelajar->ekstrakurikuler_existing->nilai ?? '-' }}
                                             </span>
-                                            <p class="mb-1">
-                                                <strong>Nilai:</strong> {{ $pelajar->ekstrakurikuler_existing->nilai ?? '-' }}
-                                            </p>
-                                            @if($pelajar->ekstrakurikuler_existing->keterangan)
+                                            @if($pelajar->ekstrakurikuler_existing->deskripsi)
                                             <p class="mb-0">
-                                                <strong>Ket:</strong> {{ $pelajar->ekstrakurikuler_existing->keterangan }}
+                                                <strong>Deskripsi:</strong><br>
+                                                {{ $pelajar->ekstrakurikuler_existing->deskripsi }}
                                             </p>
                                             @endif
                                         </div>
@@ -257,7 +271,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">
+                                    <td colspan="5" class="text-center text-muted py-4">
                                         <i class="mdi mdi-information-outline me-2"></i>
                                         @if($searchPelajar)
                                         Tidak ada pelajar yang ditemukan dengan kata kunci "{{ $searchPelajar }}"
@@ -282,7 +296,7 @@
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <div class="text-muted small">
                             <i class="mdi mdi-information-outline"></i>
-                            Pilih ekstrakurikuler, masukkan nilai (0-100), dan keterangan untuk setiap pelajar
+                            Pilih nilai dan masukkan deskripsi untuk setiap pelajar
                         </div>
 
                         <div>
@@ -322,7 +336,7 @@
 
                                 {{-- Teks tombol normal --}}
                                 <span class="text-normal" wire:loading.class="d-none" wire:target="confirmSaveEkstrakurikuler">
-                                    Simpan Ekstrakurikuler
+                                    Simpan
                                 </span>
 
                                 {{-- Teks saat loading --}}
@@ -340,9 +354,9 @@
     @else
     <div class="row">
         <div class="col-12">
-            <div class="alert alert-danger text-center mt-3" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Silakan pilih Tahun Ajaran, Semester, dan Rombel/Kelas untuk mulai menginput data ekstrakurikuler.</strong>
+            <div class="alert alert-danger text-center" role="alert">
+                <i class="mdi mdi-information-outline me-2"></i>
+                <strong>Silakan pilih Tahun Ajaran, Semester, Rombel/Kelas, dan Ekstrakurikuler untuk mulai menginput data.</strong>
             </div>
         </div>
     </div>

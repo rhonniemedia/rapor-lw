@@ -13,12 +13,17 @@
                 </div>
                 <div class="nav-profile-text d-flex flex-column pr-3">
                     <span class="font-weight-medium mb-2">
-                        Admin
+                        {{-- NAMA: Menggunakan 'name' dan memastikan bukan null --}}
+                        {{ \App\Helpers\UserHelper::getFirstName(Auth::user()->name ?? '') }}
                     </span>
-                    <span class="font-weight-normal">A</span>
+                    <span class="font-weight-normal">
+                        {{-- STATUS: Menggunakan Accessor BARU yang sudah didefinisikan di Model User --}}
+                        {{ Auth::user()->nama_role ?? 'N/A' }}
+                    </span>
                 </div>
                 <span class="badge badge-danger text-white ml-3 rounded">
-                    admin
+                    {{-- INISIAL: Mengambil huruf pertama dari Accessor BARU --}}
+                    {{ strtoupper(substr(Auth::user()->nama_role ?? 'N/A', 0, 1)) }}
                 </span>
             </a>
         </li>
@@ -143,7 +148,7 @@
                         <a class="nav-link {{ request()->is('pembelajaran/catatan-wali-kelas') ? 'active' : '' }}" href="{{url('pembelajaran/catatan-wali-kelas')}}">Catatan Wali Kelas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('pembelajaran/ekstrakurikuler') ? 'active' : '' }}" href="{{url('pembelajaran/ekstrakurikuler')}}">Ekstrakurikuler</a>
+                        <a class="nav-link {{ request()->is('pembelajaran/ekskul') ? 'active' : '' }}" href="{{url('pembelajaran/ekskul')}}">Ekstrakurikuler</a>
                     </li>
                 </ul>
             </div>

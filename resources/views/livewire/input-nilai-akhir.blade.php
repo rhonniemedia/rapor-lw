@@ -190,15 +190,15 @@
                 <div class="card-body">
                     <!-- Header & Search -->
                     <div class="row mb-3">
-                        <div class="col-lg-8">
-                            <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Daftar Pelajar</h5>
+                        <div class="col-lg-6">
+                            <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Entri Data Nilai Akhir Pelajar</h5>
                         </div>
-                        <div class="col-lg-4">
-                            <div class="input-group">
+                        <div class="col-lg-6 d-flex justify-content-end">
+                            <div class="input-group w-50">
                                 <input type="text"
                                     wire:model.live.debounce.300ms="searchPelajar"
                                     class="form-control"
-                                    placeholder="Cari Pelajar atau Nomor Induk...">
+                                    placeholder="Cari nama, atau nomor induk...">
                             </div>
                         </div>
                     </div>

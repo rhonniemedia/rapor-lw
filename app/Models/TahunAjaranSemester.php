@@ -23,4 +23,9 @@ class TahunAjaranSemester extends Model
     {
         return $this->belongsTo(Semester::class, 'semester_id');
     }
+
+    public function kokurikuler()
+    {
+        return $this->hasMany(Kokurikuler::class);
+    }
 }

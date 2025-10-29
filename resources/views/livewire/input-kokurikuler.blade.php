@@ -7,7 +7,7 @@
                         <div class="col-lg-12">
                             <div class="page-header mb-0 border-bottom">
                                 <div class="d-flex align-items-center">
-                                    <h5 class="text-dark"><i class="mdi mdi-filter me-2"></i> Filter Data Kehadiran</h5>
+                                    <h5 class="text-dark"><i class="mdi mdi-filter me-2"></i> Filter Data Kokurikuler</h5>
                                 </div>
                             </div>
                         </div>
@@ -55,12 +55,11 @@
                                         @endforeach
                                     </select>
                                 </div>
-
                             </div>
                         </div>
                     </div>
 
-                    {{-- Info Rombel - Diperbarui mengikuti style input-nilai-akhir --}}
+                    {{-- Info Rombel --}}
                     @if($rombel && $selectedRombelPengajarId)
                     <div class="alert alert-success py-3 mt-3" role="alert">
                         <div class="row g-4">
@@ -160,7 +159,7 @@
                 <div class="card-body">
                     <div class="row mb-3 align-items-center">
                         <div class="col-lg-6">
-                            <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Entri Data Kehadiran Pelajar</h5>
+                            <h5 class="text-dark"><i class="mdi mdi-school me-2"></i> Entri Data Kokurikuler</h5>
                         </div>
                         <div class="col-lg-6 d-flex justify-content-end">
                             <div class="input-group w-50">
@@ -181,81 +180,88 @@
                         </div>
                     </div>
 
-                    {{-- Tabel Kehadiran --}}
+                    {{-- Tabel Kokurikuler --}}
                     <div class="table-responsive" wire:loading.class.delay.longest="opacity-50">
-                        <table class="table table-bordered table-hover">
-                            <thead class="table-light">
+                        <table class="table table-hover table-bordered">
+                            <thead class="thead-light">
                                 <tr>
-                                    <th width="5%" class="text-center">No</th>
-                                    <th width="10%" class="text-center">Nomor Induk</th>
-                                    <th width="10%" class="text-center">NISN</th>
-                                    <th width="35%">Nama Lengkap</th>
-                                    <th width="10%" class="text-center">Sakit (S)</th>
-                                    <th width="10%" class="text-center">Izin (I)</th>
-                                    <th width="10%" class="text-center">Tanpa Ket. (A)</th>
-                                    <th width="10%" class="text-center">Total</th>
+                                    <th class="text-center" style="width: 5%;">#</th>
+                                    <th style="width: 20%;">Nama Pelajar/NIS/NISN</th>
+                                    <th class="text-center" style="width: 15%;">Predikat</th>
+                                    <th class="text-center" style="width: 35%;">Capaian</th>
+                                    <th style="width: 25%;" class="text-center">Data Tersimpan</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($pelajarData as $index => $pelajar)
+                                @forelse ($pelajarData as $index => $pelajar)
                                 <tr>
-                                    <td class="text-center">{{ $pelajarData->firstItem() + $index }}</td>
-                                    <td class="text-center">{{ $pelajar->nomor_induk }}</td>
-                                    <td class="text-center">{{ $pelajar->nisn }}</td>
-                                    <td>
-                                        <strong>{{ $pelajar->nama_lengkap }}</strong>
+                                    <td class="text-center align-middle">{{ $pelajarData->firstItem() + $index }}</td>
+                                    <td class="align-middle">
+                                        <strong>{{ $pelajar->nama_lengkap }}</strong><br>
+                                        <small class="text-muted">{{ $pelajar->nomor_induk }} | {{ $pelajar->nisn }}</small>
                                     </td>
-                                    {{-- Input Sakit --}}
                                     <td>
-                                        <input type="number"
-                                            wire:model.blur="kehadiranInput.{{ $pelajar->pelajar_id }}.sakit"
-                                            class="form-control form-control-sm text-center @error('kehadiranInput.'.$pelajar->pelajar_id.'.sakit') is-invalid @enderror"
-                                            min="0"
-                                            max="999"
-                                            placeholder="0">
-                                        @error('kehadiranInput.'.$pelajar->pelajar_id.'.sakit')
-                                        <small class="text-danger">{{ str_replace('kehadiranInput.'.$pelajar->pelajar_id.'.sakit', 'Jumlah sakit', $message) }}</small>
+                                        <select
+                                            wire:model.defer="kokurikulerInput.{{ $pelajar->pelajar_id }}.predikat"
+                                            class="form-select form-select-sm @error('kokurikulerInput.'.$pelajar->pelajar_id.'.predikat') is-invalid @enderror">
+                                            <option value="">-- Pilih Predikat --</option>
+                                            @foreach($predikatOptions as $key => $label)
+                                            <option value="{{ $key }}">{{ $key }} - {{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('kokurikulerInput.'.$pelajar->pelajar_id.'.predikat')
+                                        <small class="text-danger d-block">{{ $message }}</small>
                                         @enderror
                                     </td>
-                                    {{-- Input Izin --}}
                                     <td>
-                                        <input type="number"
-                                            wire:model.blur="kehadiranInput.{{ $pelajar->pelajar_id }}.izin"
-                                            class="form-control form-control-sm text-center @error('kehadiranInput.'.$pelajar->pelajar_id.'.izin') is-invalid @enderror"
-                                            min="0"
-                                            max="999"
-                                            placeholder="0">
-                                        @error('kehadiranInput.'.$pelajar->pelajar_id.'.izin')
-                                        <small class="text-danger">{{ str_replace('kehadiranInput.'.$pelajar->pelajar_id.'.izin', 'Jumlah izin', $message) }}</small>
+                                        <textarea
+                                            wire:model.defer="kokurikulerInput.{{ $pelajar->pelajar_id }}.capaian"
+                                            class="form-control form-control-sm @error('kokurikulerInput.'.$pelajar->pelajar_id.'.capaian') is-invalid @enderror"
+                                            placeholder="Masukkan capaian kokurikuler..."
+                                            rows="3"
+                                            maxlength="1000"></textarea>
+                                        @error('kokurikulerInput.'.$pelajar->pelajar_id.'.capaian')
+                                        <small class="text-danger d-block">{{ $message }}</small>
                                         @enderror
                                     </td>
-                                    {{-- Input Tanpa Keterangan (Alpa) --}}
-                                    <td>
-                                        <input type="number"
-                                            wire:model.blur="kehadiranInput.{{ $pelajar->pelajar_id }}.tanpa_keterangan"
-                                            class="form-control form-control-sm text-center @error('kehadiranInput.'.$pelajar->pelajar_id.'.tanpa_keterangan') is-invalid @enderror"
-                                            min="0"
-                                            max="999"
-                                            placeholder="0">
-                                        @error('kehadiranInput.'.$pelajar->pelajar_id.'.tanpa_keterangan')
-                                        <small class="text-danger">{{ str_replace('kehadiranInput.'.$pelajar->pelajar_id.'.tanpa_keterangan', 'Jumlah tanpa keterangan', $message) }}</small>
-                                        @enderror
-                                    </td>
-                                    {{-- Total --}}
-                                    <td class="text-center">
-                                        <span class="badge badge-{{ $pelajar->total_ketidakhadiran > 0 ? 'danger' : 'success' }}">
-                                            {{ $pelajar->total_ketidakhadiran }} hari
-                                        </span>
+                                    <td class="align-middle">
+                                        @if($pelajar->kokurikuler_existing)
+                                        <div class="small">
+                                            <span class="badge badge-success mb-1">
+                                                {{ $pelajar->kokurikuler_existing->predikat ?? '-' }}
+                                            </span>
+                                            @if($pelajar->kokurikuler_existing->capaian)
+                                            <p class="mb-1">
+                                                <strong>Capaian:</strong><br>
+                                                {{ $pelajar->kokurikuler_existing->capaian }}
+                                            </p>
+                                            @endif
+                                            @if($pelajar->kokurikuler_existing->tanggal_input)
+                                            <p class="mb-0 text-muted">
+                                                <small>
+                                                    <i class="mdi mdi-calendar"></i>
+                                                    {{ \Carbon\Carbon::parse($pelajar->kokurikuler_existing->tanggal_input)->format('d/m/Y H:i') }}
+                                                </small>
+                                            </p>
+                                            @endif
+                                        </div>
+                                        @else
+                                        <span class="text-muted small">Belum ada data</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
-                                        <i class="fas fa-info-circle me-2"></i> Data pelajar tidak ditemukan atau rombel belum memiliki pelajar.
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        <i class="mdi mdi-information-outline me-2"></i>
+                                        @if($searchPelajar)
+                                        Tidak ada pelajar yang ditemukan dengan kata kunci "{{ $searchPelajar }}"
+                                        @else
+                                        Data pelajar tidak ditemukan atau rombel belum memiliki pelajar.
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforelse
-
                             </tbody>
                         </table>
                     </div>
@@ -267,54 +273,61 @@
                     </div>
                     @endif
 
-                    <div class="d-flex justify-content-end mt-3">
+                    @if($pelajarData->count() > 0)
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted small">
+                            <i class="mdi mdi-information-outline"></i>
+                            Pilih predikat dan masukkan capaian kokurikuler untuk setiap pelajar
+                        </div>
 
-                        {{-- Tombol Reset --}}
-                        <button
-                            type="button"
-                            class="btn btn-labeled btn-outline-secondary me-2"
-                            wire:click="confirmResetKehadiran"
-                            wire:loading.attr="disabled"
-                            wire:target="confirmResetKehadiran">
-                            <span class="btn-label">
-                                <i class="mdi mdi-delete-sweep-outline"></i>
-                            </span>
-                            Reset
-                        </button>
+                        <div>
+                            {{-- Tombol Reset --}}
+                            <button
+                                type="button"
+                                class="btn btn-labeled btn-outline-secondary me-2"
+                                wire:click="confirmResetKokurikuler"
+                                wire:loading.attr="disabled"
+                                wire:target="confirmResetKokurikuler">
+                                <span class="btn-label">
+                                    <i class="mdi mdi-delete-sweep-outline"></i>
+                                </span>
+                                Reset
+                            </button>
 
-                        {{-- Tombol Simpan --}}
-                        <button
-                            type="button"
-                            class="btn btn-labeled btn-primary"
-                            wire:click="confirmSaveKehadiran"
-                            wire:loading.attr="disabled"
-                            wire:target="confirmSaveKehadiran">
-                            <span class="btn-label">
-                                {{-- Icon loading tampil hanya saat confirmSaveKehadiran aktif --}}
-                                <i class="mdi mdi-loading mdi-spin d-none"
-                                    wire:loading.class.remove="d-none"
-                                    wire:target="confirmSaveKehadiran">
-                                </i>
+                            {{-- Tombol Simpan --}}
+                            <button
+                                type="button"
+                                class="btn btn-labeled btn-primary"
+                                wire:click="confirmSaveKokurikuler"
+                                wire:loading.attr="disabled"
+                                wire:target="confirmSaveKokurikuler">
+                                <span class="btn-label">
+                                    {{-- Icon loading tampil hanya saat confirmSaveKokurikuler aktif --}}
+                                    <i class="mdi mdi-loading mdi-spin d-none"
+                                        wire:loading.class.remove="d-none"
+                                        wire:target="confirmSaveKokurikuler">
+                                    </i>
 
-                                {{-- Icon simpan hilang saat loading --}}
-                                <i class="mdi mdi-content-save"
-                                    wire:loading.class="d-none"
-                                    wire:target="confirmSaveKehadiran">
-                                </i>
-                            </span>
+                                    {{-- Icon simpan hilang saat loading --}}
+                                    <i class="mdi mdi-content-save"
+                                        wire:loading.class="d-none"
+                                        wire:target="confirmSaveKokurikuler">
+                                    </i>
+                                </span>
 
-                            {{-- Teks tombol normal --}}
-                            <span class="text-normal" wire:loading.class="d-none" wire:target="confirmSaveKehadiran">
-                                Simpan
-                            </span>
+                                {{-- Teks tombol normal --}}
+                                <span class="text-normal" wire:loading.class="d-none" wire:target="confirmSaveKokurikuler">
+                                    Simpan
+                                </span>
 
-                            {{-- Teks saat loading --}}
-                            <span class="text-loading d-none" wire:loading.class.remove="d-none" wire:target="confirmSaveKehadiran">
-                                Menyimpan...
-                            </span>
-                        </button>
+                                {{-- Teks saat loading --}}
+                                <span class="text-loading d-none" wire:loading.class.remove="d-none" wire:target="confirmSaveKokurikuler">
+                                    Menyimpan...
+                                </span>
+                            </button>
+                        </div>
                     </div>
-
+                    @endif
                 </div>
             </div>
         </div>
@@ -324,7 +337,7 @@
         <div class="col-12">
             <div class="alert alert-danger text-center" role="alert">
                 <i class="mdi mdi-information-outline me-2"></i>
-                <strong>Silakan pilih Tahun Ajaran, Semester, dan Rombel/Kelas untuk mulai menginput data kehadiran.</strong>
+                <strong>Silakan pilih Tahun Ajaran, Semester, dan Rombel/Kelas untuk mulai menginput data kokurikuler.</strong>
             </div>
         </div>
     </div>

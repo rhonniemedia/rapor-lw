@@ -16,7 +16,7 @@ class EkskulPelajar extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id',
+        'tahun_ajaran_semester_id',
         'ekstrakurikuler_id',
         'pelajar_id',
         'nilai',

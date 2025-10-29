@@ -99,11 +99,22 @@ class User extends Authenticatable
         return $slug;
     }
 
+    public function kokurikulerDibimbing()
+    {
+        return $this->hasMany(Kokurikuler::class, 'guru_id');
+    }
+
+
     // Relasi ke Role
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'role_users', 'user_id', 'role_id')
             ->withTimestamps();
+    }
+
+    public function getNamaRoleAttribute(): ?string
+    {
+        return $this->roles->first()?->nama_role;
     }
 
     // Cek apakah user punya role tertentu

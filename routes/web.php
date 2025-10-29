@@ -81,6 +81,12 @@ Route::middleware('auth')->group(function () {
         ]);
     });
 
+    Route::get('/pembelajaran/kokurikuler', function () {
+        return view('contents.admin.kokurikuler', [
+            'title' => 'Kokurikuler',
+        ]);
+    });
+
     Route::get('/pembelajaran/kehadiran', function () {
         return view('contents.admin.kehadiran', [
             'title' => 'Data Kehadiran',
@@ -93,8 +99,8 @@ Route::middleware('auth')->group(function () {
         ]);
     });
 
-    Route::get('/pembelajaran/ekstrakurikuler', function () {
-        return view('contents.admin.ekstrakurikuler', [
+    Route::get('/pembelajaran/ekskul', function () {
+        return view('contents.admin.ekstrakurikuler-input', [
             'title' => 'Data Ekstrakurikuler',
         ]);
     });

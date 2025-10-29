@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('tahun_ajaran_semester_id'); // tambahkan langsung di awal
             $table->uuid('ekstrakurikuler_id');
             $table->uuid('pelajar_id');
-            $table->enum('nilai', ['A', 'B', 'C']);
+            $table->enum('nilai', ['A', 'B', 'C', 'D']);
             $table->text('deskripsi')->nullable();
             $table->timestamps();
 
