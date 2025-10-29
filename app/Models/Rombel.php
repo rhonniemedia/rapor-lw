@@ -55,7 +55,7 @@ class Rombel extends Model
     {
         return $this->belongsToMany(
             Pelajar::class,
-            'rombel_pelajar',  // nama tabel pivot
+            'rombel_pelajars',  // nama tabel pivot
             'rombel_id',       // foreign key di tabel pivot untuk rombel
             'pelajar_id'       // foreign key di tabel pivot untuk pelajar
         )->withTimestamps(); // opsional, jika tabel pivot punya created_at & updated_at

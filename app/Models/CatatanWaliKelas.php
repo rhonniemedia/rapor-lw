@@ -20,7 +20,6 @@ class CatatanWaliKelas extends Model
         'pelajar_id',
         'guru_id',
         'tahun_ajaran_semester_id',
-        'jenis_catatan',
         'catatan',
         'tanggal_input',
     ];

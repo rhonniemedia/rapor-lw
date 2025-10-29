@@ -13,17 +13,29 @@ return new class extends Migration
     {
         Schema::create('ekskul_pelajars', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('tahun_ajaran_semester_id'); // tambahkan langsung di awal
             $table->uuid('ekstrakurikuler_id');
             $table->uuid('pelajar_id');
             $table->enum('nilai', ['A', 'B', 'C']);
             $table->text('deskripsi')->nullable();
             $table->timestamps();
 
-            $table->foreign('ekstrakurikuler_id')->references('id')->on('ekstrakurikulers')->onDelete('cascade');
-            $table->foreign('pelajar_id')->references('id')->on('pelajars')->onDelete('cascade');
+            // Relasi foreign key
+            $table->foreign('tahun_ajaran_semester_id')
+                ->references('id')->on('tahun_ajaran_semesters')
+                ->onDelete('cascade');
+            $table->foreign('ekstrakurikuler_id')
+                ->references('id')->on('ekstrakurikulers')
+                ->onDelete('cascade');
+            $table->foreign('pelajar_id')
+                ->references('id')->on('pelajars')
+                ->onDelete('cascade');
 
-            // Unique constraint: satu siswa hanya punya 1 nilai per ekstrakurikuler
-            $table->unique(['ekstrakurikuler_id', 'pelajar_id'], 'unique_ekskul_pelajar');
+            // Unik per semester agar 1 siswa hanya punya 1 nilai per ekskul tiap semester
+            $table->unique(
+                ['tahun_ajaran_semester_id', 'ekstrakurikuler_id', 'pelajar_id'],
+                'unique_ekskul_pelajar_semester'
+            );
         });
     }
 

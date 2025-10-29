@@ -16,7 +16,6 @@ return new class extends Migration
             $table->uuid('pelajar_id');
             $table->uuid('guru_id');
             $table->uuid('tahun_ajaran_semester_id');
-            $table->enum('jenis_catatan', ['sikap', 'prestasi', 'kedisiplinan', 'sosial', 'akademik', 'lainnya']);
             $table->text('catatan');
             $table->timestamp('tanggal_input');
             $table->timestamps();

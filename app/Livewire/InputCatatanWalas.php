@@ -2,17 +2,17 @@
 
 namespace App\Livewire;
 
-use Carbon\Carbon;
 use App\Models\Rombel;
+use App\Models\Pelajar;
 use Livewire\Component;
 use App\Models\TahunAjaran;
+use App\Models\CatatanWaliKelas;
 use Livewire\WithPagination;
 use App\Models\RombelPelajar;
 use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Models\CatatanWaliKelas;
 use Illuminate\Database\Eloquent\Builder;
 
 class InputCatatanWalas extends Component
@@ -21,41 +21,22 @@ class InputCatatanWalas extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    // 🔹 Properti filter
     public $tahunAjaranId = null;
     public $semesterId = null;
     public $rombelId = null;
     public $selectedRombelPengajarId = null;
 
-    // 🔹 Properti utama
     public $rombel;
-
-    // 🔹 Properti pencarian
     public $searchPelajar = '';
     public $perPagePelajar = 50;
 
-    // 🔹 Data dropdown
     public $tahunAjaranList = [];
     public $semesterList = [];
     public $rombelList = [];
 
-    // 🔹 Input data catatan
-    public $catatanInput = [];
+    public $catatanInput = []; // hanya untuk input baru
+    public $cachedCatatanExist = null;
 
-    // 🔹 Opsi jenis catatan
-    public $jenisCatatanOptions = [
-        'perkembangan' => 'Perkembangan',
-        'prestasi' => 'Prestasi',
-        'perilaku' => 'Perilaku',
-        'akademik' => 'Akademik',
-        'non_akademik' => 'Non-Akademik',
-        'umum' => 'Umum',
-    ];
-
-    // 🔹 Cache untuk optimasi
-    private $cachedCatatanExist = null;
-
-    // 🔹 Query string untuk persistensi state
     protected $queryString = [
         'tahunAjaranId' => ['except' => null],
         'semesterId' => ['except' => null],
@@ -63,39 +44,32 @@ class InputCatatanWalas extends Component
         'searchPelajar' => ['except' => ''],
     ];
 
-    // 🔹 Event listener
     protected $listeners = [
         'saveCatatanConfirmed' => 'saveCatatan',
         'resetCatatanConfirmed' => 'resetCatatan',
     ];
 
-    // 🔹 Validation rules
     protected $rules = [
-        'catatanInput.*.jenis_catatan' => 'nullable|string|in:perkembangan,prestasi,perilaku,akademik,non_akademik,umum',
         'catatanInput.*.catatan' => 'nullable|string|max:1000',
     ];
 
     protected $messages = [
-        'catatanInput.*.jenis_catatan.in' => 'Jenis catatan tidak valid',
+        'catatanInput.*.catatan.string' => 'Catatan harus berupa teks',
         'catatanInput.*.catatan.max' => 'Catatan maksimal 1000 karakter',
     ];
 
     public function mount()
     {
-        // Load tahun ajaran
         $this->loadTahunAjaran();
 
-        // Set default tahun ajaran aktif
         $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
         if ($activeTahunAjaran && !$this->tahunAjaranId) {
             $this->tahunAjaranId = $activeTahunAjaran->id;
         }
 
-        // Load semester jika tahun ajaran sudah dipilih
         if ($this->tahunAjaranId) {
             $this->loadSemester();
 
-            // Set default semester aktif
             $activeSemester = TahunAjaranSemester::where('tahun_ajaran_id', $this->tahunAjaranId)
                 ->where('status', 'aktif')
                 ->first();
@@ -104,25 +78,24 @@ class InputCatatanWalas extends Component
             }
         }
 
-        // Load rombel jika tahun ajaran dan semester sudah dipilih
         if ($this->tahunAjaranId && $this->semesterId) {
             $this->loadRombel();
         }
 
-        // Load data rombel dan catatan jika rombel sudah dipilih
         if ($this->rombelId && $this->semesterId) {
             $this->loadRombelData();
             $this->loadCatatanPelajar();
         }
+
+        // ✅ Kosongkan input awal agar tidak langsung terisi
+        $this->reset(['catatanInput']);
     }
 
-    // 🔹 Load data tahun ajaran
     private function loadTahunAjaran(): void
     {
         $this->tahunAjaranList = TahunAjaran::orderBy('tgl_mulai', 'desc')->get();
     }
 
-    // 🔹 Load data semester
     private function loadSemester(): void
     {
         if (!$this->tahunAjaranId) {
@@ -135,7 +108,6 @@ class InputCatatanWalas extends Component
             ->get();
     }
 
-    // 🔹 Load data rombel berdasarkan tahun ajaran
     private function loadRombel(): void
     {
         if (!$this->tahunAjaranId) {
@@ -143,7 +115,7 @@ class InputCatatanWalas extends Component
             return;
         }
 
-        $this->rombelList = Rombel::whereHas('tahunAjaranKurikulum', function ($q) {
+        $this->rombelList = Rombel::whereHas('tahunAjaran', function ($q) {
             $q->where('tahun_ajaran_id', $this->tahunAjaranId);
         })
             ->orderBy('tingkat', 'asc')
@@ -151,7 +123,6 @@ class InputCatatanWalas extends Component
             ->get();
     }
 
-    // 🔹 Load data rombel yang dipilih
     private function loadRombelData(): void
     {
         if (!$this->rombelId) {
@@ -160,12 +131,8 @@ class InputCatatanWalas extends Component
             return;
         }
 
-        $this->rombel = Rombel::with([
-            'tahunAjaranKurikulum.tahunAjaran',
-            'tahunAjaranKurikulum.kurikulum',
-            'waliKelas',
-            'jurusan'
-        ])->find($this->rombelId);
+        $this->rombel = Rombel::with(['tahunAjaranKurikulum.tahunAjaran', 'tahunAjaranKurikulum.kurikulum', 'waliKelas', 'jurusan'])
+            ->find($this->rombelId);
 
         if (!$this->rombel) {
             $this->rombelId = null;
@@ -177,17 +144,14 @@ class InputCatatanWalas extends Component
             return;
         }
 
-        // Set selectedRombelPengajarId untuk kompatibilitas dengan blade
         $this->selectedRombelPengajarId = $this->rombelId;
     }
 
-    // 🔹 Handler saat tahun ajaran berubah
     public function updatedTahunAjaranId(): void
     {
         $this->resetFilters();
         $this->loadSemester();
 
-        // Auto-select semester aktif
         $activeSemester = TahunAjaranSemester::where('tahun_ajaran_id', $this->tahunAjaranId)
             ->where('status', 'aktif')
             ->first();
@@ -199,25 +163,16 @@ class InputCatatanWalas extends Component
         $this->resetPage();
     }
 
-    // 🔹 Handler saat semester berubah
     public function updatedSemesterId(): void
     {
-        $this->rombelId = null;
-        $this->selectedRombelPengajarId = null;
-        $this->rombelList = [];
-        $this->catatanInput = [];
-        $this->rombel = null;
-        $this->cachedCatatanExist = null;
-
+        $this->resetFilters();
         $this->loadRombel();
         $this->resetPage();
     }
 
-    // 🔹 Handler saat rombel berubah
     public function updatedRombelId(): void
     {
-        $this->catatanInput = [];
-        $this->cachedCatatanExist = null;
+        $this->reset(['catatanInput', 'cachedCatatanExist']);
 
         if ($this->rombelId && $this->semesterId) {
             $this->loadRombelData();
@@ -230,13 +185,6 @@ class InputCatatanWalas extends Component
         $this->resetPage();
     }
 
-    // 🔹 Reset pagination saat search berubah
-    public function updatingSearchPelajar(): void
-    {
-        $this->resetPage();
-    }
-
-    // 🔹 Helper method untuk reset filters
     private function resetFilters(): void
     {
         $this->semesterId = null;
@@ -249,45 +197,32 @@ class InputCatatanWalas extends Component
         $this->cachedCatatanExist = null;
     }
 
-    // 🔹 Load catatan terakhir untuk setiap pelajar
     private function loadCatatanPelajar(): void
     {
         if (!$this->rombelId || !$this->semesterId) {
-            $this->catatanInput = [];
             $this->cachedCatatanExist = null;
             return;
         }
 
-        // Cache catatan terakhir untuk setiap pelajar
-        $this->cachedCatatanExist = CatatanWaliKelas::where('rombel_id', $this->rombelId)
-            ->where('tahun_ajaran_semester_id', $this->semesterId)
+        $this->cachedCatatanExist = CatatanWaliKelas::where('tahun_ajaran_semester_id', $this->semesterId)
             ->whereIn('pelajar_id', function ($query) {
                 $query->select('pelajar_id')
                     ->from('rombel_pelajars')
                     ->where('rombel_id', $this->rombelId);
             })
-            ->orderBy('tanggal_input', 'desc')
             ->get()
-            ->groupBy('pelajar_id')
-            ->map(function ($catatanGroup) {
-                return $catatanGroup->first(); // Ambil catatan terbaru
-            });
-
-        // Reset array input catatan
-        $this->catatanInput = [];
+            ->keyBy('pelajar_id');
     }
 
-    // 🔹 Get query data pelajar dengan filter
     private function getPelajarQuery(): Builder
     {
         if (!$this->rombelId) {
-            return RombelPelajar::whereNull('id'); // Return empty query
+            return RombelPelajar::whereNull('id');
         }
 
         $query = RombelPelajar::where('rombel_id', $this->rombelId)
             ->with(['pelajar']);
 
-        // Filter pencarian
         if (!empty($this->searchPelajar)) {
             $search = $this->searchPelajar;
             $query->whereHas('pelajar', function ($q) use ($search) {
@@ -300,7 +235,6 @@ class InputCatatanWalas extends Component
         return $query;
     }
 
-    // 🔹 Konfirmasi simpan catatan
     public function confirmSaveCatatan(): void
     {
         if (!$this->rombelId || !$this->semesterId) {
@@ -311,41 +245,34 @@ class InputCatatanWalas extends Component
             return;
         }
 
-        // Validasi input
-        $this->validate();
+        $count = collect($this->catatanInput)
+            ->filter(fn($input) => !empty(trim($input['catatan'] ?? '')))
+            ->count();
 
-        // Cek apakah ada catatan yang diisi
-        $hasInput = false;
-        foreach ($this->catatanInput as $input) {
-            if (!empty($input['catatan']) && !empty($input['jenis_catatan'])) {
-                $hasInput = true;
-                break;
-            }
-        }
-
-        if (!$hasInput) {
+        if ($count === 0) {
             $this->dispatch('swal:warning', [
-                'title' => 'Peringatan!',
-                'text' => 'Tidak ada catatan yang diisi.',
+                'title' => 'Perhatian!',
+                'text' => 'Tidak ada catatan yang akan disimpan.',
             ]);
             return;
         }
 
+        $this->validate();
+
         $this->dispatch('swal:confirm', [
             'title' => 'Simpan Catatan?',
-            'text' => 'Catatan akan tersimpan sebagai history dan tidak menimpa catatan sebelumnya.',
+            'text' => "Anda akan menyimpan catatan untuk {$count} pelajar. Lanjutkan?",
+            'confirmButtonText' => 'Ya, Simpan',
             'nextEvent' => 'saveCatatanConfirmed',
         ]);
     }
 
-    // 🔹 Simpan catatan
     public function saveCatatan(): void
     {
         if (!$this->rombelId || !$this->semesterId) {
             return;
         }
 
-        // Validasi rombel
         $rombel = Rombel::find($this->rombelId);
         if (!$rombel) {
             $this->dispatch('swal:error', [
@@ -355,7 +282,28 @@ class InputCatatanWalas extends Component
             return;
         }
 
-        // Security: Validasi pelajar_id yang valid
+        $isAdmin = Auth::user()->hasRole(['admin', 'superadmin']);
+        $guruId = null;
+
+        if ($isAdmin) {
+            if (!empty($rombel->wali_kelas_slug)) {
+                $guru = \App\Models\User::where('slug', $rombel->wali_kelas_slug)->first();
+                if ($guru) {
+                    $guruId = $guru->id;
+                }
+            }
+        } else {
+            $guruId = Auth::id();
+        }
+
+        if (!$guruId) {
+            $this->dispatch('swal:error', [
+                'title' => 'Error!',
+                'text' => 'Gagal menentukan wali kelas (guru_id) untuk penyimpanan catatan.',
+            ]);
+            return;
+        }
+
         $validPelajarIds = RombelPelajar::where('rombel_id', $this->rombelId)
             ->pluck('pelajar_id')
             ->toArray();
@@ -363,103 +311,89 @@ class InputCatatanWalas extends Component
         DB::beginTransaction();
         try {
             $savedCount = 0;
-            $currentDate = Carbon::now();
+            $updatedCount = 0;
+            $deletedCount = 0;
 
-            foreach ($this->catatanInput as $pelajarId => $catatan) {
-                // Security check: pastikan pelajar ada di rombel ini
-                if (!in_array($pelajarId, $validPelajarIds)) {
+            foreach ($this->catatanInput as $pelajarId => $input) {
+                if (!in_array($pelajarId, $validPelajarIds)) continue;
+                $catatan = trim($input['catatan'] ?? '');
+
+                $existing = CatatanWaliKelas::where('pelajar_id', $pelajarId)
+                    ->where('tahun_ajaran_semester_id', $this->semesterId)
+                    ->first();
+
+                if (empty($catatan)) {
+                    if ($existing) {
+                        $existing->delete();
+                        $deletedCount++;
+                    }
                     continue;
                 }
 
-                // Skip jika catatan atau jenis catatan kosong
-                if (empty($catatan['catatan']) || empty($catatan['jenis_catatan'])) {
-                    continue;
+                if ($existing) {
+                    $existing->update([
+                        'catatan' => $catatan,
+                        'tanggal_input' => now(),
+                        'guru_id' => $guruId,
+                    ]);
+                    $updatedCount++;
+                } else {
+                    CatatanWaliKelas::create([
+                        'pelajar_id' => $pelajarId,
+                        'tahun_ajaran_semester_id' => $this->semesterId,
+                        'catatan' => $catatan,
+                        'tanggal_input' => now(),
+                        'guru_id' => $guruId,
+                    ]);
+                    $savedCount++;
                 }
-
-                // Validasi jenis catatan
-                if (!array_key_exists($catatan['jenis_catatan'], $this->jenisCatatanOptions)) {
-                    continue;
-                }
-
-                // Simpan catatan baru (tidak update, tapi create baru sebagai history)
-                CatatanWaliKelas::create([
-                    'pelajar_id' => $pelajarId,
-                    'rombel_id' => $this->rombelId,
-                    'tahun_ajaran_semester_id' => $this->semesterId,
-                    'jenis_catatan' => $catatan['jenis_catatan'],
-                    'catatan' => trim($catatan['catatan']),
-                    'tanggal_input' => $currentDate,
-                    'created_by' => Auth::id(),
-                    'updated_by' => Auth::id(),
-                ]);
-
-                $savedCount++;
             }
 
             DB::commit();
 
+            $this->reset(['catatanInput']);
+            $this->cachedCatatanExist = null;
+            $this->loadCatatanPelajar();
+
+            $msg = "{$savedCount} baru, {$updatedCount} diperbarui, {$deletedCount} dihapus";
             $this->dispatch('swal:success', [
                 'title' => 'Berhasil!',
-                'text' => "Berhasil menyimpan {$savedCount} catatan untuk {$rombel->nama}.",
+                'text' => "Berhasil menyimpan catatan untuk {$rombel->nama} ({$msg}).",
             ]);
-
-            // Clear cache dan reload data
-            $this->cachedCatatanExist = null;
-            $this->catatanInput = [];
-            $this->loadCatatanPelajar();
         } catch (\Exception $e) {
             DB::rollback();
-
-            Log::error('Error saving catatan wali kelas: ' . $e->getMessage(), [
-                'rombel_id' => $this->rombelId,
-                'semester_id' => $this->semesterId,
-            ]);
-
+            Log::error('Error saving catatan: ' . $e->getMessage());
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'Gagal menyimpan catatan. Silakan coba lagi.',
+                'text' => 'Gagal menyimpan catatan: ' . $e->getMessage(),
             ]);
         }
     }
 
-    // 🔹 Konfirmasi reset catatan
-    public function confirmResetCatatan(): void
-    {
-        $this->dispatch('swal:confirm', [
-            'title' => 'Reset Input Catatan?',
-            'text' => 'Semua input catatan akan dikosongkan (belum disimpan).',
-            'nextEvent' => 'resetCatatanConfirmed',
-        ]);
-    }
-
-    // 🔹 Reset semua input catatan
     public function resetCatatan(): void
     {
-        $this->catatanInput = [];
+        $this->reset(['catatanInput']);
 
-        $this->dispatch('swal:info', [
+        $this->dispatch('swal:success', [
             'title' => 'Direset!',
             'text' => 'Semua kolom input catatan telah dikosongkan.',
         ]);
     }
 
-    // 🔹 Render view dengan data pelajar
     public function render()
     {
         $pelajarData = collect();
 
         if ($this->rombelId && $this->semesterId) {
-            // Use cached catatan instead of querying again
             $catatanExist = $this->cachedCatatanExist ?? collect();
 
-            // Query pelajar dengan pagination
             $pelajarPaginated = $this->getPelajarQuery()
                 ->orderBy('id', 'asc')
                 ->paginate($this->perPagePelajar);
 
-            // Map data pelajar dengan catatan terakhir mereka
             $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($catatanExist) {
                 $pelajarId = $rombelPelajar->pelajar_id;
+                $existing = $catatanExist->get($pelajarId);
 
                 return (object) [
                     'rombel_pelajar_id' => $rombelPelajar->id,
@@ -467,7 +401,12 @@ class InputCatatanWalas extends Component
                     'nama_lengkap' => $rombelPelajar->pelajar->nama_lengkap,
                     'nomor_induk' => $rombelPelajar->pelajar->nomor_induk,
                     'nisn' => $rombelPelajar->pelajar->nisn,
-                    'catatan_terakhir' => $catatanExist->get($pelajarId),
+                    // ✅ tampilkan tapi jangan isi kembali input
+                    'catatan_existing' => $existing ? (object) [
+                        'id' => $existing->id,
+                        'catatan' => $existing->catatan,
+                        'tanggal_input' => $existing->tanggal_input,
+                    ] : null,
                 ];
             });
         }

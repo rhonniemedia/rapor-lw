@@ -93,6 +93,12 @@ Route::middleware('auth')->group(function () {
         ]);
     });
 
+    Route::get('/pembelajaran/ekstrakurikuler', function () {
+        return view('contents.admin.ekstrakurikuler', [
+            'title' => 'Data Ekstrakurikuler',
+        ]);
+    });
+
     // // Tidak perlu parameter rombelId lagi
     // Route::get('/input-nilai', App\Livewire\InputNilaiRombel::class)
     //     ->name('input-nilai.index');

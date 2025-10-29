@@ -34,14 +34,13 @@
     @else
     <form wire:submit.prevent="saveCatatan" class="mt-4">
         <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead class="thead-dark">
+            <table class="table table-hover table-bordered">
+                <thead class="thead-light">
                     <tr>
-                        <th class="text-center" style="width: 3%;">#</th>
-                        <th style="width: 22%;">Nama Pelajar</th>
-                        <th style="width: 15%;" class="text-center">Jenis Catatan</th>
-                        <th style="width: 45%;">Catatan</th>
-                        <th style="width: 15%;" class="text-center">Catatan Terakhir</th>
+                        <th class="text-center" style="width: 5%;">#</th>
+                        <th style="width: 25%;">Nama Pelajar/NIS/NISN</th>
+                        <th class="text-center" style="width: 35%;">Catatan</th>
+                        <th style="width: 35%;" class="text-center">Catatan Terakhir</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -50,17 +49,7 @@
                         <td class="text-center align-middle">{{ $index + 1 }}</td>
                         <td class="align-middle">
                             <strong>{{ $pelajar->nama_lengkap }}</strong><br>
-                            <small class="text-muted">{{ $pelajar->nomor_induk }}</small>
-                        </td>
-                        <td class="align-middle">
-                            <select
-                                wire:model.defer="catatanInput.{{ $pelajar->pelajar_id }}.jenis_catatan"
-                                class="form-select form-select-sm">
-                                <option value="">-- Pilih Jenis --</option>
-                                @foreach($jenisCatatanOptions as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
+                            <small class="text-muted">{{ $pelajar->nomor_induk }} | {{ $pelajar->nisn }}</small>
                         </td>
                         <td>
                             <textarea

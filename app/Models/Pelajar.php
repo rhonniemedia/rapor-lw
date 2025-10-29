@@ -95,7 +95,7 @@ class Pelajar extends Model
     {
         return $this->belongsToMany(
             Rombel::class,
-            'rombel_pelajar',
+            'rombel_pelajars',
             'pelajar_id',
             'rombel_id'
         )->withTimestamps();
