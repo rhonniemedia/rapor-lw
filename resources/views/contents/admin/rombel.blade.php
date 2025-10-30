@@ -26,7 +26,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    <livewire:data-rombel />
+                    <livewire:admin.data-rombel />
 
                 </div>
             </div>

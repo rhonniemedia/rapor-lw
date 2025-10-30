@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Role;
 use App\Models\User;
 use App\Models\Rombel;
 use App\Models\Jurusan;
@@ -12,8 +11,10 @@ use App\Models\TahunAjaran;
 use App\Models\OrangTuaWali;
 use App\Models\RombelPelajar;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 
 class DataSyncService
 {
@@ -204,80 +205,89 @@ class DataSyncService
 
     private function syncGuru(array $data): void
     {
-        // Log ringkasan awal data
         Log::info('START syncGuru', ['total_data' => count($data)]);
 
-        $roleGuru = Role::where('nama_role', 'guru')->first();
-
-        // Periksa apakah peran 'guru' ada
-        if (!$roleGuru) {
-            Log::error("Role 'guru' not found. Aborting sync.");
-            return;
-        }
+        $stats = ['success' => 0, 'skipped' => 0, 'errors' => 0];
 
         foreach ($data as $index => $item) {
             $ptkSlug = $item['ptk_slug'] ?? null;
             $nama = $item['nama'] ?? null;
             $email = $item['email'] ?? null;
 
-            // SKIP JIKA SLUG ADALAH ANGKA MINUS (atau format angka lainnya yang tidak valid untuk slug)
+            // Skip jika ptk_slug adalah angka (invalid)
             if ($ptkSlug && preg_match('/^-?\d+$/', $ptkSlug)) {
-                Log::warning("Skipped: Invalid slug format (looks like number)", [
-                    'slug' => $ptkSlug,
-                    'nama' => $nama
-                ]);
+                $stats['skipped']++;
                 continue;
             }
 
-            // SKIP JIKA DATA WAJIB TIDAK LENGKAP
+            // Skip jika data tidak lengkap
             if (empty($nama) || empty($email) || empty($ptkSlug)) {
-                Log::warning('Skipped: Incomplete required data (name, email, or slug missing)', $item);
+                $stats['skipped']++;
                 continue;
             }
 
             try {
-                DB::transaction(function () use ($item, $roleGuru, $ptkSlug, $email) {
+                DB::transaction(function () use ($item, $ptkSlug, $email) {
                     $user = User::where('slug', $ptkSlug)->first();
 
                     $userData = [
                         'name' => $item['nama'],
                         'email' => $item['email'],
                         'slug' => $ptkSlug,
-                        'nip' => !empty($item['nip']) ? $item['nip'] : null,
+                        'nip' => $item['nip'] ?? null,
                         'telephone' => $item['telepon'] ?? null,
                         'is_teacher' => true,
                         'status' => 'aktif',
                     ];
 
                     if ($user) {
+                        // Update existing user
                         $user->update($userData);
-                        // Log::info('Updated user', ['slug' => $ptkSlug]); // Log detail ini dihilangkan
                     } else {
+                        // Skip jika email sudah digunakan
                         if (User::where('email', $email)->exists()) {
-                            Log::warning('Skipped: Email already exists for a different user', ['email' => $email, 'slug' => $ptkSlug]);
                             return;
                         }
 
-                        $userData['password'] = Hash::make('Pass' . ($item['telepon'] ?? '12345') . '*');
+                        // Create new user with password
+                        $password = 'Pass' . ($item['telepon'] ?? '12345') . '*';
+                        $userData['password'] = Hash::make($password);
                         $user = User::create($userData);
-                        // Log::info('Created new user', ['slug' => $ptkSlug]); // Log detail ini dihilangkan
                     }
 
-                    RoleUser::firstOrCreate([
-                        'user_id' => $user->id,
-                        'role_id' => $roleGuru->id,
-                    ]);
+                    // Refresh user instance untuk clear cached relationships
+                    $user = $user->fresh();
+
+                    // Clear existing roles dan assign guru role
+                    $user->roles()->detach();
+                    $user->assignRole('guru');
+
+                    // Verify role assignment
+                    if (!$user->fresh()->hasRole('guru')) {
+                        throw new \Exception("Failed to assign guru role to user {$user->id}");
+                    }
                 });
+
+                $stats['success']++;
             } catch (\Exception $e) {
-                // Log kesalahan serius saat memproses item
-                Log::error('FATAL Error processing guru data', [
-                    'message' => $e->getMessage(),
+                $stats['errors']++;
+                Log::error('Error processing guru data', [
+                    'index' => $index,
                     'slug' => $ptkSlug,
                     'email' => $email,
+                    'message' => $e->getMessage()
                 ]);
             }
         }
 
-        Log::info('END syncGuru');
+        // Clear Spatie permission cache
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        Log::info('END syncGuru', [
+            'total_processed' => count($data),
+            'success' => $stats['success'],
+            'skipped' => $stats['skipped'],
+            'errors' => $stats['errors']
+        ]);
     }
 }

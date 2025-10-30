@@ -14,7 +14,7 @@
     </div>
 
     <!-- LiveWire -->
-    <livewire:input-nilai-akhir />
+    <livewire:admin.input-nilai-akhir />
 
 </div>
 

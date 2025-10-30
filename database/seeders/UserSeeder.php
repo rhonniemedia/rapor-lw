@@ -2,13 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
 use App\Models\User;
-use App\Models\RoleUser;
-use Illuminate\Support\Str;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class UserSeeder extends Seeder
 {
@@ -17,41 +14,36 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Data user default
-        $users = [
+        // Pastikan role superadmin sudah ada
+        $role = Role::firstOrCreate(
+            ['name' => 'superadmin'],
+            ['guard_name' => 'web']
+        );
+
+        // Buat user superadmin
+        $user = User::updateOrCreate(
+            ['email' => 'superadmin@gmail.com'],
             [
                 'name' => 'Super Admin',
                 'slug' => 'super-admin',
-                'email' => 'superadmin@gmail.com',
                 'password' => Hash::make('Password123!'),
                 'status' => 'aktif',
-                'role' => 'superadmin',
-            ],
-        ];
+            ]
+        );
 
-        foreach ($users as $data) {
-            // Buat user
-            $user = User::firstOrCreate(
-                ['email' => $data['email']],
-                [
-                    'id' => (string) Str::uuid(),
-                    'name' => $data['name'],
-                    'slug' => $data['slug'],
-                    'password' => $data['password'],
-                    'status' => $data['status'],
-                ]
-            );
+        // Assign role superadmin (syncRoles akan menghapus role lama jika ada)
+        $user->syncRoles(['superadmin']);
 
-            // Ambil role yang sudah dibuat di RoleSeeder
-            $role = Role::where('nama_role', $data['role'])->first();
-
-            if ($role) {
-                RoleUser::firstOrCreate([
-                    'id' => (string) Str::uuid(),
-                    'user_id' => $user->id,
-                    'role_id' => $role->id,
-                ]);
-            }
-        }
+        // Contoh user lain (optional)
+        $admin = User::updateOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Admin',
+                'slug' => 'admin',
+                'password' => Hash::make('Password123!'),
+                'status' => 'aktif',
+            ]
+        );
+        $admin->syncRoles(['admin']);
     }
 }

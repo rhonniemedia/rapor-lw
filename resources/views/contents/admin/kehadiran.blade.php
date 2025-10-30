@@ -14,7 +14,7 @@
     </div>
 
     <!-- LiveWire -->
-    <livewire:input-kehadiran />
+    <livewire:admin.input-kehadiran />
 
 </div>
 

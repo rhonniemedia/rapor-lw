@@ -36,8 +36,22 @@ class Login extends Component
             Auth::login($user, $this->remember);
             session()->regenerate();
 
-            // Redirect Livewire-safe (hindari CSRF refresh)
-            return redirect()->intended(route('dashboard'));
+            // Redirect berdasarkan role
+            $roleRoutes = [
+                'superadmin' => 'admin.dashboard',
+                'admin'      => 'admin.dashboard',
+                'walikelas'  => 'walikelas.dashboard',
+                'guru'       => 'guru.dashboard',
+            ];
+
+            foreach ($roleRoutes as $role => $route) {
+                if ($user->hasRole($role)) {
+                    return redirect()->intended(route($route));
+                }
+            }
+
+            // Fallback
+            return redirect()->intended(route('admin.dashboard'));
         }
 
         $this->addError('auth', 'Nama pengguna atau kata sandi yang Anda inputkan salah!');

@@ -14,7 +14,7 @@
     </div>
 
     <!-- LiveWire -->
-    <livewire:input-catatan-walas />
+    <livewire:admin.input-catatan-walas />
 
 </div>
 

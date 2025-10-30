@@ -14,7 +14,7 @@
     </div>
 
     <!-- LiveWire -->
-    <livewire:input-ekstrakurikuler />
+    <livewire:admin.input-ekstrakurikuler />
 
 </div>
 

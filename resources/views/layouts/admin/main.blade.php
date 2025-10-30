@@ -31,6 +31,25 @@
     <div class="container-scroller">
 
         <!-- Left Sidebar -->
+        @if (Auth::user()->hasRole('superadmin'))
+        @include('layouts.admin.sidebar')
+
+        @elseif (Auth::user()->hasRole('admin'))
+        @include('layouts.partials.sidebar-admin')
+
+        @elseif (Auth::user()->hasRole('walikelas'))
+        {{-- Jika role disimpan sebagai "walikelas" (tanpa underscore) --}}
+        @include('layouts.partials.sidebar-walikelas')
+
+        @elseif (Auth::user()->hasRole('wali_kelas'))
+        {{-- Jika role disimpan dengan underscore --}}
+        @include('layouts.partials.sidebar-wali')
+
+        @elseif (Auth::user()->hasRole('guru'))
+        @include('layouts.partials.sidebar-guru')
+
+        @endif
+
         @include ('layouts.admin.sidebar')
         <!-- End of left sidebar -->
 

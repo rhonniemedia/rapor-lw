@@ -2,17 +2,22 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Str;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
+    use HasFactory, Notifiable, HasRoles, HasUuids;
+
+    protected $keyType = 'string';
+    public $incrementing = false;
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasUuids, Notifiable;
+    use HasFactory, HasUuids, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -20,7 +25,6 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'id',
         'name',
         'slug',
         'email',
@@ -102,33 +106,5 @@ class User extends Authenticatable
     public function kokurikulerDibimbing()
     {
         return $this->hasMany(Kokurikuler::class, 'guru_id');
-    }
-
-
-    // Relasi ke Role
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class, 'role_users', 'user_id', 'role_id')
-            ->withTimestamps();
-    }
-
-    public function getNamaRoleAttribute(): ?string
-    {
-        return $this->roles->first()?->nama_role;
-    }
-
-    // Cek apakah user punya role tertentu
-    public function hasRole($roles)
-    {
-        $roles = (array) $roles;
-        return $this->roles()->whereIn('nama_role', $roles)->exists();
-    }
-
-    public function assignRole($roleId)
-    {
-        return RoleUser::create([
-            'user_id' => $this->id,
-            'role_id' => $roleId,
-        ]);
     }
 }

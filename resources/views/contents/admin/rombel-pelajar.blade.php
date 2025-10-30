@@ -21,7 +21,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    <livewire:data-rombel-pelajar :rombel-id="$rombelId" />
+                    <livewire:admin.data-rombel-pelajar :rombel-id="$rombelId" />
 
                 </div>
             </div>

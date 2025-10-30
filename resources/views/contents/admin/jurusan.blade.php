@@ -26,7 +26,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    <livewire:data-jurusan />
+                    <livewire:admin.data-jurusan />
 
                 </div>
             </div>

@@ -50,7 +50,7 @@
                         <div class="tab-pane fade show active" id="mapel" role="tabpanel">
 
                             <!-- Livewire Mata Pelajaran -->
-                            <livewire:data-mata-pelajaran />
+                            <livewire:admin.data-mata-pelajaran />
 
                         </div>
 
@@ -58,7 +58,7 @@
                         <div class="tab-pane fade" id="mapelGroup" role="tabpanel">
 
                             <!-- Livewire Kelompok Mata Pelajaran -->
-                            <livewire:data-kelompok-mapel />
+                            <livewire:admin.data-kelompok-mapel />
 
                         </div>
 
@@ -66,7 +66,7 @@
                         <div class="tab-pane fade" id="kurikulum" role="tabpanel">
 
                             <!-- Livewire Kurikulum -->
-                            <livewire:data-maping-kurikulum-mapel />
+                            <livewire:admin.data-maping-kurikulum-mapel />
 
                         </div>
 
@@ -74,7 +74,7 @@
                         <div class="tab-pane fade" id="jurusan" role="tabpanel">
 
                             <!-- Livewire Jurusan -->
-                            <livewire:data-maping-jurusan-mapel />
+                            <livewire:admin.data-maping-jurusan-mapel />
 
 
                         </div>

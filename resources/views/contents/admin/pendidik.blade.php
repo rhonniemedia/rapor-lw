@@ -26,7 +26,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    <livewire:data-pendidik />
+                    <livewire:admin.data-pendidik />
 
                 </div>
             </div>

@@ -14,7 +14,7 @@
     </div>
 
     <!-- LiveWire -->
-    <livewire:input-kokurikuler />
+    <livewire:admin.input-kokurikuler />
 
 </div>
 

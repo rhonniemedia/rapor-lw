@@ -1,6 +1,6 @@
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <div class="text-center sidebar-brand-wrapper d-flex align-items-center">
-        <a class="sidebar-brand brand-logo" href="{{url('dashboard')}}"><img src="{{ asset('assets/images/logo.svg') }}" alt="logo" /></a>
+        <a class="sidebar-brand brand-logo" href="{{url('admin/dashboard')}}"><img src="{{ asset('assets/images/logo.svg') }}" alt="logo" /></a>
         <a class="sidebar-brand brand-logo-mini pl-4 pt-3" href="{{url('')}}"><img src="{{ asset('assets/images/logo-mini.svg') }}" alt="logo" /></a>
     </div>
     <ul class="nav">
@@ -17,13 +17,13 @@
                         {{ \App\Helpers\UserHelper::getFirstName(Auth::user()->name ?? '') }}
                     </span>
                     <span class="font-weight-normal">
-                        {{-- STATUS: Menggunakan Accessor BARU yang sudah didefinisikan di Model User --}}
-                        {{ Auth::user()->nama_role ?? 'N/A' }}
+                        {{-- ROLE: Mengambil role pertama dari Spatie Permission --}}
+                        {{ Auth::user()->roles->first()->name ?? 'N/A' }}
                     </span>
                 </div>
                 <span class="badge badge-danger text-white ml-3 rounded">
-                    {{-- INISIAL: Mengambil huruf pertama dari Accessor BARU --}}
-                    {{ strtoupper(substr(Auth::user()->nama_role ?? 'N/A', 0, 1)) }}
+                    {{-- INISIAL: Mengambil huruf pertama dari role --}}
+                    {{ strtoupper(substr(Auth::user()->roles->first()->name ?? 'N', 0, 1)) }}
                 </span>
             </a>
         </li>
@@ -35,7 +35,7 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('dashboard') ? 'active' : '' }}" href="{{url('dashboard')}}">
+            <a class="nav-link {{ request()->url() === url('admin/dashboard') ? 'active' : '' }}" href="{{url('admin/dashboard')}}">
                 <i class="mdi mdi-view-dashboard menu-icon"></i>
                 <span class="menu-title">Dashboard</span>
             </a>
@@ -48,7 +48,7 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('home/master-data') ? 'active' : '' }}" href="{{url('home/master-data')}}">
+            <a class="nav-link {{ request()->url() === url('admin/master/sync') ? 'active' : '' }}" href="{{url('admin/master/sync')}}">
                 <i class="mdi mdi-file-compare menu-icon"></i>
                 <span class="menu-title">Sinkronisasi</span>
             </a>
@@ -63,10 +63,10 @@
             <div class="collapse {{ request()->is('sekolah*') ? 'show' : '' }}" id="ui-school">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('sekolah/profil') ? 'active' : '' }}" href="{{ url('sekolah/profil') }}">Profil Sekolah</a>
+                        <a class="nav-link {{ request()->is('admin/master/profile') ? 'active' : '' }}" href="{{ url('admin/master/profile') }}">Profil Sekolah</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('sekolah/kurikulum') ? 'active' : '' }}" href="{{ url('sekolah/kurikulum') }}">Kurikulum</a>
+                        <a class="nav-link {{ request()->is('admin/master/curriculum') ? 'active' : '' }}" href="{{ url('admin/master/curriculum') }}">Kurikulum</a>
                     </li>
                 </ul>
             </div>
@@ -74,27 +74,37 @@
 
         <!-- Akademik -->
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('akademik*') ? 'active' : '' }}" data-toggle="collapse" href="#ui-akademik" aria-expanded="false" aria-controls="ui-akademik">
+            <a class="nav-link {{ request()->is('admin/academic*') ? 'active' : '' }}"
+                data-toggle="collapse"
+                href="#ui-academic"
+                aria-expanded="false"
+                aria-controls="ui-academic">
                 <i class="mdi mdi-animation menu-icon"></i>
                 <span class="menu-title">Data Akademik</span>
                 <i class="menu-arrow"></i>
             </a>
-            <div class="collapse {{ request()->is('akademik*') ? 'show' : '' }}" id="ui-akademik">
+            <div class="collapse {{ request()->is('admin/academic*') ? 'show' : '' }}" id="ui-academic">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('akademik/tahun-ajaran') ? 'active' : '' }}" href="{{url('akademik/tahun-ajaran')}}">Tahun Ajaran</a>
+                        <a class="nav-link {{ request()->is('admin/academic/year') ? 'active' : '' }}"
+                            href="{{url('admin/academic/year')}}">Tahun Ajaran</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('akademik/semester') ? 'active' : '' }}" href="{{url('akademik/semester')}}">Semester</a>
+                        <a class="nav-link {{ request()->is('admin/academic/semester') ? 'active' : '' }}"
+                            href="{{url('admin/academic/semester')}}">Semester</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('akademik/jurusan') ? 'active' : '' }}" href="{{url('akademik/jurusan')}}">Jurusan</a>
+                        <a class="nav-link {{ request()->is('admin/academic/department') ? 'active' : '' }}"
+                            href="{{url('admin/academic/department')}}">Jurusan</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('akademik/mata-pelajaran') ? 'active' : '' }}" href="{{url('akademik/mata-pelajaran')}}">Mata Pelajaran</a>
+                        <a class="nav-link {{ request()->is('admin/academic/subject') ? 'active' : '' }}"
+                            href="{{url('admin/academic/subject')}}">Mata Pelajaran</a>
                     </li>
+                    <!-- Menu Akademik -->
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('akademik/ekstrakurikuler') ? 'active' : '' }}" href="{{url('akademik/ekstrakurikuler')}}">Ekstrakurikuler</a>
+                        <a class="nav-link {{ request()->is('admin/academic/manage-extracurricular') ? 'active' : '' }}"
+                            href="{{url('admin/academic/manage-extracurricular')}}">Ekstrakurikuler</a>
                     </li>
                 </ul>
             </div>
@@ -107,14 +117,14 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('home/rombongan-belajar*') ? 'active' : '' }}"
-                href="{{ url('home/rombongan-belajar') }}">
+            <a class="nav-link {{ request()->is('admin/class/list*') ? 'active' : '' }}"
+                href="{{ url('admin/class/list') }}">
                 <i class="mdi mdi-ungroup menu-icon"></i>
                 <span class="menu-title">Daftar Rombel</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{url('home/pendidik')}}">
+            <a class="nav-link" href="{{url('admin/class/teachers')}}">
                 <i class="mdi mdi-human-greeting menu-icon"></i>
                 <span class="menu-title">Daftar Pendidik</span>
             </a>
@@ -127,28 +137,39 @@
             </span>
         </li>
 
+        <!-- Pembelajaran -->
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('pembelajaran*') ? 'active' : '' }}" data-toggle="collapse" href="#ui-pembelajaran" aria-expanded="false" aria-controls="ui-pembelajaran">
-                <i class="mdi mdi-finance menu-icon menu-icon"></i>
+            <a class="nav-link {{ request()->is('admin/entry*') ? 'active' : '' }}"
+                data-toggle="collapse"
+                href="#ui-pembelajaran"
+                aria-expanded="false"
+                aria-controls="ui-pembelajaran">
+                <i class="mdi mdi-finance menu-icon"></i>
                 <span class="menu-title">Entri Data</span>
                 <i class="menu-arrow"></i>
             </a>
-            <div class="collapse {{ request()->is('pembelajaran*') ? 'show' : '' }}" id="ui-pembelajaran">
+            <div class="collapse {{ request()->is('admin/entry*') ? 'show' : '' }}" id="ui-pembelajaran">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('pembelajaran/nilai-akhir') ? 'active' : '' }}" href="{{url('pembelajaran/nilai-akhir')}}">Nilai Akhir</a>
+                        <a class="nav-link {{ request()->is('admin/entry/grades') ? 'active' : '' }}"
+                            href="{{url('admin/entry/grades')}}">Nilai Akhir</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('pembelajaran/kokurikuler') ? 'active' : '' }}" href="{{url('pembelajaran/kokurikuler')}}">Kokurikuler</a>
+                        <a class="nav-link {{ request()->is('admin/entry/cocurricular') ? 'active' : '' }}"
+                            href="{{url('admin/entry/cocurricular')}}">Kokurikuler</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('pembelajaran/kehadiran') ? 'active' : '' }}" href="{{url('pembelajaran/kehadiran')}}">Kehadiran</a>
+                        <a class="nav-link {{ request()->is('admin/entry/attendance') ? 'active' : '' }}"
+                            href="{{url('admin/entry/attendance')}}">Kehadiran</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('pembelajaran/catatan-wali-kelas') ? 'active' : '' }}" href="{{url('pembelajaran/catatan-wali-kelas')}}">Catatan Wali Kelas</a>
+                        <a class="nav-link {{ request()->is('admin/entry/class-notes') ? 'active' : '' }}"
+                            href="{{url('admin/entry/class-notes')}}">Catatan Wali Kelas</a>
                     </li>
+                    <!-- Menu Entri Data -->
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('pembelajaran/ekskul') ? 'active' : '' }}" href="{{url('pembelajaran/ekskul')}}">Ekstrakurikuler</a>
+                        <a class="nav-link {{ request()->is('admin/entry/entry-extracurricular') ? 'active' : '' }}"
+                            href="{{url('admin/entry/extracurricular')}}">Ekstrakurikuler</a>
                     </li>
                 </ul>
             </div>

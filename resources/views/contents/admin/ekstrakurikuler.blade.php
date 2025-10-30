@@ -25,7 +25,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    <livewire:data-ekstrakurikuler />
+                    <livewire:admin.data-ekstrakurikuler />
 
                 </div>
             </div>

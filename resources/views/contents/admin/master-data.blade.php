@@ -26,7 +26,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    @livewire('master-data')
+                    <livewire:admin.master-data />
 
                 </div>
             </div>

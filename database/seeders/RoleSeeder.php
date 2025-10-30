@@ -3,12 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Role;
-use App\Models\User;
-use App\Models\RoleUser;
-use Illuminate\Support\Str;
+use App\Models\Permission;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class RoleSeeder extends Seeder
 {
@@ -17,14 +13,47 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Daftar role
-        $roles = ['superadmin', 'admin', 'guru', 'walikelas'];
+        // Reset cached roles and permissions
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        foreach ($roles as $namaRole) {
+        // Buat roles
+        $roles = [
+            'superadmin',
+            'admin',
+            'walikelas',
+            'guru',
+        ];
+
+        foreach ($roles as $roleName) {
             Role::firstOrCreate(
-                ['nama_role' => $namaRole],
-                ['id' => (string) Str::uuid()]
+                ['name' => $roleName],
+                ['guard_name' => 'web']
             );
+        }
+
+        // Contoh membuat permissions (optional)
+        $permissions = [
+            'view users',
+            'create users',
+            'edit users',
+            'delete users',
+            'view roles',
+            'create roles',
+            'edit roles',
+            'delete roles',
+        ];
+
+        foreach ($permissions as $permissionName) {
+            Permission::firstOrCreate(
+                ['name' => $permissionName],
+                ['guard_name' => 'web']
+            );
+        }
+
+        // Assign permissions ke role superadmin (optional)
+        $superadmin = Role::where('name', 'superadmin')->first();
+        if ($superadmin) {
+            $superadmin->givePermissionTo(Permission::all());
         }
     }
 }

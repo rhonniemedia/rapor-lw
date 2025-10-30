@@ -49,7 +49,7 @@
                         <div class="tab-pane fade show active" id="tahun" role="tabpanel">
 
                             <!-- Livewire Tahun Ajaran -->
-                            <livewire:data-tahun-ajaran />
+                            <livewire:admin.data-tahun-ajaran />
 
                         </div>
 
@@ -57,10 +57,10 @@
                         <div class="tab-pane fade" id="kurikulum" role="tabpanel">
 
                             <!-- Livewire Kurikulum -->
-                            <livewire:data-kurikulum />
+                            <livewire:admin.data-kurikulum />
 
                             <!-- Livewire Kurikulum -->
-                            <livewire:data-maping-kurikulum />
+                            <livewire:admin.data-maping-kurikulum />
 
                         </div>
 
@@ -68,10 +68,10 @@
                         <div class="tab-pane fade" id="semester" role="tabpanel">
 
                             <!-- Livewire Semester -->
-                            <livewire:data-semester />
+                            <livewire:admin.data-semester />
 
                             <!-- Livewire Semester -->
-                            <livewire:data-maping-semester />
+                            <livewire:admin.data-maping-semester />
 
 
 
