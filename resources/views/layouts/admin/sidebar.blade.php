@@ -18,7 +18,7 @@
                     </span>
                     <span class="font-weight-normal">
                         {{-- ROLE: Mengambil role pertama dari Spatie Permission --}}
-                        {{ Auth::user()->roles->first()->name ?? 'N/A' }}
+                        {{ ucwords(Auth::user()->roles->first()->name ?? 'N/A') }}
                     </span>
                 </div>
                 <span class="badge badge-danger text-white ml-3 rounded">

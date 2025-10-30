@@ -17,7 +17,7 @@ Route::get('/auth/login', function () {
     ]);
 })->name('login')->middleware('guest');
 
-// Logout bisa diakses semua user yang login
+// Logout
 Route::post('/auth/logout', function () {
     Auth::logout();
     session()->invalidate();
@@ -85,20 +85,17 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
     Route::prefix('users')->group(function () {
         Route::get('/list', fn() => view('contents.admin.pengguna', ['title' => 'Daftar Pengguna']));
     });
-
-    // Route::post('/logout', function () {
-    //     Auth::logout();
-    //     session()->invalidate();
-    //     session()->regenerateToken();
-    //     return redirect()->route('login');
-    // })->name('logout');
 });
 
 // Wali Kelas Routes
-Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikelas.')->group(function () {
+Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('homeroom.')->group(function () {
     Route::get('/dashboard', function () {
-        return view('contents.teacher.dashboard', ['title' => 'Dashboard Wali Kelas']);
+        return view('contents.wali.dashboard', ['title' => 'Dashboard Wali Kelas']);
     })->name('dashboard');
+
+    Route::get('/students', function () {
+        return view('contents.wali.rombel-pelajar', ['title' => 'Data Pelajar']);
+    })->name('students');
 
     // Route wali kelas lainnya...
 });
