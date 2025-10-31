@@ -18,6 +18,13 @@ use Illuminate\Support\Facades\Cache;
 
 class DataSyncService
 {
+    protected $apiSyncService;
+
+    public function __construct(ApiSyncService $apiSyncService)
+    {
+        $this->apiSyncService = $apiSyncService;
+    }
+
     public function syncAll(array $apiData): void
     {
         DB::beginTransaction();
@@ -207,6 +214,9 @@ class DataSyncService
     {
         Log::info('START syncGuru', ['total_data' => count($data)]);
 
+        // Gunakan ApiSyncService untuk fetch wali kelas
+        $waliKelasSlugs = $this->apiSyncService->getWaliKelasSlugs();
+
         $stats = ['success' => 0, 'skipped' => 0, 'errors' => 0];
 
         foreach ($data as $index => $item) {
@@ -214,20 +224,18 @@ class DataSyncService
             $nama = $item['nama'] ?? null;
             $email = $item['email'] ?? null;
 
-            // Skip jika ptk_slug adalah angka (invalid)
             if ($ptkSlug && preg_match('/^-?\d+$/', $ptkSlug)) {
                 $stats['skipped']++;
                 continue;
             }
 
-            // Skip jika data tidak lengkap
             if (empty($nama) || empty($email) || empty($ptkSlug)) {
                 $stats['skipped']++;
                 continue;
             }
 
             try {
-                DB::transaction(function () use ($item, $ptkSlug, $email) {
+                DB::transaction(function () use ($item, $ptkSlug, $email, $waliKelasSlugs) {
                     $user = User::where('slug', $ptkSlug)->first();
 
                     $userData = [
@@ -241,30 +249,25 @@ class DataSyncService
                     ];
 
                     if ($user) {
-                        // Update existing user
                         $user->update($userData);
                     } else {
-                        // Skip jika email sudah digunakan
                         if (User::where('email', $email)->exists()) {
                             return;
                         }
 
-                        // Create new user with password
                         $password = 'Pass' . ($item['telepon'] ?? '12345') . '*';
                         $userData['password'] = Hash::make($password);
                         $user = User::create($userData);
                     }
 
-                    // Refresh user instance untuk clear cached relationships
                     $user = $user->fresh();
-
-                    // Clear existing roles dan assign guru role
                     $user->roles()->detach();
-                    $user->assignRole('guru');
 
-                    // Verify role assignment
-                    if (!$user->fresh()->hasRole('guru')) {
-                        throw new \Exception("Failed to assign guru role to user {$user->id}");
+                    $role = in_array($ptkSlug, $waliKelasSlugs) ? 'walikelas' : 'guru';
+                    $user->assignRole($role);
+
+                    if (!$user->fresh()->hasRole($role)) {
+                        throw new \Exception("Failed to assign {$role} role to user {$user->id}");
                     }
                 });
 
@@ -280,7 +283,6 @@ class DataSyncService
             }
         }
 
-        // Clear Spatie permission cache
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         Log::info('END syncGuru', [

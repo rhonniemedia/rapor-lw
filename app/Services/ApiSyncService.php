@@ -87,4 +87,39 @@ class ApiSyncService
             return $carry + (is_array($dataset) ? count($dataset) : 0);
         }, 0);
     }
+
+    /**
+     * Get all wali kelas slugs from rombel data
+     */
+    public function getWaliKelasSlugs(): array
+    {
+        try {
+            $rombelData = $this->fetchRombel();
+
+            if (empty($rombelData)) {
+                Log::warning('No rombel data available for wali kelas');
+                return [];
+            }
+
+            // Extract wali_kelas slugs
+            $waliKelasSlugs = collect($rombelData)
+                ->pluck('wali_kelas')
+                ->filter() // Remove null/empty values
+                ->unique()
+                ->values()
+                ->toArray();
+
+            Log::info('Wali kelas slugs extracted', [
+                'total_rombel' => count($rombelData),
+                'total_wali_kelas' => count($waliKelasSlugs)
+            ]);
+
+            return $waliKelasSlugs;
+        } catch (\Exception $e) {
+            Log::error('Error extracting wali kelas slugs', [
+                'message' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
 }
