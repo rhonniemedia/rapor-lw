@@ -56,7 +56,6 @@ class EntriNilai extends Component
 
     public function mount()
     {
-        // Load rombel dari wali kelas yang login
         $this->loadRombelWaliKelas();
 
         if (!$this->rombel) {
@@ -64,21 +63,20 @@ class EntriNilai extends Component
             return redirect()->route('walikelas.dashboard');
         }
 
-        // Load semester aktif
         $this->loadSemesterAktif();
 
         if (!$this->semesterAktif) {
             session()->flash('warning', 'Tidak ada semester aktif saat ini.');
         }
 
-        // Load mata pelajaran
         $this->loadMataPelajaran();
 
-        // Load nilai jika mata pelajaran sudah dipilih
         if ($this->selectedRombelPengajarId) {
             $this->loadNilaiPelajar();
         }
     }
+
+    protected $listeners = ['deleteNilai'];
 
     private function loadRombelWaliKelas(): void
     {
@@ -106,7 +104,6 @@ class EntriNilai extends Component
             return;
         }
 
-        // Load mata pelajaran yang diajarkan di rombel ini
         $this->mataPelajaranList = RombelPengajar::with([
             'mataPelajaran',
             'guru'
@@ -120,6 +117,7 @@ class EntriNilai extends Component
     {
         $this->resetPage();
         $this->searchPelajar = '';
+        $this->nilaiInput = []; // Reset input saat ganti mapel
         $this->cachedNilaiExist = null;
         $this->loadNilaiPelajar();
     }
@@ -151,16 +149,10 @@ class EntriNilai extends Component
 
         $this->guruName = $rombelPengajar->guru->name ?? 'N/A';
 
-        // Cache nilai existing
+        // Reload cache dari database
         $this->cachedNilaiExist = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
             ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
             ->pluck('nilai_angka', 'pelajar_id');
-
-        // Reset dan populate nilai input
-        $this->nilaiInput = [];
-        foreach ($this->cachedNilaiExist as $pelajarId => $nilai) {
-            $this->nilaiInput[$pelajarId] = $nilai;
-        }
     }
 
     private function getPelajarQuery(): Builder
@@ -202,7 +194,6 @@ class EntriNilai extends Component
             return;
         }
 
-        // Validasi input
         $this->validate();
 
         $rombelPengajar = RombelPengajar::with('mataPelajaran')
@@ -220,7 +211,6 @@ class EntriNilai extends Component
         $mataPelajaranId = $rombelPengajar->mata_pelajaran_id;
         $guruId = $rombelPengajar->guru_id;
 
-        // Validasi pelajar_id yang valid
         $validPelajarIds = RombelPelajar::where('rombel_id', $this->rombel->id)
             ->pluck('pelajar_id')
             ->toArray();
@@ -272,7 +262,7 @@ class EntriNilai extends Component
                 'text' => "Berhasil menyimpan {$savedCount} nilai untuk mata pelajaran '{$mataPelajaran}'.",
             ]);
 
-            $this->cachedNilaiExist = null;
+            // Reload cache setelah save
             $this->loadNilaiPelajar();
         } catch (\Exception $e) {
             DB::rollback();
@@ -291,12 +281,76 @@ class EntriNilai extends Component
 
     public function resetNilai(): void
     {
-        $this->nilaiInput = array_map(fn() => null, $this->nilaiInput);
+        if ($this->cachedNilaiExist === null) {
+            $this->loadNilaiPelajar();
+        }
+
+        foreach ($this->nilaiInput as $pelajarId => $nilai) {
+            if ($this->cachedNilaiExist && $this->cachedNilaiExist->has($pelajarId)) {
+                $this->nilaiInput[$pelajarId] = $this->cachedNilaiExist->get($pelajarId);
+            } else {
+                $this->nilaiInput[$pelajarId] = null;
+            }
+        }
 
         $this->dispatch('swal:info', [
             'title' => 'Direset!',
-            'text' => 'Semua kolom input nilai telah dikosongkan.',
+            'text' => 'Input nilai telah dikembalikan ke nilai tersimpan.',
         ]);
+    }
+
+    public function confirmDelete($pelajarId): void
+    {
+        $this->dispatch('swal:confirm', [
+            'title' => 'Hapus Nilai Pelajar?',
+            'text' => 'Anda yakin ingin menghapus nilai ini?',
+            'icon' => 'warning',
+            'confirmButtonText' => 'Ya, Hapus!',
+            'nextEvent' => 'deleteNilai',
+            'id' => $pelajarId
+        ]);
+    }
+
+    public function deleteNilai($pelajarId = null): void
+    {
+        // ✅ SOLUSI: Menangani parameter yang dikirim dari JS/SweetAlert sebagai array
+        if (is_array($pelajarId) && isset($pelajarId[0])) {
+            $pelajarId = $pelajarId[0];
+        }
+
+        if (!$pelajarId || !$this->selectedRombelPengajarId || !$this->semesterAktif) {
+            $this->dispatch('swal:error', [ // Ganti session()->flash
+                'title' => 'Gagal!',
+                'text' => 'ID Pelajar tidak ditemukan atau data rombel/semester tidak valid.',
+            ]);
+            return;
+        }
+
+        try {
+            $deleted = Nilai::where('pelajar_id', $pelajarId)
+                ->where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+                ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+                ->delete();
+
+            if ($deleted) {
+                $this->dispatch('swal:success', [ // Ganti session()->flash
+                    'title' => 'Berhasil!',
+                    'text' => 'Nilai berhasil dihapus.',
+                ]);
+                $this->loadNilaiPelajar();
+            } else {
+                $this->dispatch('swal:info', [ // Ganti session()->flash
+                    'title' => 'Info',
+                    'text' => 'Nilai tidak ditemukan.',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error deleting nilai: ' . $e->getMessage(), ['pelajar_id' => $pelajarId]);
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'Terjadi kesalahan saat menghapus nilai.',
+            ]);
+        }
     }
 
     public function render()
@@ -318,7 +372,8 @@ class EntriNilai extends Component
             $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($nilaiExist) {
                 $pelajarId = $rombelPelajar->pelajar_id;
 
-                if (!isset($this->nilaiInput[$pelajarId])) {
+                // Hanya set jika belum ada
+                if (!array_key_exists($pelajarId, $this->nilaiInput)) {
                     $this->nilaiInput[$pelajarId] = $nilaiExist->get($pelajarId);
                 }
 

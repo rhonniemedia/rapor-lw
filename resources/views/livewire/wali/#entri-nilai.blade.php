@@ -186,30 +186,13 @@
         <table class="table table-hover table-bordered">
             <thead class="table-light">
                 <tr>
-                    <th class="text-center" width="5%">
-                        <p class="mb-0">No</p>
-                        <small>Urut</small>
-                    </th>
-                    <th width="40%">
-                        <p class="mb-0">Nama Lengkap</p>
-                        <small>Nomor Induk Sekolah & Nasional</small>
-                    </th>
-                    <th class="text-center" width="10%">
-                        <p class="mb-0">Nilai</p>
-                        <small>Input Nilai</small>
-                    </th>
-                    <th class="text-center" width="10%">
-                        <p class="mb-0">Nilai Tersimpan</p>
-                        <small>Nilai yang telah tersimpan</small>
-                    </th>
-                    <th class="text-center" width="30%">
-                        <p class="mb-0">Capaian Kompetensi</p>
-                        <small>Telah atau Belum Tercapai</small>
-                    </th>
-                    <th class="text-center" width="5%">
-                        <p class="mb-0">Aksi</p>
-                        <small>Delete</small>
-                    </th>
+                    <th class="text-center" width="5%">No</th>
+                    <th class="text-center" width="10%">NIS</th>
+                    <th class="text-center" width="10%">NISN</th>
+                    <th width="40%">Nama Lengkap</th>
+                    <th class="text-center" width="13%">Nilai Tersimpan</th>
+                    <th class="text-center" width="17%">Input Nilai</th>
+                    <th class="text-center" width="5%">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -218,9 +201,17 @@
                     <td class="text-center">
                         {{ $pelajarData->firstItem() + $index }}
                     </td>
-                    <td>
-                        <p class="mb-0">{{ $pelajar->nama_lengkap }}</p>
-                        <small>{{ $pelajar->nomor_induk ?? '-' }} | {{ $pelajar->nisn ?? '-' }}</small>
+                    <td class="text-center">{{ $pelajar->nomor_induk ?? '-' }}</td>
+                    <td class="text-center">{{ $pelajar->nisn ?? '-' }}</td>
+                    <td>{{ $pelajar->nama_lengkap }}</td>
+                    <td class="text-center">
+                        @if($pelajar->nilai_sekarang)
+                        <span class="badge bg-info">
+                            {{ number_format($pelajar->nilai_sekarang, 2) }}
+                        </span>
+                        @else
+                        <span class="text-muted">-</span>
+                        @endif
                     </td>
                     <td>
                         <input type="number"
@@ -236,19 +227,9 @@
                     </td>
                     <td class="text-center">
                         @if($pelajar->nilai_sekarang)
-                        <span class="badge bg-info">
-                            {{ number_format($pelajar->nilai_sekarang, 2) }}
-                        </span>
-                        @else
-                        <span class="text-muted">-</span>
-                        @endif
-                    </td>
-                    <td></td>
-                    <td class="text-center">
-                        @if($pelajar->nilai_sekarang)
                         <button type="button"
                             wire:key="delete-{{ $pelajar->pelajar_id }}"
-                            class="btn btn-sm btn-outline-danger"
+                            class="btn btn-sm btn-danger"
                             wire:click="confirmDelete('{{ $pelajar->pelajar_id }}')"
                             wire:loading.attr="disabled"
                             wire:target="confirmDelete,deleteNilai"
