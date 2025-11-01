@@ -6,8 +6,21 @@ use Illuminate\Support\Facades\Route;
 // Redirect root ke login
 Route::get('/', function () {
     if (Auth::check()) {
-        return redirect()->route('admin.dashboard');
+        $user = Auth::user();
+
+        // Arahkan sesuai role
+        if ($user->hasAnyRole(['superadmin', 'admin'])) {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->hasRole('walikelas')) {
+            return redirect()->route('walikelas.dashboard');
+        } elseif ($user->hasRole('guru')) {
+            return redirect()->route('guru.dashboard');
+        } else {
+            Auth::logout();
+            return redirect()->route('login')->with('error', 'Akses tidak dikenali.');
+        }
     }
+
     return redirect()->route('login');
 });
 
@@ -105,6 +118,10 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
         Route::get('/class-notes', fn() => view('contents.wali.entri-catatan', ['title' => 'Catatan Wali Kelas']));
         Route::get('/extracurricular', fn() => view('contents.wali.entri-ekstrakurikuler', ['title' => 'Data Ekstrakurikuler']));
     });
+
+    Route::get('/teaching', function () {
+        return view('contents.wali.rombel-ajar', ['title' => 'Rombongan Belajar']);
+    })->name('kelasajar');
 
     // Route wali kelas lainnya...
 });
