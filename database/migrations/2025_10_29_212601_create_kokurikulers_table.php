@@ -27,7 +27,7 @@ return new class extends Migration
             $table->foreign('tahun_ajaran_semester_id')->references('id')->on('tahun_ajaran_semesters')->onDelete('cascade');
 
             // Kolom utama
-            $table->string('predikat', 2)->nullable(); // misal A/B/C
+            $table->string('predikat', 25)->nullable(); // misal A/B/C
             $table->text('capaian')->nullable();
             $table->date('tanggal_input')->nullable();
 

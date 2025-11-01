@@ -5,13 +5,13 @@
             <div class="d-flex align-items-center">
                 <div class="icon-wrapper position-relative">
                     <span class="bg-gradient-primary p-2 rounded-3 shadow-sm me-3 d-inline-flex align-items-center justify-content-center">
-                        <i class="mdi mdi-numeric mdi-24px text-white"></i>
+                        <i class="mdi mdi-clipboard-text mdi-24px text-white"></i>
                     </span>
                 </div>
                 <div>
-                    <h4 class="mb-1 text-dark fw-bold">Entri Nilai Akhir Pelajar</h4>
+                    <h4 class="mb-1 text-dark fw-bold">Entri Catatan Wali Kelas</h4>
                     <div class="d-flex align-items-center gap-2">
-                        <small class="text-muted">Kelola nilai per mata pelajaran</small>
+                        <small class="text-muted">Kelola data catatan Wali Kelas</small>
                     </div>
                 </div>
             </div>
@@ -70,6 +70,23 @@
                         </div>
                     </div>
 
+                    <!-- Jurusan -->
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
+                            style="width: 36px; height: 36px;">
+                            <i class="mdi mdi-school text-white fs-5"></i>
+                        </div>
+                        <div class="ms-3 d-flex flex-column justify-content-center">
+                            <small class="text-muted lh-2">Kompetensi Keahlian</small>
+                            <p class="fw-bold mb-0 text-dark lh-sm">
+                                {{ $rombel->jurusan->nama ?? 'Umum' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolom 3 -->
+                <div class="col-md-4">
                     <!-- Wali Kelas -->
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
@@ -84,48 +101,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Kolom 3 -->
-                <div class="col-md-4">
-                    <!-- Guru Mata Pelajaran -->
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
-                            style="width: 36px; height: 36px;">
-                            <i class="mdi mdi-teach text-white fs-5"></i>
-                        </div>
-                        <div class="ms-3 d-flex flex-column justify-content-center">
-                            <small class="text-muted lh-2">Guru Mata Pelajaran</small>
-                            <p class="fw-bold mb-0 text-primary lh-sm">
-                                @if($selectedRombelPengajarId && $guruName)
-                                {{ $guruName }}
-                                @else
-                                <span class="text-muted">Belum Dipilih</span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Mata Pelajaran -->
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-danger rounded-3"
-                            style="width: 36px; height: 36px;">
-                            <i class="mdi mdi-book-open-variant text-white fs-5"></i>
-                        </div>
-                        <div class="ms-3 d-flex flex-column justify-content-center">
-                            <small class="text-muted lh-2">Mata Pelajaran</small>
-                            <p class="fw-bold mb-0 text-danger lh-sm">
-                                @if($selectedRombelPengajarId)
-                                @php
-                                $selectedMapel = $mataPelajaranList->firstWhere('id', $selectedRombelPengajarId);
-                                @endphp
-                                {{ $selectedMapel->mataPelajaran->nama ?? 'N/A' }}
-                                @else
-                                <span class="text-muted">Belum Dipilih</span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -136,49 +111,30 @@
     </div>
     @endif
 
-    {{-- Filter Mata Pelajaran --}}
+    {{-- Tabel Input Catatan --}}
     @if($rombel && $semesterAktif)
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">
-                        <i class="mdi mdi-book-open-page-variant me-1"></i>
-                        Pilih Mata Pelajaran <span class="text-danger">*</span>
-                    </label>
-                    <select wire:model.live="selectedRombelPengajarId" class="form-select">
-                        <option value="">-- Pilih Mata Pelajaran --</option>
-                        @foreach($mataPelajaranList as $rp)
-                        <option value="{{ $rp->id }}">
-                            {{ $rp->mataPelajaran->nama }}
-                            @if($rp->mataPelajaran->kelompok)
-                            - {{ $rp->mataPelajaran->kelompok->nama }}
-                            @endif
-                        </option>
-                        @endforeach
-                    </select>
+    <div class="row mb-3 align-items-center">
+        <div class="col-lg-6">
+            <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Entri Data Catatan Wali Kelas</h5>
+        </div>
+        <div class="col-lg-6 d-flex justify-content-end">
+            <div class="input-group w-50">
+                <input type="text"
+                    wire:model.live.debounce.300ms="searchPelajar"
+                    class="form-control"
+                    placeholder="Cari nama, atau nomor induk...">
+                @if($searchPelajar)
+                <div class="input-group-append">
+                    <button type="button"
+                        class="btn btn-secondary"
+                        wire:click="$set('searchPelajar', '')">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">
-                        <i class="mdi mdi-magnify me-1"></i> Cari Siswa
-                    </label>
-                    <input type="text"
-                        wire:model.live.debounce.300ms="searchPelajar"
-                        class="form-control"
-                        placeholder="Nama, NIS, atau NISN..."
-                        @if(!$selectedRombelPengajarId) disabled @endif>
-                </div>
+                @endif
             </div>
         </div>
     </div>
-    @endif
-
-    {{-- Tabel Input Nilai --}}
-    @if($selectedRombelPengajarId)
-    <h5 class="text-dark mb-3">
-        <i class="mdi mdi-account-multiple me-2"></i> Entri Data Nilai Akhir Pelajar
-    </h5>
 
     <div class="table-responsive">
         <table class="table table-hover">
@@ -188,21 +144,17 @@
                         <p class="mb-0">No</p>
                         <small>Urut</small>
                     </th>
-                    <th width="40%">
+                    <th width="30%">
                         <p class="mb-0">Nama Lengkap</p>
                         <small>Nomor Induk Sekolah & Nasional</small>
                     </th>
-                    <th width="10%">
+                    <th width="30%">
                         <p class="mb-0">Form</p>
-                        <small>Entri Nilai</small>
-                    </th>
-                    <th width="10%">
-                        <p class="mb-0">Nilai</p>
-                        <small>Tersimpan</small>
+                        <small>Entri Catatan Wali Kelas</small>
                     </th>
                     <th width="30%">
-                        <p class="mb-0">Capaian Kompetensi</p>
-                        <small>Telah atau Belum Tercapai</small>
+                        <p class="mb-0">Catatan</p>
+                        <small>Catatan Tersimpan</small>
                     </th>
                     <th width="5%">
                         <p class="mb-0">Aksi</p>
@@ -221,36 +173,48 @@
                         <small>{{ $pelajar->nomor_induk ?? '-' }} | {{ $pelajar->nisn ?? '-' }}</small>
                     </td>
                     <td>
-                        <input type="number"
-                            wire:key="input-{{ $pelajar->pelajar_id }}"
-                            wire:model.defer="nilaiInput.{{ $pelajar->pelajar_id }}"
-                            class="form-control form-control-sm text-center"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            placeholder="0-100">
-                        @error('nilaiInput.' . $pelajar->pelajar_id)
+                        <textarea
+                            wire:key="catatan-input-{{ $pelajar->pelajar_id }}"
+                            wire:model.defer="catatanInput.{{ $pelajar->pelajar_id }}"
+                            class="form-control form-control-sm"
+                            rows="3"
+                            placeholder="Masukkan catatan untuk pelajar..."
+                            maxlength="5000"></textarea>
+                        @error('catatanInput.' . $pelajar->pelajar_id)
                         <small class="text-danger">{{ $message }}</small>
                         @enderror
                     </td>
                     <td>
-                        @if($pelajar->nilai_sekarang)
-                        <span class="badge bg-info">
-                            {{ number_format($pelajar->nilai_sekarang, 2) }}
-                        </span>
+                        @if($pelajar->catatan_sekarang)
+                        <div class="mb-2">
+                            <small class="text-muted d-block mb-1">
+                                <i class="mdi mdi-calendar"></i>
+                                {{ $pelajar->tanggal_input ? \Carbon\Carbon::parse($pelajar->tanggal_input)->format('d/m/Y H:i') : '-' }}
+                            </small>
+                            <p class="mb-0 text-dark" style="font-size: 0.9rem;">
+                                {{ Str::limit($pelajar->catatan_sekarang, 150) }}
+                            </p>
+                            @if(strlen($pelajar->catatan_sekarang) > 150)
+                            <button type="button"
+                                class="btn btn-link btn-sm p-0 mt-1"
+                                onclick="showFullCatatan('{{ $pelajar->nama_lengkap }}', `{{ addslashes($pelajar->catatan_sekarang) }}`)"
+                                title="Lihat Selengkapnya">
+                                <small>Lihat Selengkapnya...</small>
+                            </button>
+                            @endif
+                        </div>
                         @else
-                        <span class="text-muted">-</span>
+                        <span class="text-muted">Belum ada catatan</span>
                         @endif
                     </td>
-                    <td></td>
                     <td>
-                        @if($pelajar->nilai_sekarang)
+                        @if($pelajar->catatan_sekarang)
                         <button type="button"
                             wire:key="delete-btn-{{ $pelajar->pelajar_id }}"
                             id="delete-btn-{{ $pelajar->pelajar_id }}"
                             class="btn btn-sm btn-outline-danger"
-                            onclick="confirmDeleteNilai('{{ $pelajar->pelajar_id }}')"
-                            title="Hapus Nilai">
+                            onclick="confirmDeleteCatatan('{{ $pelajar->pelajar_id }}')"
+                            title="Hapus Data">
                             <i class="mdi mdi-delete"></i>
                         </button>
                         @else
@@ -260,7 +224,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
+                    <td colspan="5" class="text-center text-muted py-4">
                         <i class="mdi mdi-information-outline me-2"></i>
                         Tidak ada data pelajar
                     </td>
@@ -281,9 +245,9 @@
     <div class="d-flex justify-content-end mt-3">
         <button type="button"
             class="btn btn-labeled btn-outline-secondary me-2"
-            wire:click="resetNilai"
+            wire:click="resetCatatan"
             wire:loading.attr="disabled"
-            wire:target="resetNilai">
+            wire:target="resetCatatan">
             <span class="btn-label">
                 <i class="mdi mdi-delete-sweep-outline"></i>
             </span>
@@ -292,40 +256,40 @@
 
         <button type="button"
             class="btn btn-labeled btn-primary"
-            wire:click="saveNilai"
+            wire:click="saveCatatan"
             wire:loading.attr="disabled"
-            wire:target="saveNilai">
+            wire:target="saveCatatan">
             <span class="btn-label">
                 <i class="mdi mdi-loading mdi-spin d-none"
                     wire:loading.class.remove="d-none"
-                    wire:target="saveNilai">
+                    wire:target="saveCatatan">
                 </i>
                 <i class="mdi mdi-content-save"
                     wire:loading.class="d-none"
-                    wire:target="saveNilai">
+                    wire:target="saveCatatan">
                 </i>
             </span>
-            <span wire:loading.class="d-none" wire:target="saveNilai">
+            <span wire:loading.class="d-none" wire:target="saveCatatan">
                 Simpan
             </span>
-            <span class="d-none" wire:loading.class.remove="d-none" wire:target="saveNilai">
+            <span class="d-none" wire:loading.class.remove="d-none" wire:target="saveCatatan">
                 Menyimpan...
             </span>
         </button>
     </div>
-    @elseif($rombel && $semesterAktif)
+    @else
     <div class="alert alert-warning text-center" role="alert">
         <i class="mdi mdi-information-outline me-2"></i>
-        <strong>Silakan pilih Mata Pelajaran untuk mulai mengentri nilai.</strong>
+        <strong>Tidak ada kelas binaan atau semester aktif.</strong>
     </div>
     @endif
 
-    {{-- Loading Overlay - Hanya untuk saveNilai dan actions penting --}}
+    {{-- Loading Overlay --}}
     <div wire:loading.flex
-        wire:target="saveNilai,selectedRombelPengajarId,searchPelajar"
+        wire:target="saveCatatan,searchPelajar"
         class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center"
         style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: none;">
-        <div class="spinner-border text-primary" role="status">
+        <div class="spinner-border text-success" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
@@ -335,12 +299,23 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 
-        // ✅ Function untuk handle delete confirmation dengan loading state
-        window.confirmDeleteNilai = function(pelajarId) {
+        // Function untuk menampilkan catatan lengkap
+        window.showFullCatatan = function(namaPelajar, catatan) {
+            Swal.fire({
+                title: 'Catatan untuk ' + namaPelajar,
+                html: '<div style="text-align: left; white-space: pre-wrap;">' + catatan + '</div>',
+                width: '600px',
+                confirmButtonText: 'Tutup',
+                confirmButtonColor: '#3085d6',
+            });
+        };
+
+        // Function untuk handle delete confirmation dengan loading state
+        window.confirmDeleteCatatan = function(pelajarId) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Hapus Nilai Pelajar?',
-                text: 'Anda yakin ingin menghapus nilai ini?',
+                title: 'Hapus Catatan Pelajar?',
+                text: 'Anda yakin ingin menghapus semua catatan untuk pelajar ini?',
                 showCancelButton: true,
                 confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal',
@@ -348,15 +323,13 @@
                 cancelButtonColor: '#3085d6',
             }).then(result => {
                 if (result.isConfirmed) {
-                    // ✅ Tampilkan loading pada tombol spesifik
                     const btn = document.getElementById(`delete-btn-${pelajarId}`);
                     if (btn) {
                         btn.disabled = true;
                         btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
                     }
 
-                    // Dispatch ke backend
-                    Livewire.dispatch('deleteNilai', [pelajarId]);
+                    Livewire.dispatch('deleteCatatan', [pelajarId]);
                 }
             });
         };

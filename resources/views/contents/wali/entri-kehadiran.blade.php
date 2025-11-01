@@ -21,7 +21,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    <!-- livewire:wali.kelas-binaan -->
+                    <livewire:wali.entri-absensi />
 
                 </div>
             </div>

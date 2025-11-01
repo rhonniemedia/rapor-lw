@@ -75,7 +75,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('homeroom/entry/attendance') ? 'active' : '' }}"
-                            href="{{url('homeroom/entry/attendance')}}">Kehadiran</a>
+                            href="{{url('homeroom/entry/attendance')}}">Absensi</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('homeroom/entry/class-notes') ? 'active' : '' }}"

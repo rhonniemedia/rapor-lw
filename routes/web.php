@@ -68,7 +68,7 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
     Route::prefix('entry')->group(function () {
         Route::get('/grades', fn() => view('contents.admin.nilai-akhir', ['title' => 'Nilai Akhir']));
         Route::get('/cocurricular', fn() => view('contents.admin.kokurikuler', ['title' => 'Kokurikuler']));
-        Route::get('/attendance', fn() => view('contents.admin.kehadiran', ['title' => 'Kehadiran']));
+        Route::get('/attendance', fn() => view('contents.admin.kehadiran', ['title' => 'Absensi']));
         Route::get('/class-notes', fn() => view('contents.admin.catatan-walas', ['title' => 'Catatan Wali Kelas']));
         Route::get('/extracurricular', fn() => view('contents.admin.ekstrakurikuler-input', ['title' => 'Ekstrakurikuler']))->name('entry.extracurricular');
     });
@@ -101,7 +101,7 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
     Route::prefix('entry')->group(function () {
         Route::get('/grades', fn() => view('contents.wali.entri-nilai', ['title' => 'Nilai Akhir']));
         Route::get('/cocurricular', fn() => view('contents.wali.entri-kokurikuler', ['title' => 'Data Kokurikuler']));
-        Route::get('/attendance', fn() => view('contents.wali.entri-kehadiran', ['title' => 'Data Kehadiran']));
+        Route::get('/attendance', fn() => view('contents.wali.entri-kehadiran', ['title' => 'Data Absensi']));
         Route::get('/class-notes', fn() => view('contents.wali.entri-catatan', ['title' => 'Catatan Wali Kelas']));
         Route::get('/extracurricular', fn() => view('contents.wali.entri-ekstrakurikuler', ['title' => 'Data Ekstrakurikuler']));
     });

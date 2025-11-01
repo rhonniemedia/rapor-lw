@@ -5,13 +5,13 @@
             <div class="d-flex align-items-center">
                 <div class="icon-wrapper position-relative">
                     <span class="bg-gradient-primary p-2 rounded-3 shadow-sm me-3 d-inline-flex align-items-center justify-content-center">
-                        <i class="mdi mdi-numeric mdi-24px text-white"></i>
+                        <i class="mdi mdi-clipboard-text mdi-24px text-white"></i>
                     </span>
                 </div>
                 <div>
-                    <h4 class="mb-1 text-dark fw-bold">Entri Nilai Akhir Pelajar</h4>
+                    <h4 class="mb-1 text-dark fw-bold">Entri Data Kokurikuler</h4>
                     <div class="d-flex align-items-center gap-2">
-                        <small class="text-muted">Kelola nilai per mata pelajaran</small>
+                        <small class="text-muted">Kelola data Kokurikuler Pelajar</small>
                     </div>
                 </div>
             </div>
@@ -70,6 +70,23 @@
                         </div>
                     </div>
 
+                    <!-- Jurusan -->
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
+                            style="width: 36px; height: 36px;">
+                            <i class="mdi mdi-account-tie text-white fs-5"></i>
+                        </div>
+                        <div class="ms-3 d-flex flex-column justify-content-center">
+                            <small class="text-muted lh-2">Kompetensi Keahlian</small>
+                            <p class="fw-bold mb-0 text-dark lh-sm">
+                                Nama Jurusan
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolom 3 -->
+                <div class="col-md-4">
                     <!-- Wali Kelas -->
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
@@ -84,101 +101,34 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Kolom 3 -->
-                <div class="col-md-4">
-                    <!-- Guru Mata Pelajaran -->
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
-                            style="width: 36px; height: 36px;">
-                            <i class="mdi mdi-teach text-white fs-5"></i>
-                        </div>
-                        <div class="ms-3 d-flex flex-column justify-content-center">
-                            <small class="text-muted lh-2">Guru Mata Pelajaran</small>
-                            <p class="fw-bold mb-0 text-primary lh-sm">
-                                @if($selectedRombelPengajarId && $guruName)
-                                {{ $guruName }}
-                                @else
-                                <span class="text-muted">Belum Dipilih</span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Mata Pelajaran -->
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-danger rounded-3"
-                            style="width: 36px; height: 36px;">
-                            <i class="mdi mdi-book-open-variant text-white fs-5"></i>
-                        </div>
-                        <div class="ms-3 d-flex flex-column justify-content-center">
-                            <small class="text-muted lh-2">Mata Pelajaran</small>
-                            <p class="fw-bold mb-0 text-danger lh-sm">
-                                @if($selectedRombelPengajarId)
-                                @php
-                                $selectedMapel = $mataPelajaranList->firstWhere('id', $selectedRombelPengajarId);
-                                @endphp
-                                {{ $selectedMapel->mataPelajaran->nama ?? 'N/A' }}
-                                @else
-                                <span class="text-muted">Belum Dipilih</span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
-    @else
-    <div class="alert alert-danger" role="alert">
-        <i class="mdi mdi-alert-circle me-2"></i>
-        <strong>Perhatian!</strong> Tidak ada kelas binaan atau semester aktif.
-    </div>
-    @endif
 
-    {{-- Filter Mata Pelajaran --}}
-    @if($rombel && $semesterAktif)
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">
-                        <i class="mdi mdi-book-open-page-variant me-1"></i>
-                        Pilih Mata Pelajaran <span class="text-danger">*</span>
-                    </label>
-                    <select wire:model.live="selectedRombelPengajarId" class="form-select">
-                        <option value="">-- Pilih Mata Pelajaran --</option>
-                        @foreach($mataPelajaranList as $rp)
-                        <option value="{{ $rp->id }}">
-                            {{ $rp->mataPelajaran->nama }}
-                            @if($rp->mataPelajaran->kelompok)
-                            - {{ $rp->mataPelajaran->kelompok->nama }}
-                            @endif
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">
-                        <i class="mdi mdi-magnify me-1"></i> Cari Siswa
-                    </label>
-                    <input type="text"
-                        wire:model.live.debounce.300ms="searchPelajar"
-                        class="form-control"
-                        placeholder="Nama, NIS, atau NISN..."
-                        @if(!$selectedRombelPengajarId) disabled @endif>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 
     {{-- Tabel Input Nilai --}}
-    @if($selectedRombelPengajarId)
-    <h5 class="text-dark mb-3">
-        <i class="mdi mdi-account-multiple me-2"></i> Entri Data Nilai Akhir Pelajar
-    </h5>
+    <div class="row mb-3 align-items-center">
+        <div class="col-lg-6">
+            <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Entri Data Kokurikuler</h5>
+        </div>
+        <div class="col-lg-6 d-flex justify-content-end">
+            <div class="input-group w-50">
+                <input type="text"
+                    wire:model.live.debounce.300ms="searchPelajar"
+                    class="form-control"
+                    placeholder="Cari nama, atau nomor induk...">
+                @if($searchPelajar)
+                <div class="input-group-append">
+                    <button type="button"
+                        class="btn btn-secondary"
+                        wire:click="$set('searchPelajar', '')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
     <div class="table-responsive">
         <table class="table table-hover">
@@ -188,21 +138,21 @@
                         <p class="mb-0">No</p>
                         <small>Urut</small>
                     </th>
-                    <th width="40%">
+                    <th width="30%">
                         <p class="mb-0">Nama Lengkap</p>
                         <small>Nomor Induk Sekolah & Nasional</small>
                     </th>
-                    <th width="10%">
+                    <th width="15%">
                         <p class="mb-0">Form</p>
                         <small>Entri Nilai</small>
+                        <!-- Nilainya: -->
+                        <!-- Berkembang -->
+                        <!-- Cakap -->
+                        <!-- Mahir -->
                     </th>
-                    <th width="10%">
-                        <p class="mb-0">Nilai</p>
-                        <small>Tersimpan</small>
-                    </th>
-                    <th width="30%">
-                        <p class="mb-0">Capaian Kompetensi</p>
-                        <small>Telah atau Belum Tercapai</small>
+                    <th width="15%">
+                        <p class="mb-0">Catatan Tersimpan</p>
+                        <small>Catatan Kokurikuler Tersimpan</small>
                     </th>
                     <th width="5%">
                         <p class="mb-0">Aksi</p>
@@ -211,118 +161,33 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($pelajarData as $index => $pelajar)
-                <tr wire:key="pelajar-{{ $pelajar->pelajar_id }}">
-                    <td class="text-center">
-                        {{ $pelajarData->firstItem() + $index }}
-                    </td>
-                    <td>
-                        <p class="mb-0">{{ $pelajar->nama_lengkap }}</p>
-                        <small>{{ $pelajar->nomor_induk ?? '-' }} | {{ $pelajar->nisn ?? '-' }}</small>
-                    </td>
-                    <td>
-                        <input type="number"
-                            wire:key="input-{{ $pelajar->pelajar_id }}"
-                            wire:model.defer="nilaiInput.{{ $pelajar->pelajar_id }}"
-                            class="form-control form-control-sm text-center"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            placeholder="0-100">
-                        @error('nilaiInput.' . $pelajar->pelajar_id)
-                        <small class="text-danger">{{ $message }}</small>
-                        @enderror
-                    </td>
-                    <td>
-                        @if($pelajar->nilai_sekarang)
-                        <span class="badge bg-info">
-                            {{ number_format($pelajar->nilai_sekarang, 2) }}
-                        </span>
-                        @else
-                        <span class="text-muted">-</span>
-                        @endif
-                    </td>
-                    <td></td>
-                    <td>
-                        @if($pelajar->nilai_sekarang)
-                        <button type="button"
-                            wire:key="delete-btn-{{ $pelajar->pelajar_id }}"
-                            id="delete-btn-{{ $pelajar->pelajar_id }}"
-                            class="btn btn-sm btn-outline-danger"
-                            onclick="confirmDeleteNilai('{{ $pelajar->pelajar_id }}')"
-                            title="Hapus Nilai">
-                            <i class="mdi mdi-delete"></i>
-                        </button>
-                        @else
-                        <span class="text-muted">-</span>
-                        @endif
-                    </td>
-                </tr>
-                @empty
+
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
+                    <td colspan="7" class="text-center text-muted py-4">
                         <i class="mdi mdi-information-outline me-2"></i>
                         Tidak ada data pelajar
                     </td>
                 </tr>
-                @endforelse
             </tbody>
         </table>
     </div>
 
-    {{-- Pagination --}}
-    @if($pelajarData->hasPages())
-    <div class="mt-3">
-        {{ $pelajarData->links() }}
-    </div>
-    @endif
 
     {{-- Action Buttons --}}
     <div class="d-flex justify-content-end mt-3">
         <button type="button"
-            class="btn btn-labeled btn-outline-secondary me-2"
-            wire:click="resetNilai"
-            wire:loading.attr="disabled"
-            wire:target="resetNilai">
+            class="btn btn-labeled btn-outline-secondary me-2">
             <span class="btn-label">
                 <i class="mdi mdi-delete-sweep-outline"></i>
             </span>
             Reset
         </button>
 
-        <button type="button"
-            class="btn btn-labeled btn-primary"
-            wire:click="saveNilai"
-            wire:loading.attr="disabled"
-            wire:target="saveNilai">
-            <span class="btn-label">
-                <i class="mdi mdi-loading mdi-spin d-none"
-                    wire:loading.class.remove="d-none"
-                    wire:target="saveNilai">
-                </i>
-                <i class="mdi mdi-content-save"
-                    wire:loading.class="d-none"
-                    wire:target="saveNilai">
-                </i>
-            </span>
-            <span wire:loading.class="d-none" wire:target="saveNilai">
-                Simpan
-            </span>
-            <span class="d-none" wire:loading.class.remove="d-none" wire:target="saveNilai">
-                Menyimpan...
-            </span>
-        </button>
+
     </div>
-    @elseif($rombel && $semesterAktif)
-    <div class="alert alert-warning text-center" role="alert">
-        <i class="mdi mdi-information-outline me-2"></i>
-        <strong>Silakan pilih Mata Pelajaran untuk mulai mengentri nilai.</strong>
-    </div>
-    @endif
 
     {{-- Loading Overlay - Hanya untuk saveNilai dan actions penting --}}
-    <div wire:loading.flex
-        wire:target="saveNilai,selectedRombelPengajarId,searchPelajar"
+    <div
         class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center"
         style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: none;">
         <div class="spinner-border text-primary" role="status">
