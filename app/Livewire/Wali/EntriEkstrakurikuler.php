@@ -2,19 +2,20 @@
 
 namespace App\Livewire\Wali;
 
-use App\Models\Nilai;
 use App\Models\Rombel;
 use Livewire\Component;
+use App\Models\Pelajar;
 use Livewire\WithPagination;
+use App\Models\EkskulPelajar;
 use App\Models\RombelPelajar;
-use App\Models\RombelPengajar;
+use App\Models\Ekstrakurikuler;
 use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 
-class EntriNilai extends Component
+class EntriEkstrakurikuler extends Component
 {
     use WithPagination;
 
@@ -23,35 +24,38 @@ class EntriNilai extends Component
     // Properties
     public $rombel;
     public $semesterAktif;
-    public $selectedRombelPengajarId = null;
-    public $mataPelajaranList = [];
-    public $guruName = null;
+    public $selectedEkstrakurikulerId = null;
+    public $ekstrakurikulerList = [];
+    public $pembinaName = null;
 
     // Search & Pagination
     public $searchPelajar = '';
     public $perPagePelajar = 50;
 
-    // Input nilai
+    // Input nilai dan deskripsi
     public $nilaiInput = [];
+    public $deskripsiInput = [];
 
     // Cache
-    private $cachedNilaiExist = null;
+    private $cachedEkskulExist = null;
 
     // Query string
     protected $queryString = [
-        'selectedRombelPengajarId' => ['except' => null],
+        'selectedEkstrakurikulerId' => ['except' => null],
         'searchPelajar' => ['except' => ''],
     ];
 
     // Validation
     protected $rules = [
-        'nilaiInput.*' => 'nullable|numeric|min:0|max:100',
+        'nilaiInput.*' => 'nullable|string|max:50',
+        'deskripsiInput.*' => 'nullable|string|max:1000',
     ];
 
     protected $messages = [
-        'nilaiInput.*.numeric' => 'Nilai harus berupa angka',
-        'nilaiInput.*.min' => 'Nilai minimal adalah 0',
-        'nilaiInput.*.max' => 'Nilai maksimal adalah 100',
+        'nilaiInput.*.string' => 'Nilai harus berupa teks',
+        'nilaiInput.*.max' => 'Nilai maksimal 50 karakter',
+        'deskripsiInput.*.string' => 'Deskripsi harus berupa teks',
+        'deskripsiInput.*.max' => 'Deskripsi maksimal 1000 karakter',
     ];
 
     public function mount()
@@ -69,14 +73,14 @@ class EntriNilai extends Component
             session()->flash('warning', 'Tidak ada semester aktif saat ini.');
         }
 
-        $this->loadMataPelajaran();
+        $this->loadEkstrakurikuler();
 
-        if ($this->selectedRombelPengajarId) {
-            $this->loadNilaiPelajar();
+        if ($this->selectedEkstrakurikulerId) {
+            $this->loadEkskulPelajar();
         }
     }
 
-    protected $listeners = ['deleteNilai'];
+    protected $listeners = ['deleteEkskul'];
 
     private function loadRombelWaliKelas(): void
     {
@@ -97,29 +101,21 @@ class EntriNilai extends Component
             ->first();
     }
 
-    private function loadMataPelajaran(): void
+    private function loadEkstrakurikuler(): void
     {
-        if (!$this->rombel) {
-            $this->mataPelajaranList = [];
-            return;
-        }
-
-        $this->mataPelajaranList = RombelPengajar::with([
-            'mataPelajaran',
-            'guru'
-        ])
-            ->where('rombel_id', $this->rombel->id)
-            ->orderBy('mata_pelajaran_id')
+        $this->ekstrakurikulerList = Ekstrakurikuler::with('pembina')
+            ->orderBy('nama')
             ->get();
     }
 
-    public function updatedSelectedRombelPengajarId(): void
+    public function updatedSelectedEkstrakurikulerId(): void
     {
         $this->resetPage();
         $this->searchPelajar = '';
         $this->nilaiInput = [];
-        $this->cachedNilaiExist = null;
-        $this->loadNilaiPelajar();
+        $this->deskripsiInput = [];
+        $this->cachedEkskulExist = null;
+        $this->loadEkskulPelajar();
     }
 
     public function updatingSearchPelajar(): void
@@ -127,31 +123,37 @@ class EntriNilai extends Component
         $this->resetPage();
     }
 
-    private function loadNilaiPelajar(): void
+    private function loadEkskulPelajar(): void
     {
-        if (!$this->selectedRombelPengajarId || !$this->semesterAktif) {
+        if (!$this->selectedEkstrakurikulerId || !$this->semesterAktif) {
             $this->nilaiInput = [];
-            $this->guruName = null;
-            $this->cachedNilaiExist = null;
+            $this->deskripsiInput = [];
+            $this->pembinaName = null;
+            $this->cachedEkskulExist = null;
             return;
         }
 
-        $rombelPengajar = RombelPengajar::with('guru', 'mataPelajaran')
-            ->find($this->selectedRombelPengajarId);
+        $ekstrakurikuler = Ekstrakurikuler::with('pembina')
+            ->find($this->selectedEkstrakurikulerId);
 
-        if (!$rombelPengajar) {
+        if (!$ekstrakurikuler) {
             $this->nilaiInput = [];
-            $this->guruName = null;
-            $this->cachedNilaiExist = null;
-            $this->selectedRombelPengajarId = null;
+            $this->deskripsiInput = [];
+            $this->pembinaName = null;
+            $this->cachedEkskulExist = null;
+            $this->selectedEkstrakurikulerId = null;
             return;
         }
 
-        $this->guruName = $rombelPengajar->guru->name ?? 'N/A';
+        $this->pembinaName = $ekstrakurikuler->pembina->name ?? 'N/A';
 
-        $this->cachedNilaiExist = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+        // Reload cache dari database
+        $ekskulData = EkskulPelajar::where('ekstrakurikuler_id', $this->selectedEkstrakurikulerId)
             ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
-            ->pluck('nilai_angka', 'pelajar_id');
+            ->get()
+            ->keyBy('pelajar_id');
+
+        $this->cachedEkskulExist = $ekskulData;
     }
 
     private function getPelajarQuery(): Builder
@@ -175,20 +177,12 @@ class EntriNilai extends Component
         return $query;
     }
 
-    private function hitungPredikat(float $nilai): string
+    public function saveEkskul(): void
     {
-        if ($nilai >= 90) return 'A';
-        if ($nilai >= 75) return 'B';
-        if ($nilai >= 60) return 'C';
-        return 'D';
-    }
-
-    public function saveNilai(): void
-    {
-        if (!$this->selectedRombelPengajarId || !$this->semesterAktif) {
+        if (!$this->selectedEkstrakurikulerId || !$this->semesterAktif) {
             $this->dispatch('swal:error', [
                 'title' => 'Error!',
-                'text' => 'Silakan pilih mata pelajaran terlebih dahulu.',
+                'text' => 'Silakan pilih ekstrakurikuler terlebih dahulu.',
             ]);
             return;
         }
@@ -199,26 +193,23 @@ class EntriNilai extends Component
             Log::error('Validation failed', ['errors' => $e->errors()]);
             $this->dispatch('swal:error', [
                 'title' => 'Validasi Gagal!',
-                'text' => 'Periksa input nilai Anda. ' . implode(', ', array_map(fn($err) => implode(', ', $err), $e->errors())),
+                'text' => 'Periksa input Anda. ' . implode(', ', array_map(fn($err) => implode(', ', $err), $e->errors())),
             ]);
             return;
         }
 
-        $rombelPengajar = RombelPengajar::with('mataPelajaran')
-            ->find($this->selectedRombelPengajarId);
+        $ekstrakurikuler = Ekstrakurikuler::find($this->selectedEkstrakurikulerId);
 
-        if (!$rombelPengajar) {
-            Log::error('RombelPengajar not found', ['id' => $this->selectedRombelPengajarId]);
+        if (!$ekstrakurikuler) {
+            Log::error('Ekstrakurikuler not found', ['id' => $this->selectedEkstrakurikulerId]);
             $this->dispatch('swal:error', [
                 'title' => 'Error!',
-                'text' => 'Data mata pelajaran tidak ditemukan.',
+                'text' => 'Data ekstrakurikuler tidak ditemukan.',
             ]);
             return;
         }
 
-        $mataPelajaran = $rombelPengajar->mataPelajaran->nama;
-        $mataPelajaranId = $rombelPengajar->mata_pelajaran_id;
-        $guruId = $rombelPengajar->guru_id;
+        $namaEkskul = $ekstrakurikuler->nama;
 
         $validPelajarIds = RombelPelajar::where('rombel_id', $this->rombel->id)
             ->pluck('pelajar_id')
@@ -230,61 +221,50 @@ class EntriNilai extends Component
             $userId = Auth::id();
 
             foreach ($this->nilaiInput as $pelajarId => $nilai) {
-
                 if (!in_array($pelajarId, $validPelajarIds)) {
                     continue;
                 }
 
-                if ($nilai === null || $nilai === '') {
+                // Jika nilai dan deskripsi kosong, skip
+                $deskripsi = $this->deskripsiInput[$pelajarId] ?? null;
+                if (empty($nilai) && empty($deskripsi)) {
                     continue;
                 }
-
-                $nilaiBersih = is_numeric($nilai) ? floatval($nilai) : null;
-
-                if ($nilaiBersih === null || $nilaiBersih < 0 || $nilaiBersih > 100) {
-                    continue;
-                }
-
-                $predikat = $this->hitungPredikat($nilaiBersih);
 
                 try {
-                    $existingNilai = Nilai::where([
+                    $existingEkskul = EkskulPelajar::where([
                         'pelajar_id' => $pelajarId,
-                        'mata_pelajaran_id' => $mataPelajaranId,
+                        'ekstrakurikuler_id' => $this->selectedEkstrakurikulerId,
                         'tahun_ajaran_semester_id' => $this->semesterAktif->id,
                     ])->lockForUpdate()->first();
 
                     $dataToSave = [
-                        'rombel_pengajar_id' => $this->selectedRombelPengajarId,
-                        'guru_id' => $guruId,
-                        'nilai_angka' => $nilaiBersih,
-                        'predikat' => $predikat,
+                        'nilai' => $nilai,
+                        'deskripsi' => $deskripsi,
                         'updated_by' => $userId,
                     ];
 
-                    if ($existingNilai) {
-                        $existingNilai->update($dataToSave);
+                    if ($existingEkskul) {
+                        $existingEkskul->update($dataToSave);
                     } else {
                         $dataToSave['pelajar_id'] = $pelajarId;
-                        $dataToSave['mata_pelajaran_id'] = $mataPelajaranId;
+                        $dataToSave['ekstrakurikuler_id'] = $this->selectedEkstrakurikulerId;
                         $dataToSave['tahun_ajaran_semester_id'] = $this->semesterAktif->id;
                         $dataToSave['created_by'] = $userId;
 
-                        Nilai::create($dataToSave);
+                        EkskulPelajar::create($dataToSave);
                     }
 
                     $savedCount++;
                 } catch (\Illuminate\Database\QueryException $e) {
                     if ($e->errorInfo[1] == 1062) {
-                        Nilai::where([
+                        EkskulPelajar::where([
                             'pelajar_id' => $pelajarId,
-                            'mata_pelajaran_id' => $mataPelajaranId,
+                            'ekstrakurikuler_id' => $this->selectedEkstrakurikulerId,
                             'tahun_ajaran_semester_id' => $this->semesterAktif->id,
                         ])->update([
-                            'rombel_pengajar_id' => $this->selectedRombelPengajarId,
-                            'guru_id' => $guruId,
-                            'nilai_angka' => $nilaiBersih,
-                            'predikat' => $predikat,
+                            'nilai' => $nilai,
+                            'deskripsi' => $deskripsi,
                             'updated_by' => $userId,
                         ]);
 
@@ -298,110 +278,99 @@ class EntriNilai extends Component
             DB::commit();
 
             $this->nilaiInput = [];
-            $this->cachedNilaiExist = null;
-            $this->loadNilaiPelajar();
+            $this->deskripsiInput = [];
+            $this->cachedEkskulExist = null;
+            $this->loadEkskulPelajar();
 
             $this->dispatch('swal:success', [
                 'title' => 'Berhasil!',
-                'text' => "Berhasil menyimpan {$savedCount} nilai untuk mata pelajaran '{$mataPelajaran}'.",
+                'text' => "Berhasil menyimpan {$savedCount} data untuk ekstrakurikuler '{$namaEkskul}'.",
             ]);
         } catch (\Exception $e) {
             DB::rollback();
 
-            Log::error('Error saving nilai', [
+            Log::error('Error saving ekskul', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'rombel_pengajar_id' => $this->selectedRombelPengajarId,
+                'ekstrakurikuler_id' => $this->selectedEkstrakurikulerId,
                 'semester_id' => $this->semesterAktif->id,
             ]);
 
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'Gagal menyimpan nilai: ' . $e->getMessage(),
+                'text' => 'Gagal menyimpan data: ' . $e->getMessage(),
             ]);
         }
     }
 
-    public function resetNilai(): void
+    public function resetEkskul(): void
     {
-        if ($this->cachedNilaiExist === null) {
-            $this->loadNilaiPelajar();
+        if ($this->cachedEkskulExist === null) {
+            $this->loadEkskulPelajar();
         }
 
         foreach ($this->nilaiInput as $pelajarId => $nilai) {
-            if ($this->cachedNilaiExist && $this->cachedNilaiExist->has($pelajarId)) {
-                $this->nilaiInput[$pelajarId] = $this->cachedNilaiExist->get($pelajarId);
+            if ($this->cachedEkskulExist && $this->cachedEkskulExist->has($pelajarId)) {
+                $this->nilaiInput[$pelajarId] = $this->cachedEkskulExist->get($pelajarId)->nilai;
+                $this->deskripsiInput[$pelajarId] = $this->cachedEkskulExist->get($pelajarId)->deskripsi;
             } else {
                 $this->nilaiInput[$pelajarId] = null;
+                $this->deskripsiInput[$pelajarId] = null;
             }
         }
 
         $this->dispatch('swal:info', [
             'title' => 'Direset!',
-            'text' => 'Input nilai telah dikembalikan ke nilai tersimpan.',
+            'text' => 'Input telah dikembalikan ke data tersimpan.',
         ]);
     }
 
-    // ✅ PERBAIKAN: Jangan ubah state, langsung trigger SweetAlert dari frontend
-    public function confirmDelete($pelajarId): void
-    {
-        // Hanya dispatch event, TIDAK ubah state apapun
-        $this->dispatch('swal:confirm', [
-            'title' => 'Hapus Nilai Pelajar?',
-            'text' => 'Anda yakin ingin menghapus nilai ini?',
-            'icon' => 'warning',
-            'confirmButtonText' => 'Ya, Hapus!',
-            'nextEvent' => 'deleteNilai',
-            'id' => $pelajarId
-        ]);
-    }
-
-    public function deleteNilai($pelajarId = null): void
+    public function deleteEkskul($pelajarId = null): void
     {
         if (is_array($pelajarId) && isset($pelajarId[0])) {
             $pelajarId = $pelajarId[0];
         }
 
-        if (!$pelajarId || !$this->selectedRombelPengajarId || !$this->semesterAktif) {
+        if (!$pelajarId || !$this->selectedEkstrakurikulerId || !$this->semesterAktif) {
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'ID Pelajar tidak ditemukan atau data rombel/semester tidak valid.',
+                'text' => 'ID Pelajar tidak ditemukan atau data tidak valid.',
             ]);
             return;
         }
 
         try {
-            $rombelPengajar = RombelPengajar::find($this->selectedRombelPengajarId);
-            $deleted = Nilai::where('pelajar_id', $pelajarId)
-                ->where('mata_pelajaran_id', $rombelPengajar->mata_pelajaran_id)
+            $deleted = EkskulPelajar::where('pelajar_id', $pelajarId)
+                ->where('ekstrakurikuler_id', $this->selectedEkstrakurikulerId)
                 ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
                 ->delete();
 
             if ($deleted) {
-                // ✅ Reset input nilai untuk pelajar yang dihapus
                 if (isset($this->nilaiInput[$pelajarId])) {
                     unset($this->nilaiInput[$pelajarId]);
                 }
+                if (isset($this->deskripsiInput[$pelajarId])) {
+                    unset($this->deskripsiInput[$pelajarId]);
+                }
 
-                // ✅ Reload cache dan data
-                $this->cachedNilaiExist = null;
-                $this->loadNilaiPelajar();
+                $this->cachedEkskulExist = null;
+                $this->loadEkskulPelajar();
 
                 $this->dispatch('swal:success', [
                     'title' => 'Berhasil!',
-                    'text' => 'Nilai berhasil dihapus.',
+                    'text' => 'Data ekstrakurikuler berhasil dihapus.',
                 ]);
             } else {
                 $this->dispatch('swal:info', [
                     'title' => 'Info',
-                    'text' => 'Nilai tidak ditemukan.',
+                    'text' => 'Data tidak ditemukan.',
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error('Error deleting nilai: ' . $e->getMessage(), ['pelajar_id' => $pelajarId]);
+            Log::error('Error deleting ekskul: ' . $e->getMessage(), ['pelajar_id' => $pelajarId]);
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'Terjadi kesalahan saat menghapus nilai.',
+                'text' => 'Terjadi kesalahan saat menghapus data.',
             ]);
         }
     }
@@ -415,18 +384,21 @@ class EntriNilai extends Component
             $totalSiswa = RombelPelajar::where('rombel_id', $this->rombel->id)->count();
         }
 
-        if ($this->selectedRombelPengajarId && $this->semesterAktif) {
-            $nilaiExist = $this->cachedNilaiExist ?? collect();
+        if ($this->selectedEkstrakurikulerId && $this->semesterAktif) {
+            $ekskulExist = $this->cachedEkskulExist ?? collect();
 
             $pelajarPaginated = $this->getPelajarQuery()
                 ->orderBy('id', 'asc')
                 ->paginate($this->perPagePelajar);
 
-            $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($nilaiExist) {
+            $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($ekskulExist) {
                 $pelajarId = $rombelPelajar->pelajar_id;
 
                 if (!array_key_exists($pelajarId, $this->nilaiInput)) {
-                    $this->nilaiInput[$pelajarId] = $nilaiExist->get($pelajarId);
+                    $this->nilaiInput[$pelajarId] = $ekskulExist->get($pelajarId)?->nilai;
+                }
+                if (!array_key_exists($pelajarId, $this->deskripsiInput)) {
+                    $this->deskripsiInput[$pelajarId] = $ekskulExist->get($pelajarId)?->deskripsi;
                 }
 
                 return (object) [
@@ -435,12 +407,13 @@ class EntriNilai extends Component
                     'nama_lengkap' => $rombelPelajar->pelajar->nama_lengkap,
                     'nomor_induk' => $rombelPelajar->pelajar->nomor_induk,
                     'nisn' => $rombelPelajar->pelajar->nisn,
-                    'nilai_sekarang' => $nilaiExist->get($pelajarId),
+                    'nilai_sekarang' => $ekskulExist->get($pelajarId)?->nilai,
+                    'deskripsi_sekarang' => $ekskulExist->get($pelajarId)?->deskripsi,
                 ];
             });
         }
 
-        return view('livewire.wali.entri-nilai', [
+        return view('livewire.wali.entri-ekstrakurikuler', [
             'pelajarData' => $pelajarData,
             'totalSiswa' => $totalSiswa,
         ]);

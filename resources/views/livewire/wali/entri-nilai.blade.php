@@ -107,7 +107,7 @@
 
                     <!-- Mata Pelajaran -->
                     <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
+                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-danger rounded-3"
                             style="width: 36px; height: 36px;">
                             <i class="mdi mdi-book-open-variant text-white fs-5"></i>
                         </div>
@@ -176,14 +176,12 @@
 
     {{-- Tabel Input Nilai --}}
     @if($selectedRombelPengajarId)
-    <!-- <div class="card shadow-sm"> -->
-    <!-- <div class="card-body"> -->
     <h5 class="text-dark mb-3">
         <i class="mdi mdi-account-multiple me-2"></i> Entri Data Nilai Akhir Pelajar
     </h5>
 
     <div class="table-responsive">
-        <table class="table table-hover table-bordered">
+        <table class="table table-hover">
             <thead class="table-light">
                 <tr>
                     <th class="text-center" width="5%">
@@ -194,19 +192,19 @@
                         <p class="mb-0">Nama Lengkap</p>
                         <small>Nomor Induk Sekolah & Nasional</small>
                     </th>
-                    <th class="text-center" width="10%">
+                    <th width="10%">
+                        <p class="mb-0">Form</p>
+                        <small>Entri Nilai</small>
+                    </th>
+                    <th width="10%">
                         <p class="mb-0">Nilai</p>
-                        <small>Input Nilai</small>
+                        <small>Tersimpan</small>
                     </th>
-                    <th class="text-center" width="10%">
-                        <p class="mb-0">Nilai Tersimpan</p>
-                        <small>Nilai yang telah tersimpan</small>
-                    </th>
-                    <th class="text-center" width="30%">
+                    <th width="30%">
                         <p class="mb-0">Capaian Kompetensi</p>
                         <small>Telah atau Belum Tercapai</small>
                     </th>
-                    <th class="text-center" width="5%">
+                    <th width="5%">
                         <p class="mb-0">Aksi</p>
                         <small>Delete</small>
                     </th>
@@ -224,6 +222,7 @@
                     </td>
                     <td>
                         <input type="number"
+                            wire:key="input-{{ $pelajar->pelajar_id }}"
                             wire:model.defer="nilaiInput.{{ $pelajar->pelajar_id }}"
                             class="form-control form-control-sm text-center"
                             min="0"
@@ -234,7 +233,7 @@
                         <small class="text-danger">{{ $message }}</small>
                         @enderror
                     </td>
-                    <td class="text-center">
+                    <td>
                         @if($pelajar->nilai_sekarang)
                         <span class="badge bg-info">
                             {{ number_format($pelajar->nilai_sekarang, 2) }}
@@ -244,22 +243,15 @@
                         @endif
                     </td>
                     <td></td>
-                    <td class="text-center">
+                    <td>
                         @if($pelajar->nilai_sekarang)
                         <button type="button"
-                            wire:key="delete-{{ $pelajar->pelajar_id }}"
+                            wire:key="delete-btn-{{ $pelajar->pelajar_id }}"
+                            id="delete-btn-{{ $pelajar->pelajar_id }}"
                             class="btn btn-sm btn-outline-danger"
-                            wire:click="confirmDelete('{{ $pelajar->pelajar_id }}')"
-                            wire:loading.attr="disabled"
-                            wire:target="confirmDelete,deleteNilai"
+                            onclick="confirmDeleteNilai('{{ $pelajar->pelajar_id }}')"
                             title="Hapus Nilai">
-
-                            <i class="mdi mdi-delete"
-                                wire:loading.remove
-                                wire:target="confirmDelete,deleteNilai"></i>
-                            <i class="mdi mdi-loading mdi-spin d-none"
-                                wire:loading.class.remove="d-none"
-                                wire:target="confirmDelete,deleteNilai"></i>
+                            <i class="mdi mdi-delete"></i>
                         </button>
                         @else
                         <span class="text-muted">-</span>
@@ -268,7 +260,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                         <i class="mdi mdi-information-outline me-2"></i>
                         Tidak ada data pelajar
                     </td>
@@ -321,8 +313,6 @@
             </span>
         </button>
     </div>
-    <!-- </div> -->
-    <!-- </div> -->
     @elseif($rombel && $semesterAktif)
     <div class="alert alert-warning text-center" role="alert">
         <i class="mdi mdi-information-outline me-2"></i>
@@ -343,32 +333,95 @@
 
 @push('scripts')
 <script>
-    // SweetAlert2 handlers
-    window.addEventListener('swal:success', event => {
-        Swal.fire({
-            icon: 'success',
-            title: event.detail[0].title,
-            text: event.detail[0].text,
-            timer: 3000,
-            showConfirmButton: false
-        });
-    });
+    document.addEventListener('DOMContentLoaded', function() {
 
-    window.addEventListener('swal:error', event => {
-        Swal.fire({
-            icon: 'error',
-            title: event.detail[0].title,
-            text: event.detail[0].text,
-        });
-    });
+        // ✅ Function untuk handle delete confirmation dengan loading state
+        window.confirmDeleteNilai = function(pelajarId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Hapus Nilai Pelajar?',
+                text: 'Anda yakin ingin menghapus nilai ini?',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+            }).then(result => {
+                if (result.isConfirmed) {
+                    // ✅ Tampilkan loading pada tombol spesifik
+                    const btn = document.getElementById(`delete-btn-${pelajarId}`);
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
+                    }
 
-    window.addEventListener('swal:info', event => {
-        Swal.fire({
-            icon: 'info',
-            title: event.detail[0].title,
-            text: event.detail[0].text,
-            timer: 2000,
-            showConfirmButton: false
+                    // Dispatch ke backend
+                    Livewire.dispatch('deleteNilai', [pelajarId]);
+                }
+            });
+        };
+
+        // Handler untuk response dari backend
+        window.addEventListener('swal:success', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: detail,
+                    showConfirmButton: true,
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'success',
+                    title: detail.title ?? 'Berhasil!',
+                    text: detail.text ?? '',
+                    showConfirmButton: true,
+                });
+            }
+        });
+
+        window.addEventListener('swal:error', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: detail,
+                    confirmButtonText: 'Tutup'
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'error',
+                    title: detail.title ?? 'Error!',
+                    text: detail.text ?? '',
+                    confirmButtonText: 'Tutup'
+                });
+            }
+        });
+
+        window.addEventListener('swal:info', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Info',
+                    text: detail,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'info',
+                    title: detail.title ?? 'Info',
+                    text: detail.text ?? '',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
         });
     });
 </script>

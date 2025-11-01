@@ -9,25 +9,16 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Nilai extends Model
 {
-    use HasFactory, SoftDeletes, HasUuids;
+    // use HasFactory, SoftDeletes, HasUuids;
+    use HasFactory, HasUuids;
 
     protected $table = 'nilais';
-    protected $primaryKey = 'id';
-    public $incrementing = false; // karena pakai UUID
+
+    public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = [
-        'pelajar_id',
-        'mata_pelajaran_id',
-        'rombel_pengajar_id',
-        'tahun_ajaran_semester_id',
-        'guru_id',
-        'nilai_angka',
-        'predikat',
-        'capaian_kompetensi',
-        'created_by',
-        'updated_by',
-    ];
+    // ✅ PERBAIKAN: Tambahkan created_by dan updated_by ke fillable
+    protected $guarded = ['id'];
 
     // 🔹 Relasi ke Pelajar
     public function pelajar()
@@ -57,5 +48,15 @@ class Nilai extends Model
     public function guru()
     {
         return $this->belongsTo(User::class, 'guru_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }
