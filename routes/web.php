@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 // Redirect root ke login
 Route::get('/', function () {
     if (Auth::check()) {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         // Arahkan sesuai role
@@ -123,6 +124,14 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
         return view('contents.wali.rombel-ajar', ['title' => 'Rombongan Belajar']);
     })->name('kelasajar');
 
+    Route::get('/teaching/detail/{rombelId}/{mataPelajaranId}', function ($rombelId, $mataPelajaranId) {
+        return view('contents.wali.rombel-ajar-nilai', [
+            'title' => 'Entri Data Nilai',
+            'rombelId' => $rombelId,
+            'mataPelajaranId' => $mataPelajaranId, // tambahkan ini
+        ]);
+    })->name('class.detail');
+
     // Route wali kelas lainnya...
 });
 
@@ -131,6 +140,18 @@ Route::middleware(['auth', 'role:guru'])->prefix('teacher')->name('guru.')->grou
     Route::get('/dashboard', function () {
         return view('contents.guru.dashboard', ['title' => 'Dashboard Guru']);
     })->name('dashboard');
+
+    Route::get('/class', function () {
+        return view('contents.guru.rombel-ajar', ['title' => 'Rombongan Belajar']);
+    })->name('kelasajar');
+
+    Route::get('/class/detail/{rombelId}/{mataPelajaranId}', function ($rombelId, $mataPelajaranId) {
+        return view('contents.guru.rombel-ajar-nilai', [
+            'title' => 'Entri Data Nilai',
+            'rombelId' => $rombelId,
+            'mataPelajaranId' => $mataPelajaranId, // tambahkan ini
+        ]);
+    })->name('class.detail');
 
     // Route guru lainnya...
 });

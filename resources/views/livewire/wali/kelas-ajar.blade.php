@@ -120,13 +120,13 @@
                         <small class="text-muted">{{ $percentage }}% selesai</small>
                     </td>
                     <td>
-                        <button type="button"
-                            class="btn btn-sm btn-primary d-flex align-items-center gap-1"
-                            title="Lihat Detail & Input Nilai"
-                            onclick="alert('Fitur detail akan segera dibuat')">
-                            <i class="mdi mdi-eye"></i>
-                            <span>Detail</span>
-                        </button>
+                        <form action="{{ route('walikelas.class.detail', ['rombelId' => $rombel->id, 'mataPelajaranId' => $rombel->mata_pelajaran_id]) }}" method="get" style="display:inline">
+                            <button type="submit"
+                                class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                                title="Lihat Detail & Input Nilai">
+                                <i class="mdi mdi-eye-outline"></i>
+                            </button>
+                        </form>
                     </td>
                 </tr>
                 @empty

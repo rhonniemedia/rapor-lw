@@ -72,14 +72,23 @@ class KelasAjar extends Component
         return $query;
     }
 
-    // public function detail($rombelId, $mataPelajaranId)
-    // {
-    //     // Redirect ke halaman detail dengan parameter rombel_id dan mata_pelajaran_id
-    //     $this->redirect(route('guru.nilai.detail', [
-    //         'rombel_id' => $rombelId,
-    //         'mata_pelajaran_id' => $mataPelajaranId
-    //     ]), navigate: false);
-    // }
+    public function detail($rombelId, $mataPelajaranId)
+    {
+        // Validasi parameter
+        if (!$rombelId || !$mataPelajaranId) {
+            $this->dispatch('swal:error', [
+                'title' => 'Error!',
+                'text' => 'Parameter tidak lengkap.'
+            ]);
+            return;
+        }
+
+        // Redirect tanpa dependency injection
+        $this->redirect(route('walikelas.class.detail', [
+            'rombelId' => $rombelId,
+            'mataPelajaranId' => $mataPelajaranId
+        ]));
+    }
 
     public function render()
     {
@@ -95,7 +104,6 @@ class KelasAjar extends Component
             $totalPelajar = $rombel->pelajars()->count();
 
             // Hitung pelajar yang sudah dinilai untuk mata pelajaran ini
-            // (Asumsi: tabel nilais memiliki relasi dengan pelajar_id, mata_pelajaran_id, rombel_id)
             $selesaiDinilai = \App\Models\Nilai::where('mata_pelajaran_id', $rombelPengajar->mata_pelajaran_id)
                 ->whereIn('pelajar_id', $rombel->pelajars()->pluck('pelajars.id'))
                 ->where('guru_id', Auth::id())

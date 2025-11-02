@@ -89,18 +89,14 @@
                 <div class="col-md-4">
                     <!-- Guru Mata Pelajaran -->
                     <div class="d-flex align-items-center mb-3">
-                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
+                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-primary rounded-3"
                             style="width: 36px; height: 36px;">
                             <i class="mdi mdi-teach text-white fs-5"></i>
                         </div>
                         <div class="ms-3 d-flex flex-column justify-content-center">
                             <small class="text-muted lh-2">Guru Mata Pelajaran</small>
                             <p class="fw-bold mb-0 text-primary lh-sm">
-                                @if($selectedRombelPengajarId && $guruName)
-                                {{ $guruName }}
-                                @else
-                                <span class="text-muted">Belum Dipilih</span>
-                                @endif
+                                {{ $rombelPengajar->guru->name ?? 'N/A' }}
                             </p>
                         </div>
                     </div>
@@ -114,15 +110,69 @@
                         <div class="ms-3 d-flex flex-column justify-content-center">
                             <small class="text-muted lh-2">Mata Pelajaran</small>
                             <p class="fw-bold mb-0 text-danger lh-sm">
-                                @if($selectedRombelPengajarId)
-                                @php
-                                $selectedMapel = $mataPelajaranList->firstWhere('id', $selectedRombelPengajarId);
-                                @endphp
-                                {{ $selectedMapel->mataPelajaran->nama ?? 'N/A' }}
-                                @else
-                                <span class="text-muted">Belum Dipilih</span>
-                                @endif
+                                {{ $mataPelajaran->nama ?? 'N/A' }}
                             </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Statistics Card --}}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="mdi mdi-account-multiple mdi-36px me-3"></i>
+                        <div>
+                            <h6 class="mb-0">Total Siswa</h6>
+                            <h3 class="mb-0">{{ $totalSiswa }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="mdi mdi-check-circle mdi-36px me-3"></i>
+                        <div>
+                            <h6 class="mb-0">Sudah Dinilai</h6>
+                            <h3 class="mb-0">{{ $cachedNilaiExist ? $cachedNilaiExist->count() : 0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="mdi mdi-clock-alert mdi-36px me-3"></i>
+                        <div>
+                            <h6 class="mb-0">Belum Dinilai</h6>
+                            <h3 class="mb-0">{{ $totalSiswa - ($cachedNilaiExist ? $cachedNilaiExist->count() : 0) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="mdi mdi-chart-line mdi-36px me-3"></i>
+                        <div>
+                            <h6 class="mb-0">Progress</h6>
+                            <h3 class="mb-0">
+                                @php
+                                $progress = $totalSiswa > 0 ? round(($cachedNilaiExist ? $cachedNilaiExist->count() : 0) / $totalSiswa * 100) : 0;
+                                @endphp
+                                {{ $progress }}%
+                            </h3>
                         </div>
                     </div>
                 </div>
@@ -132,11 +182,12 @@
     @else
     <div class="alert alert-danger" role="alert">
         <i class="mdi mdi-alert-circle me-2"></i>
-        <strong>Perhatian!</strong> Tidak ada kelas binaan atau semester aktif.
+        <strong>Perhatian!</strong> Data tidak lengkap atau semester tidak aktif.
     </div>
     @endif
 
-
+    {{-- Search and Table Section --}}
+    @if($rombel && $semesterAktif && $rombelPengajar)
     <div class="row mb-3">
         <div class="col-lg-6">
             <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Entri Data Nilai Akhir Pelajar</h5>
@@ -147,6 +198,13 @@
                     wire:model.live.debounce.300ms="searchPelajar"
                     class="form-control"
                     placeholder="Cari nama, atau nomor induk...">
+                @if($searchPelajar)
+                <button type="button"
+                    class="btn btn-secondary"
+                    wire:click="$set('searchPelajar', '')">
+                    <i class="mdi mdi-close"></i>
+                </button>
+                @endif
             </div>
         </div>
     </div>
@@ -171,9 +229,13 @@
                         <p class="mb-0">Nilai</p>
                         <small>Tersimpan</small>
                     </th>
-                    <th width="30%">
+                    <th width="10%">
+                        <p class="mb-0">Predikat</p>
+                        <small>A, B, C, D</small>
+                    </th>
+                    <th width="20%">
                         <p class="mb-0">Capaian Kompetensi</p>
-                        <small>Telah atau Belum Tercapai</small>
+                        <small>Status Pencapaian</small>
                     </th>
                     <th width="5%">
                         <p class="mb-0">Aksi</p>
@@ -188,8 +250,8 @@
                         {{ $pelajarData->firstItem() + $index }}
                     </td>
                     <td>
-                        <p class="mb-0">{{ $pelajar->nama_lengkap }}</p>
-                        <small>{{ $pelajar->nomor_induk ?? '-' }} | {{ $pelajar->nisn ?? '-' }}</small>
+                        <p class="mb-0 fw-medium">{{ $pelajar->nama_lengkap }}</p>
+                        <small class="text-muted">{{ $pelajar->nomor_induk ?? '-' }} | {{ $pelajar->nisn ?? '-' }}</small>
                     </td>
                     <td>
                         <input type="number"
@@ -204,7 +266,7 @@
                         <small class="text-danger">{{ $message }}</small>
                         @enderror
                     </td>
-                    <td>
+                    <td class="text-center">
                         @if($pelajar->nilai_sekarang)
                         <span class="badge bg-info">
                             {{ number_format($pelajar->nilai_sekarang, 2) }}
@@ -213,8 +275,45 @@
                         <span class="text-muted">-</span>
                         @endif
                     </td>
-                    <td></td>
+                    <td class="text-center">
+                        @if($pelajar->nilai_sekarang)
+                        @php
+                        $nilai = $pelajar->nilai_sekarang;
+                        if ($nilai >= 90) {
+                        $predikat = 'A';
+                        $badgeClass = 'bg-success';
+                        } elseif ($nilai >= 75) {
+                        $predikat = 'B';
+                        $badgeClass = 'bg-primary';
+                        } elseif ($nilai >= 60) {
+                        $predikat = 'C';
+                        $badgeClass = 'bg-warning';
+                        } else {
+                        $predikat = 'D';
+                        $badgeClass = 'bg-danger';
+                        }
+                        @endphp
+                        <span class="badge {{ $badgeClass }}">{{ $predikat }}</span>
+                        @else
+                        <span class="text-muted">-</span>
+                        @endif
+                    </td>
                     <td>
+                        @if($pelajar->nilai_sekarang)
+                        @if($pelajar->nilai_sekarang >= 75)
+                        <span class="badge bg-success">
+                            <i class="mdi mdi-check-circle me-1"></i>Tercapai
+                        </span>
+                        @else
+                        <span class="badge bg-danger">
+                            <i class="mdi mdi-close-circle me-1"></i>Belum Tercapai
+                        </span>
+                        @endif
+                        @else
+                        <span class="text-muted">-</span>
+                        @endif
+                    </td>
+                    <td class="text-center">
                         @if($pelajar->nilai_sekarang)
                         <button type="button"
                             wire:key="delete-btn-{{ $pelajar->pelajar_id }}"
@@ -231,9 +330,13 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
+                    <td colspan="7" class="text-center text-muted py-4">
                         <i class="mdi mdi-information-outline me-2"></i>
+                        @if($searchPelajar)
+                        Tidak ada data pelajar yang sesuai dengan pencarian "{{ $searchPelajar }}"
+                        @else
                         Tidak ada data pelajar
+                        @endif
                     </td>
                 </tr>
                 @endforelse
@@ -249,14 +352,14 @@
     @endif
 
     {{-- Action Buttons --}}
-    <div class="d-flex justify-content-end mt-3">
+    <div class="d-flex justify-content-end mt-3 gap-2">
         <button type="button"
-            class="btn btn-labeled btn-outline-secondary me-2"
+            class="btn btn-labeled btn-outline-secondary"
             wire:click="resetNilai"
             wire:loading.attr="disabled"
             wire:target="resetNilai">
             <span class="btn-label">
-                <i class="mdi mdi-delete-sweep-outline"></i>
+                <i class="mdi mdi-refresh"></i>
             </span>
             Reset
         </button>
@@ -277,7 +380,7 @@
                 </i>
             </span>
             <span wire:loading.class="d-none" wire:target="saveNilai">
-                Simpan
+                Simpan Nilai
             </span>
             <span class="d-none" wire:loading.class.remove="d-none" wire:target="saveNilai">
                 Menyimpan...
@@ -287,13 +390,13 @@
     @elseif($rombel && $semesterAktif)
     <div class="alert alert-warning text-center" role="alert">
         <i class="mdi mdi-information-outline me-2"></i>
-        <strong>Silakan pilih Mata Pelajaran untuk mulai mengentri nilai.</strong>
+        <strong>Data tidak lengkap untuk mengentri nilai.</strong>
     </div>
     @endif
 
-    {{-- Loading Overlay - Hanya untuk saveNilai dan actions penting --}}
+    {{-- Loading Overlay --}}
     <div wire:loading.flex
-        wire:target="saveNilai,selectedRombelPengajarId,searchPelajar"
+        wire:target="saveNilai,searchPelajar"
         class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center"
         style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: none;">
         <div class="spinner-border text-primary" role="status">

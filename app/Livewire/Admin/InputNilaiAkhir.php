@@ -60,6 +60,7 @@ class InputNilaiAkhir extends Component
     protected $listeners = [
         'saveNilaiConfirmed' => 'saveNilai',
         'resetNilaiConfirmed' => 'resetNilai',
+        'deleteNilai' => 'deleteNilai', // ✅ NEW
     ];
 
     // 🔹 Validation rules
@@ -484,6 +485,68 @@ class InputNilaiAkhir extends Component
             'title' => 'Direset!',
             'text' => 'Semua kolom input nilai telah dikosongkan.',
         ]);
+    }
+
+    // 🔹 NEW: Delete nilai
+    public function deleteNilai($pelajarId = null): void
+    {
+        // Handle array parameter dari JavaScript
+        if (is_array($pelajarId) && isset($pelajarId[0])) {
+            $pelajarId = $pelajarId[0];
+        }
+
+        if (!$pelajarId || !$this->selectedRombelPengajarId || !$this->semesterId) {
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'ID Pelajar tidak ditemukan atau data tidak valid.',
+            ]);
+            return;
+        }
+
+        try {
+            $rombelPengajar = RombelPengajar::find($this->selectedRombelPengajarId);
+
+            if (!$rombelPengajar) {
+                throw new \Exception('Data mata pelajaran tidak ditemukan');
+            }
+
+            $deleted = Nilai::where('pelajar_id', $pelajarId)
+                ->where('mata_pelajaran_id', $rombelPengajar->mata_pelajaran_id)
+                ->where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
+                ->delete();
+
+            if ($deleted) {
+                // Reset input nilai untuk pelajar yang dihapus
+                if (isset($this->nilaiInput[$pelajarId])) {
+                    unset($this->nilaiInput[$pelajarId]);
+                }
+
+                // Reload cache dan data
+                $this->cachedNilaiExist = null;
+                $this->loadNilaiPelajar();
+
+                $this->dispatch('swal:success', [
+                    'title' => 'Berhasil!',
+                    'text' => 'Nilai berhasil dihapus.',
+                ]);
+            } else {
+                $this->dispatch('swal:info', [
+                    'title' => 'Info',
+                    'text' => 'Nilai tidak ditemukan.',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error deleting nilai: ' . $e->getMessage(), [
+                'pelajar_id' => $pelajarId,
+                'user_id' => Auth::id(),
+            ]);
+
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'Terjadi kesalahan saat menghapus nilai.',
+            ]);
+        }
     }
 
     // 🔹 Render view dengan data pelajar

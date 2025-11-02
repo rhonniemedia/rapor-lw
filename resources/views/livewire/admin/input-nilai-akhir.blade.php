@@ -211,9 +211,10 @@
                                     <th class="text-center" width="5%">No</th>
                                     <th class="text-center" width="10%">NIS</th>
                                     <th class="text-center" width="10%">NISN</th>
-                                    <th width="45%">Nama Lengkap</th>
-                                    <th class="text-center" width="15%">Nilai Tersimpan</th>
+                                    <th width="35%">Nama Lengkap</th>
+                                    <th class="text-center" width="12%">Nilai Tersimpan</th>
                                     <th class="text-center" width="15%">Input Nilai</th>
+                                    <th class="text-center" width="8%">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -236,7 +237,7 @@
                                     </td>
                                     <td>
                                         <input type="number"
-                                            wire:model.live.debounce.500ms="nilaiInput.{{ $pelajar->pelajar_id }}"
+                                            wire:model.defer="nilaiInput.{{ $pelajar->pelajar_id }}"
                                             class="form-control form-control-sm text-center"
                                             min="0"
                                             max="100"
@@ -246,10 +247,24 @@
                                         <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </td>
+                                    <td class="text-center">
+                                        @if($pelajar->nilai_sekarang)
+                                        <button type="button"
+                                            wire:key="delete-btn-{{ $pelajar->pelajar_id }}"
+                                            id="delete-btn-{{ $pelajar->pelajar_id }}"
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDeleteNilai('{{ $pelajar->pelajar_id }}')"
+                                            title="Hapus Nilai">
+                                            <i class="mdi mdi-delete"></i>
+                                        </button>
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">
+                                    <td colspan="7" class="text-center text-muted py-4">
                                         <i class="mdi mdi-information-outline me-2"></i>
                                         Tidak ada data pelajar
                                     </td>
@@ -272,7 +287,7 @@
                         <button
                             type="button"
                             class="btn btn-labeled btn-outline-secondary me-2"
-                            wire:click="resetNilai"
+                            wire:click="confirmResetNilai"
                             wire:loading.attr="disabled"
                             wire:target="resetNilai">
                             <span class="btn-label">
@@ -329,3 +344,99 @@
     </div>
     @endif
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Function untuk handle delete confirmation dengan loading state
+        window.confirmDeleteNilai = function(pelajarId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Hapus Nilai Pelajar?',
+                text: 'Anda yakin ingin menghapus nilai ini?',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+            }).then(result => {
+                if (result.isConfirmed) {
+                    // Tampilkan loading pada tombol spesifik
+                    const btn = document.getElementById(`delete-btn-${pelajarId}`);
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
+                    }
+
+                    // Dispatch ke backend
+                    Livewire.dispatch('deleteNilai', [pelajarId]);
+                }
+            });
+        };
+
+        // Handler untuk response dari backend
+        window.addEventListener('swal:success', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: detail,
+                    showConfirmButton: true,
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'success',
+                    title: detail.title ?? 'Berhasil!',
+                    text: detail.text ?? '',
+                    showConfirmButton: true,
+                });
+            }
+        });
+
+        window.addEventListener('swal:error', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: detail,
+                    confirmButtonText: 'Tutup'
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'error',
+                    title: detail.title ?? 'Error!',
+                    text: detail.text ?? '',
+                    confirmButtonText: 'Tutup'
+                });
+            }
+        });
+
+        window.addEventListener('swal:info', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Info',
+                    text: detail,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'info',
+                    title: detail.title ?? 'Info',
+                    text: detail.text ?? '',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        });
+    });
+</script>
+@endpush
