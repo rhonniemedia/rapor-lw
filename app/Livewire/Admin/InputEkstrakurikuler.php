@@ -67,8 +67,9 @@ class InputEkstrakurikuler extends Component
 
     // 🔹 Event listener
     protected $listeners = [
-        'saveEkstrakurikulerConfirmed' => 'saveEkstrakurikuler',
+        // 'saveEkstrakurikulerConfirmed' => 'saveEkstrakurikuler',
         'resetEkstrakurikulerConfirmed' => 'resetEkstrakurikuler',
+        'deleteEkstrakurikuler' => 'deleteEkstrakurikuler', // ✅ NEW
     ];
 
     // 🔹 Validation rules
@@ -361,43 +362,46 @@ class InputEkstrakurikuler extends Component
     }
 
     // 🔹 Konfirmasi simpan ekstrakurikuler
-    public function confirmSaveEkstrakurikuler(): void
-    {
-        if (!$this->rombelId || !$this->semesterId || !$this->ekstrakurikulerId) {
-            $this->dispatch('swal:error', [
-                'title' => 'Error!',
-                'text' => 'Silakan lengkapi semua filter terlebih dahulu.',
-            ]);
-            return;
-        }
+    // public function confirmSaveEkstrakurikuler(): void
+    // {
+    //     if (!$this->rombelId || !$this->semesterId || !$this->ekstrakurikulerId) {
+    //         $this->dispatch('swal:error', [
+    //             'title' => 'Error!',
+    //             'text' => 'Silakan lengkapi semua filter terlebih dahulu.',
+    //         ]);
+    //         return;
+    //     }
 
-        // Hitung jumlah ekstrakurikuler yang akan disimpan
-        $count = collect($this->ekstrakurikulerInput)
-            ->filter(fn($input) => !empty($input['nilai']))
-            ->count();
+    //     // Hitung jumlah ekstrakurikuler yang akan disimpan
+    //     $count = collect($this->ekstrakurikulerInput)
+    //         ->filter(fn($input) => !empty($input['nilai']))
+    //         ->count();
 
-        if ($count === 0) {
-            $this->dispatch('swal:warning', [
-                'title' => 'Perhatian!',
-                'text' => 'Tidak ada data ekstrakurikuler yang akan disimpan.',
-            ]);
-            return;
-        }
+    //     if ($count === 0) {
+    //         $this->dispatch('swal:warning', [
+    //             'title' => 'Perhatian!',
+    //             'text' => 'Tidak ada data ekstrakurikuler yang akan disimpan.',
+    //         ]);
+    //         return;
+    //     }
 
-        // Validasi input
-        $this->validate();
+    //     // Validasi input
+    //     $this->validate();
 
-        $this->dispatch('swal:confirm', [
-            'title' => 'Simpan Ekstrakurikuler?',
-            'text' => "Anda akan menyimpan data ekstrakurikuler untuk {$count} pelajar. Lanjutkan?",
-            'confirmButtonText' => 'Ya, Simpan',
-            'nextEvent' => 'saveEkstrakurikulerConfirmed',
-        ]);
-    }
+    //     $this->dispatch('swal:confirm', [
+    //         'title' => 'Simpan Ekstrakurikuler?',
+    //         'text' => "Anda akan menyimpan data ekstrakurikuler untuk {$count} pelajar. Lanjutkan?",
+    //         'confirmButtonText' => 'Ya, Simpan',
+    //         'nextEvent' => 'saveEkstrakurikulerConfirmed',
+    //     ]);
+    // }
 
     // 🔹 Simpan ekstrakurikuler
     public function saveEkstrakurikuler(): void
     {
+        // Validasi tetap dilakukan
+        $this->validate();
+
         if (!$this->rombelId || !$this->semesterId || !$this->ekstrakurikulerId) {
             return;
         }
@@ -551,6 +555,81 @@ class InputEkstrakurikuler extends Component
             'title' => 'Direset!',
             'text' => 'Semua kolom input ekstrakurikuler telah dikosongkan.',
         ]);
+    }
+
+    // 🔹 ✅ NEW: Delete ekstrakurikuler
+    public function deleteEkstrakurikuler($pelajarId = null): void
+    {
+        // Handle array parameter dari JavaScript
+        if (is_array($pelajarId) && isset($pelajarId[0])) {
+            $pelajarId = $pelajarId[0];
+        }
+
+        if (!$pelajarId || !$this->ekstrakurikulerId || !$this->semesterId) {
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'ID Pelajar tidak ditemukan atau data tidak valid.',
+            ]);
+            return;
+        }
+
+        try {
+            // Validasi ekstrakurikuler
+            $ekstrakurikuler = Ekstrakurikuler::find($this->ekstrakurikulerId);
+            if (!$ekstrakurikuler) {
+                throw new \Exception('Data ekstrakurikuler tidak ditemukan');
+            }
+
+            // Security: Validasi pelajar ada di rombel
+            $validPelajar = RombelPelajar::where('rombel_id', $this->rombelId)
+                ->where('pelajar_id', $pelajarId)
+                ->exists();
+
+            if (!$validPelajar) {
+                throw new \Exception('Pelajar tidak ditemukan di rombel ini');
+            }
+
+            // Delete data ekstrakurikuler
+            $deleted = EkskulPelajar::where('pelajar_id', $pelajarId)
+                ->where('ekstrakurikuler_id', $this->ekstrakurikulerId)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
+                ->delete();
+
+            if ($deleted) {
+                // Reset input ekstrakurikuler untuk pelajar yang dihapus
+                if (isset($this->ekstrakurikulerInput[$pelajarId])) {
+                    $this->ekstrakurikulerInput[$pelajarId] = [
+                        'nilai' => null,
+                        'deskripsi' => ''
+                    ];
+                }
+
+                // Reload cache dan data
+                $this->cachedEkstrakurikulerExist = null;
+                $this->loadEkstrakurikulerPelajar();
+
+                $this->dispatch('swal:success', [
+                    'title' => 'Berhasil!',
+                    'text' => 'Data ekstrakurikuler berhasil dihapus.',
+                ]);
+            } else {
+                $this->dispatch('swal:info', [
+                    'title' => 'Info',
+                    'text' => 'Data ekstrakurikuler tidak ditemukan.',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error deleting ekstrakurikuler: ' . $e->getMessage(), [
+                'pelajar_id' => $pelajarId,
+                'ekstrakurikuler_id' => $this->ekstrakurikulerId,
+                'user_id' => Auth::id(),
+            ]);
+
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'Terjadi kesalahan saat menghapus data ekstrakurikuler.',
+            ]);
+        }
     }
 
     // 🔹 Render view dengan data pelajar

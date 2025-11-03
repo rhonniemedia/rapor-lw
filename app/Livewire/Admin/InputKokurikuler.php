@@ -62,8 +62,8 @@ class InputKokurikuler extends Component
 
     // 🔹 Event listener
     protected $listeners = [
-        'saveKokurikulerConfirmed' => 'saveKokurikuler',
         'resetKokurikulerConfirmed' => 'resetKokurikuler',
+        'deleteKokurikuler' => 'deleteKokurikuler', // ✅ NEW
     ];
 
     // 🔹 Validation rules
@@ -301,44 +301,46 @@ class InputKokurikuler extends Component
         return $query;
     }
 
-    // 🔹 Konfirmasi simpan kokurikuler
-    public function confirmSaveKokurikuler(): void
-    {
-        if (!$this->rombelId || !$this->semesterId) {
-            $this->dispatch('swal:error', [
-                'title' => 'Error!',
-                'text' => 'Silakan pilih rombel terlebih dahulu.',
-            ]);
-            return;
-        }
+    // // 🔹 Konfirmasi simpan kokurikuler
+    // public function confirmSaveKokurikuler(): void
+    // {
+    //     if (!$this->rombelId || !$this->semesterId) {
+    //         $this->dispatch('swal:error', [
+    //             'title' => 'Error!',
+    //             'text' => 'Silakan pilih rombel terlebih dahulu.',
+    //         ]);
+    //         return;
+    //     }
 
-        // Hitung jumlah kokurikuler yang akan disimpan
-        $count = collect($this->kokurikulerInput)
-            ->filter(fn($input) => !empty($input['predikat']))
-            ->count();
+    //     // Hitung jumlah kokurikuler yang akan disimpan
+    //     $count = collect($this->kokurikulerInput)
+    //         ->filter(fn($input) => !empty($input['predikat']))
+    //         ->count();
 
-        if ($count === 0) {
-            $this->dispatch('swal:warning', [
-                'title' => 'Perhatian!',
-                'text' => 'Tidak ada data kokurikuler yang akan disimpan.',
-            ]);
-            return;
-        }
+    //     if ($count === 0) {
+    //         $this->dispatch('swal:warning', [
+    //             'title' => 'Perhatian!',
+    //             'text' => 'Tidak ada data kokurikuler yang akan disimpan.',
+    //         ]);
+    //         return;
+    //     }
 
-        // Validasi input
-        $this->validate();
+    //     // Validasi input
+    //     $this->validate();
 
-        $this->dispatch('swal:confirm', [
-            'title' => 'Simpan Kokurikuler?',
-            'text' => "Anda akan menyimpan data kokurikuler untuk {$count} pelajar. Lanjutkan?",
-            'confirmButtonText' => 'Ya, Simpan',
-            'nextEvent' => 'saveKokurikulerConfirmed',
-        ]);
-    }
+    //     $this->dispatch('swal:confirm', [
+    //         'title' => 'Simpan Kokurikuler?',
+    //         'text' => "Anda akan menyimpan data kokurikuler untuk {$count} pelajar. Lanjutkan?",
+    //         'confirmButtonText' => 'Ya, Simpan',
+    //         'nextEvent' => 'saveKokurikulerConfirmed',
+    //     ]);
+    // }
 
     // 🔹 Simpan kokurikuler
     public function saveKokurikuler(): void
     {
+        $this->validate();
+
         if (!$this->rombelId || !$this->semesterId) {
             return;
         }
@@ -482,6 +484,80 @@ class InputKokurikuler extends Component
             'title' => 'Direset!',
             'text' => 'Semua kolom input kokurikuler telah dikosongkan.',
         ]);
+    }
+
+    // 🔹 ✅ NEW: Delete kokurikuler
+    public function deleteKokurikuler($pelajarId = null): void
+    {
+        // Handle array parameter dari JavaScript
+        if (is_array($pelajarId) && isset($pelajarId[0])) {
+            $pelajarId = $pelajarId[0];
+        }
+
+        if (!$pelajarId || !$this->semesterId) {
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'ID Pelajar tidak ditemukan atau data tidak valid.',
+            ]);
+            return;
+        }
+
+        try {
+            // Validasi rombel
+            $rombel = Rombel::find($this->rombelId);
+            if (!$rombel) {
+                throw new \Exception('Data rombel tidak ditemukan');
+            }
+
+            // Security: Validasi pelajar ada di rombel
+            $validPelajar = RombelPelajar::where('rombel_id', $this->rombelId)
+                ->where('pelajar_id', $pelajarId)
+                ->exists();
+
+            if (!$validPelajar) {
+                throw new \Exception('Pelajar tidak ditemukan di rombel ini');
+            }
+
+            // Delete data kokurikuler
+            $deleted = Kokurikuler::where('pelajar_id', $pelajarId)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
+                ->delete();
+
+            if ($deleted) {
+                // Reset input kokurikuler untuk pelajar yang dihapus
+                if (isset($this->kokurikulerInput[$pelajarId])) {
+                    $this->kokurikulerInput[$pelajarId] = [
+                        'predikat' => null,
+                        'capaian' => ''
+                    ];
+                }
+
+                // Reload cache dan data
+                $this->cachedKokurikulerExist = null;
+                $this->loadKokurikulerPelajar();
+
+                $this->dispatch('swal:success', [
+                    'title' => 'Berhasil!',
+                    'text' => 'Data kokurikuler berhasil dihapus.',
+                ]);
+            } else {
+                $this->dispatch('swal:info', [
+                    'title' => 'Info',
+                    'text' => 'Data kokurikuler tidak ditemukan.',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error deleting kokurikuler: ' . $e->getMessage(), [
+                'pelajar_id' => $pelajarId,
+                'semester_id' => $this->semesterId,
+                'user_id' => Auth::id(),
+            ]);
+
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'Terjadi kesalahan saat menghapus data kokurikuler.',
+            ]);
+        }
     }
 
     // 🔹 Render view dengan data pelajar

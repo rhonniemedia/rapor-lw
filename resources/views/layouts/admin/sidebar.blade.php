@@ -106,6 +106,10 @@
                         <a class="nav-link {{ request()->is('admin/academic/manage-extracurricular') ? 'active' : '' }}"
                             href="{{url('admin/academic/manage-extracurricular')}}">Ekstrakurikuler</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('admin/academic/manage-description') ? 'active' : '' }}"
+                            href="{{url('admin/academic/manage-description')}}">Deskripsi Capaian</a>
+                    </li>
                 </ul>
             </div>
         </li>
@@ -168,8 +172,8 @@
                     </li>
                     <!-- Menu Entri Data -->
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('admin/entry/entry-extracurricular') ? 'active' : '' }}"
-                            href="{{url('admin/entry/extracurricular')}}">Ekstrakurikuler</a>
+                        <a class="nav-link {{ request()->is('admin/entry/data-extracurricular') ? 'active' : '' }}"
+                            href="{{url('admin/entry/data-extracurricular')}}">Ekstrakurikuler</a>
                     </li>
                 </ul>
             </div>

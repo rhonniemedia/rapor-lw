@@ -39,6 +39,8 @@ Route::post('/auth/logout', function () {
     return redirect()->route('login');
 })->middleware('auth')->name('logout');
 
+
+// Admin Route
 Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // Dashboard
@@ -64,6 +66,7 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
         Route::get('/subject', fn() => view('contents.admin.mata-pelajaran', ['title' => 'Mata Pelajaran']));
         Route::get('/manage-extracurricular', fn() => view('contents.admin.ekstrakurikuler', ['title' => 'Ekstrakurikuler']))
             ->name('academic.extracurricular');
+        Route::get('/manage-description', fn() => view('contents.admin.deskripsi-capaian', ['title' => 'Deskripsi Capaian']));
     });
 
     //  Class Management
@@ -84,7 +87,7 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
         Route::get('/cocurricular', fn() => view('contents.admin.kokurikuler', ['title' => 'Kokurikuler']));
         Route::get('/attendance', fn() => view('contents.admin.kehadiran', ['title' => 'Absensi']));
         Route::get('/class-notes', fn() => view('contents.admin.catatan-walas', ['title' => 'Catatan Wali Kelas']));
-        Route::get('/extracurricular', fn() => view('contents.admin.ekstrakurikuler-input', ['title' => 'Ekstrakurikuler']))->name('entry.extracurricular');
+        Route::get('/data-extracurricular', fn() => view('contents.admin.ekstrakurikuler-input', ['title' => 'Ekstrakurikuler']))->name('entry.extracurricular');
     });
 
     // Report Finalization

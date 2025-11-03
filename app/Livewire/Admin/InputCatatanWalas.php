@@ -45,8 +45,9 @@ class InputCatatanWalas extends Component
     ];
 
     protected $listeners = [
-        'saveCatatanConfirmed' => 'saveCatatan',
+        // 'saveCatatanConfirmed' => 'saveCatatan', // ❌ Dihapus
         'resetCatatanConfirmed' => 'resetCatatan',
+        'deleteCatatan' => 'deleteCatatan', // ✅ NEW: Listener untuk delete
     ];
 
     protected $rules = [
@@ -235,6 +236,7 @@ class InputCatatanWalas extends Component
         return $query;
     }
 
+    // ❌ Dihapus dan digabungkan ke saveCatatan()
     public function confirmSaveCatatan(): void
     {
         if (!$this->rombelId || !$this->semesterId) {
@@ -259,17 +261,27 @@ class InputCatatanWalas extends Component
 
         $this->validate();
 
-        $this->dispatch('swal:confirm', [
-            'title' => 'Simpan Catatan?',
-            'text' => "Anda akan menyimpan catatan untuk {$count} pelajar. Lanjutkan?",
-            'confirmButtonText' => 'Ya, Simpan',
-            'nextEvent' => 'saveCatatanConfirmed',
-        ]);
+        // ❌ Logika konfirmasi dihapus, tombol di blade sekarang panggil saveCatatan()
     }
 
+    // 🔹 Simpan Catatan (dipanggil langsung dari blade)
     public function saveCatatan(): void
     {
         if (!$this->rombelId || !$this->semesterId) {
+            return;
+        }
+
+        $this->validate(); // ✅ Pindah validasi ke sini
+
+        $count = collect($this->catatanInput)
+            ->filter(fn($input) => !empty(trim($input['catatan'] ?? '')))
+            ->count();
+
+        if ($count === 0) {
+            $this->dispatch('swal:info', [
+                'title' => 'Info',
+                'text' => 'Tidak ada catatan baru yang diinput untuk disimpan.',
+            ]);
             return;
         }
 
@@ -282,7 +294,14 @@ class InputCatatanWalas extends Component
             return;
         }
 
-        $isAdmin = Auth::user()->hasRole(['admin', 'superadmin']);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $isAdmin = $user ? $user->hasRole(['admin', 'superadmin']) : false;
+
+        if ($user && method_exists($user, 'hasRole')) {
+            $isAdmin = $user->hasRole(['admin', 'superadmin']);
+        }
+
         $guruId = null;
 
         if ($isAdmin) {
@@ -322,6 +341,7 @@ class InputCatatanWalas extends Component
                     ->where('tahun_ajaran_semester_id', $this->semesterId)
                     ->first();
 
+                // Logic: Jika input kosong, hapus yang existing
                 if (empty($catatan)) {
                     if ($existing) {
                         $existing->delete();
@@ -330,13 +350,17 @@ class InputCatatanWalas extends Component
                     continue;
                 }
 
+                // Logic: Simpan/Update
                 if ($existing) {
-                    $existing->update([
-                        'catatan' => $catatan,
-                        'tanggal_input' => now(),
-                        'guru_id' => $guruId,
-                    ]);
-                    $updatedCount++;
+                    // Hanya update jika isi catatan berbeda
+                    if ($existing->catatan !== $catatan) {
+                        $existing->update([
+                            'catatan' => $catatan,
+                            'tanggal_input' => now(),
+                            'guru_id' => $guruId,
+                        ]);
+                        $updatedCount++;
+                    }
                 } else {
                     CatatanWaliKelas::create([
                         'pelajar_id' => $pelajarId,
@@ -365,7 +389,7 @@ class InputCatatanWalas extends Component
             Log::error('Error saving catatan: ' . $e->getMessage());
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'Gagal menyimpan catatan: ' . $e->getMessage(),
+                'text' => 'Gagal menyimpan catatan. Silakan coba lagi.',
             ]);
         }
     }
@@ -378,6 +402,60 @@ class InputCatatanWalas extends Component
             'title' => 'Direset!',
             'text' => 'Semua kolom input catatan telah dikosongkan.',
         ]);
+    }
+
+    // 🔹 NEW: Hapus Catatan
+    public function deleteCatatan($pelajarId = null): void
+    {
+        // Handle array parameter dari JavaScript
+        if (is_array($pelajarId) && isset($pelajarId[0])) {
+            $pelajarId = $pelajarId[0];
+        }
+
+        if (!$pelajarId || !$this->rombelId || !$this->semesterId) {
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'ID Pelajar tidak ditemukan atau filter tidak valid.',
+            ]);
+            return;
+        }
+
+        try {
+            $deleted = CatatanWaliKelas::where('pelajar_id', $pelajarId)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
+                ->delete();
+
+            if ($deleted) {
+                // Reset input untuk pelajar yang dihapus
+                if (isset($this->catatanInput[$pelajarId])) {
+                    unset($this->catatanInput[$pelajarId]);
+                }
+
+                // Reload cache dan data
+                $this->cachedCatatanExist = null;
+                $this->loadCatatanPelajar();
+
+                $this->dispatch('swal:success', [
+                    'title' => 'Berhasil!',
+                    'text' => 'Catatan wali kelas berhasil dihapus.',
+                ]);
+            } else {
+                $this->dispatch('swal:info', [
+                    'title' => 'Info',
+                    'text' => 'Catatan tidak ditemukan.',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error deleting catatan walas: ' . $e->getMessage(), [
+                'pelajar_id' => $pelajarId,
+                'user_id' => Auth::id(),
+            ]);
+
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'Terjadi kesalahan saat menghapus catatan.',
+            ]);
+        }
     }
 
     public function render()

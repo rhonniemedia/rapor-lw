@@ -189,32 +189,55 @@
             <div class="card">
                 <div class="card-body">
                     <!-- Header & Search -->
-                    <div class="row mb-3">
+                    <div class="row mb-3 align-items-center">
                         <div class="col-lg-6">
                             <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Entri Data Nilai Akhir Pelajar</h5>
                         </div>
                         <div class="col-lg-6 d-flex justify-content-end">
-                            <div class="input-group w-50">
-                                <input type="text"
+                            <div class="input-group" style="width: 250px;"> <input type="text"
                                     wire:model.live.debounce.300ms="searchPelajar"
                                     class="form-control"
                                     placeholder="Cari nama, atau nomor induk...">
                             </div>
+
+                            <button type="button"
+                                wire:click="create"
+                                class="btn btn-outline-light-muted btn-sm ms-2"
+                                style="padding: 0.25rem 0.5rem; width: 2.25rem; height: calc(2.25rem + 2px); display: flex; align-items: center; justify-content: center;">
+                                <i class="mdi mdi-plus"></i>
+                            </button>
                         </div>
                     </div>
 
                     <!-- Tabel Nilai -->
                     <div class="table-responsive">
-                        <table class="table table-hover table-bordered">
+                        <table class="table table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="text-center" width="5%">No</th>
-                                    <th class="text-center" width="10%">NIS</th>
-                                    <th class="text-center" width="10%">NISN</th>
-                                    <th width="35%">Nama Lengkap</th>
-                                    <th class="text-center" width="12%">Nilai Tersimpan</th>
-                                    <th class="text-center" width="15%">Input Nilai</th>
-                                    <th class="text-center" width="8%">Aksi</th>
+                                    <th class="text-center" width="5%">
+                                        <p class="mb-0">No</p>
+                                        <small>Urut</small>
+                                    </th>
+                                    <th width="40%">
+                                        <p class="mb-0">Nama Lengkap</p>
+                                        <small>Nomor Induk Sekolah & Nasional</small>
+                                    </th>
+                                    <th width="10%">
+                                        <p class="mb-0">Form</p>
+                                        <small>Entri Nilai</small>
+                                    </th>
+                                    <th width="10%">
+                                        <p class="mb-0">Nilai</p>
+                                        <small>Tersimpan</small>
+                                    </th>
+                                    <th width="30%">
+                                        <p class="mb-0">Capaian</p>
+                                        <small>Telah atau Belum Tercapai</small>
+                                    </th>
+                                    <th width="5%">
+                                        <p class="mb-0">Aksi</p>
+                                        <small>Delete</small>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -223,17 +246,9 @@
                                     <td class="text-center">
                                         {{ $pelajarData->firstItem() + $index }}
                                     </td>
-                                    <td class="text-center">{{ $pelajar->nomor_induk ?? '-' }}</td>
-                                    <td class="text-center">{{ $pelajar->nisn ?? '-' }}</td>
-                                    <td>{{ $pelajar->nama_lengkap }}</td>
-                                    <td class="text-center">
-                                        @if($pelajar->nilai_sekarang)
-                                        <span class="badge bg-info">
-                                            {{ number_format($pelajar->nilai_sekarang, 2) }}
-                                        </span>
-                                        @else
-                                        <span class="text-muted">-</span>
-                                        @endif
+                                    <td>
+                                        <p class="mb-0">{{ $pelajar->nama_lengkap }}</p>
+                                        <small>{{ $pelajar->nomor_induk ?? '-' }} | {{ $pelajar->nisn ?? '-' }}</small>
                                     </td>
                                     <td>
                                         <input type="number"
@@ -247,7 +262,19 @@
                                         <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </td>
-                                    <td class="text-center">
+                                    <td>
+                                        @if($pelajar->nilai_sekarang)
+                                        <span class="badge bg-info">
+                                            {{ number_format($pelajar->nilai_sekarang, 2) }}
+                                        </span>
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+
+                                    </td>
+                                    <td>
                                         @if($pelajar->nilai_sekarang)
                                         <button type="button"
                                             wire:key="delete-btn-{{ $pelajar->pelajar_id }}"

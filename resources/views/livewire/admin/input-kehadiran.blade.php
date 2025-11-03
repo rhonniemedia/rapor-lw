@@ -13,7 +13,6 @@
                         </div>
                         <div class="col-lg-12">
                             <div class="mb-3 row">
-                                <!-- Filter Tahun Ajaran -->
                                 <div class="col-sm-4">
                                     <label class="form-label">Tahun Ajaran</label>
                                     <select wire:model.live="tahunAjaranId" class="form-select">
@@ -27,7 +26,6 @@
                                     </select>
                                 </div>
 
-                                <!-- Filter Semester -->
                                 <div class="col-sm-4">
                                     <label class="form-label">Semester</label>
                                     <select wire:model.live="semesterId" class="form-select"
@@ -42,7 +40,6 @@
                                     </select>
                                 </div>
 
-                                <!-- Filter Rombel -->
                                 <div class="col-sm-4">
                                     <label class="form-label">Rombongan Belajar</label>
                                     <select wire:model.live="rombelId" class="form-select"
@@ -64,9 +61,7 @@
                     @if($rombel && $selectedRombelPengajarId)
                     <div class="alert alert-success py-3 mt-3" role="alert">
                         <div class="row g-4">
-                            <!-- Kolom 1 -->
                             <div class="col-md-4">
-                                <!-- Kurikulum -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -80,7 +75,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Tahun Ajaran & Semester -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -100,9 +94,7 @@
                                 </div>
                             </div>
 
-                            <!-- Kolom 2 -->
                             <div class="col-md-4">
-                                <!-- Rombel -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -114,7 +106,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Jurusan -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -129,9 +120,7 @@
                                 </div>
                             </div>
 
-                            <!-- Kolom 3 -->
                             <div class="col-md-4">
-                                <!-- Wali Kelas -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -189,11 +178,12 @@
                                     <th width="5%" class="text-center">No</th>
                                     <th width="10%" class="text-center">Nomor Induk</th>
                                     <th width="10%" class="text-center">NISN</th>
-                                    <th width="35%">Nama Lengkap</th>
+                                    <th width="30%">Nama Lengkap</th>
                                     <th width="10%" class="text-center">Sakit (S)</th>
                                     <th width="10%" class="text-center">Izin (I)</th>
                                     <th width="10%" class="text-center">Tanpa Ket. (A)</th>
-                                    <th width="10%" class="text-center">Total</th>
+                                    <th width="8%" class="text-center">Total</th>
+                                    <th width="7%" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -247,11 +237,26 @@
                                             {{ $pelajar->total_ketidakhadiran }} hari
                                         </span>
                                     </td>
+                                    {{-- Tombol Aksi --}}
+                                    <td class="text-center">
+                                        @if($pelajar->kehadiran_sekarang)
+                                        <button type="button"
+                                            wire:key="delete-kehadiran-btn-{{ $pelajar->pelajar_id }}"
+                                            id="delete-kehadiran-btn-{{ $pelajar->pelajar_id }}"
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDeleteKehadiran('{{ $pelajar->pelajar_id }}')"
+                                            title="Hapus Data Kehadiran">
+                                            <i class="mdi mdi-delete"></i>
+                                        </button>
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
-                                        <i class="fas fa-info-circle me-2"></i> Data pelajar tidak ditemukan atau rombel belum memiliki pelajar.
+                                    <td colspan="9" class="text-center text-muted py-4">
+                                        <i class="mdi mdi-information-outline me-2"></i> Data pelajar tidak ditemukan atau rombel belum memiliki pelajar.
                                     </td>
                                 </tr>
                                 @endforelse
@@ -286,30 +291,30 @@
                         <button
                             type="button"
                             class="btn btn-labeled btn-primary"
-                            wire:click="confirmSaveKehadiran"
+                            wire:click="saveKehadiran"
                             wire:loading.attr="disabled"
-                            wire:target="confirmSaveKehadiran">
+                            wire:target="saveKehadiran">
                             <span class="btn-label">
-                                {{-- Icon loading tampil hanya saat confirmSaveKehadiran aktif --}}
+                                {{-- Icon loading tampil hanya saat saveKehadiran aktif --}}
                                 <i class="mdi mdi-loading mdi-spin d-none"
                                     wire:loading.class.remove="d-none"
-                                    wire:target="confirmSaveKehadiran">
+                                    wire:target="saveKehadiran">
                                 </i>
 
                                 {{-- Icon simpan hilang saat loading --}}
                                 <i class="mdi mdi-content-save"
                                     wire:loading.class="d-none"
-                                    wire:target="confirmSaveKehadiran">
+                                    wire:target="saveKehadiran">
                                 </i>
                             </span>
 
                             {{-- Teks tombol normal --}}
-                            <span class="text-normal" wire:loading.class="d-none" wire:target="confirmSaveKehadiran">
+                            <span class="text-normal" wire:loading.class="d-none" wire:target="saveKehadiran">
                                 Simpan
                             </span>
 
                             {{-- Teks saat loading --}}
-                            <span class="text-loading d-none" wire:loading.class.remove="d-none" wire:target="confirmSaveKehadiran">
+                            <span class="text-loading d-none" wire:loading.class.remove="d-none" wire:target="saveKehadiran">
                                 Menyimpan...
                             </span>
                         </button>
@@ -330,3 +335,100 @@
     </div>
     @endif
 </div>
+
+{{-- Skrip untuk SweetAlert dan deleteKehadiran --}}
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Function untuk handle delete confirmation kehadiran dengan loading state
+        window.confirmDeleteKehadiran = function(pelajarId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Hapus Data Kehadiran Pelajar?',
+                text: 'Anda yakin ingin menghapus data kehadiran ini? Tindakan ini tidak dapat dibatalkan.',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+            }).then(result => {
+                if (result.isConfirmed) {
+                    // Tampilkan loading pada tombol spesifik
+                    const btn = document.getElementById(`delete-kehadiran-btn-${pelajarId}`);
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
+                    }
+
+                    // Dispatch ke backend
+                    Livewire.dispatch('deleteKehadiran', [pelajarId]);
+                }
+            });
+        };
+
+        // SweetAlert handlers (jika belum ada)
+        window.addEventListener('swal:success', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: detail,
+                    showConfirmButton: true,
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'success',
+                    title: detail.title ?? 'Berhasil!',
+                    text: detail.text ?? '',
+                    showConfirmButton: true,
+                });
+            }
+        });
+
+        window.addEventListener('swal:error', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: detail,
+                    confirmButtonText: 'Tutup'
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'error',
+                    title: detail.title ?? 'Error!',
+                    text: detail.text ?? '',
+                    confirmButtonText: 'Tutup'
+                });
+            }
+        });
+
+        window.addEventListener('swal:info', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Info',
+                    text: detail,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'info',
+                    title: detail.title ?? 'Info',
+                    text: detail.text ?? '',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        });
+    });
+</script>
+@endpush

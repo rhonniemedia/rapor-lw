@@ -13,7 +13,6 @@
                         </div>
                         <div class="col-lg-12">
                             <div class="mb-3 row">
-                                <!-- Filter Tahun Ajaran -->
                                 <div class="col-sm-4">
                                     <label class="form-label">Tahun Ajaran</label>
                                     <select wire:model.live="tahunAjaranId" class="form-select">
@@ -27,7 +26,6 @@
                                     </select>
                                 </div>
 
-                                <!-- Filter Semester -->
                                 <div class="col-sm-4">
                                     <label class="form-label">Semester</label>
                                     <select wire:model.live="semesterId" class="form-select"
@@ -42,7 +40,6 @@
                                     </select>
                                 </div>
 
-                                <!-- Filter Rombel -->
                                 <div class="col-sm-4">
                                     <label class="form-label">Rombongan Belajar</label>
                                     <select wire:model.live="rombelId" class="form-select"
@@ -63,9 +60,7 @@
                     @if($rombel && $selectedRombelPengajarId)
                     <div class="alert alert-success py-3 mt-3" role="alert">
                         <div class="row g-4">
-                            <!-- Kolom 1 -->
                             <div class="col-md-4">
-                                <!-- Kurikulum -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -79,7 +74,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Tahun Ajaran & Semester -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -99,9 +93,7 @@
                                 </div>
                             </div>
 
-                            <!-- Kolom 2 -->
                             <div class="col-md-4">
-                                <!-- Rombel -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -113,7 +105,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Jurusan -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -128,9 +119,7 @@
                                 </div>
                             </div>
 
-                            <!-- Kolom 3 -->
                             <div class="col-md-4">
-                                <!-- Wali Kelas -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -187,8 +176,9 @@
                                 <tr>
                                     <th class="text-center" style="width: 5%;">#</th>
                                     <th style="width: 20%;">Nama Pelajar/NIS/NISN</th>
-                                    <th class="text-center" style="width: 35%;">Catatan Baru</th>
-                                    <th style="width: 40%;" class="text-center">Catatan Terakhir</th>
+                                    <th class="text-center" style="width: 30%;">Catatan Baru/Update</th>
+                                    <th style="width: 35%;" class="text-center">Catatan Terakhir</th>
+                                    <th style="width: 10%;" class="text-center">Aksi</th> {{-- ✅ NEW: Kolom Aksi --}}
                                 </tr>
                             </thead>
                             <tbody>
@@ -204,7 +194,7 @@
                                             wire:model.defer="catatanInput.{{ $pelajar->pelajar_id }}.catatan"
                                             class="form-control form-control-sm @error('catatanInput.'.$pelajar->pelajar_id.'.catatan') is-invalid @enderror"
                                             rows="3"
-                                            placeholder="Tulis catatan untuk siswa..."
+                                            placeholder="Tulis catatan untuk siswa."
                                             maxlength="1000"></textarea>
                                         <small class="text-muted">Maksimal 1000 karakter</small>
                                         @error('catatanInput.'.$pelajar->pelajar_id.'.catatan')
@@ -224,11 +214,25 @@
                                         <span class="text-muted small">Belum ada catatan</span>
                                         @endif
                                     </td>
-
+                                    {{-- ✅ NEW: Tombol Aksi --}}
+                                    <td class="text-center align-top">
+                                        @if($pelajar->catatan_existing)
+                                        <button type="button"
+                                            wire:key="delete-catatan-btn-{{ $pelajar->pelajar_id }}"
+                                            id="delete-catatan-btn-{{ $pelajar->pelajar_id }}"
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDeleteCatatan('{{ $pelajar->pelajar_id }}')"
+                                            title="Hapus Catatan Permanen">
+                                            <i class="mdi mdi-delete"></i>
+                                        </button>
+                                        @else
+                                        <span class="text-muted small">-</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="text-center align-top text-muted py-4">
+                                    <td colspan="5" class="text-center align-top text-muted py-4"> {{-- ✅ Kolom diubah dari 4 menjadi 5 --}}
                                         <i class="mdi mdi-information-outline me-2"></i>
                                         @if($searchPelajar)
                                         Tidak ada pelajar yang ditemukan dengan kata kunci "{{ $searchPelajar }}"
@@ -268,30 +272,30 @@
                         <button
                             type="button"
                             class="btn btn-labeled btn-primary"
-                            wire:click="confirmSaveCatatan"
+                            wire:click="saveCatatan" {{-- ✅ Perubahan: Panggil langsung saveCatatan --}}
                             wire:loading.attr="disabled"
-                            wire:target="confirmSaveCatatan">
+                            wire:target="saveCatatan"> {{-- ✅ Perubahan: Target ke saveCatatan --}}
                             <span class="btn-label">
-                                {{-- Icon loading tampil hanya saat confirmSaveCatatan aktif --}}
+                                {{-- Icon loading tampil hanya saat saveCatatan aktif --}}
                                 <i class="mdi mdi-loading mdi-spin d-none"
                                     wire:loading.class.remove="d-none"
-                                    wire:target="confirmSaveCatatan">
+                                    wire:target="saveCatatan">
                                 </i>
 
                                 {{-- Icon simpan hilang saat loading --}}
                                 <i class="mdi mdi-content-save"
                                     wire:loading.class="d-none"
-                                    wire:target="confirmSaveCatatan">
+                                    wire:target="saveCatatan">
                                 </i>
                             </span>
 
                             {{-- Teks tombol normal --}}
-                            <span class="text-normal" wire:loading.class="d-none" wire:target="confirmSaveCatatan">
+                            <span class="text-normal" wire:loading.class="d-none" wire:target="saveCatatan">
                                 Simpan
                             </span>
 
                             {{-- Teks saat loading --}}
-                            <span class="text-loading d-none" wire:loading.class.remove="d-none" wire:target="confirmSaveCatatan">
+                            <span class="text-loading d-none" wire:loading.class.remove="d-none" wire:target="saveCatatan">
                                 Menyimpan...
                             </span>
                         </button>
@@ -312,3 +316,100 @@
     </div>
     @endif
 </div>
+
+{{-- ✅ NEW: Skrip untuk SweetAlert dan deleteCatatan --}}
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Function untuk handle delete confirmation Catatan Walas
+        window.confirmDeleteCatatan = function(pelajarId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Hapus Catatan Wali Kelas?',
+                text: 'Anda yakin ingin menghapus catatan ini secara permanen?',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+            }).then(result => {
+                if (result.isConfirmed) {
+                    // Tampilkan loading pada tombol spesifik
+                    const btn = document.getElementById(`delete-catatan-btn-${pelajarId}`);
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Hapus';
+                    }
+
+                    // Dispatch ke backend
+                    Livewire.dispatch('deleteCatatan', [pelajarId]);
+                }
+            });
+        };
+
+        // Handler untuk response dari backend (Dipertahankan dari file input-nilai-akhir)
+        window.addEventListener('swal:success', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: detail,
+                    showConfirmButton: true,
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'success',
+                    title: detail.title ?? 'Berhasil!',
+                    text: detail.text ?? '',
+                    showConfirmButton: true,
+                });
+            }
+        });
+
+        window.addEventListener('swal:error', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: detail,
+                    confirmButtonText: 'Tutup'
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'error',
+                    title: detail.title ?? 'Error!',
+                    text: detail.text ?? '',
+                    confirmButtonText: 'Tutup'
+                });
+            }
+        });
+
+        window.addEventListener('swal:info', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Info',
+                    text: detail,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'info',
+                    title: detail.title ?? 'Info',
+                    text: detail.text ?? '',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        });
+    });
+</script>
+@endpush

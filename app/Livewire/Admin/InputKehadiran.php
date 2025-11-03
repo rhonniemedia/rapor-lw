@@ -56,6 +56,7 @@ class InputKehadiran extends Component
     protected $listeners = [
         'saveKehadiranConfirmed' => 'saveKehadiran',
         'resetKehadiranConfirmed' => 'resetKehadiran',
+        'deleteKehadiran' => 'deleteKehadiran', // ✅ NEW: Delete listener
     ];
 
     // 🔹 Validation rules
@@ -297,8 +298,8 @@ class InputKehadiran extends Component
         return $query;
     }
 
-    // 🔹 Konfirmasi simpan kehadiran
-    public function confirmSaveKehadiran(): void
+    // 🔹 Simpan kehadiran (dipanggil langsung dari blade setelah validasi)
+    public function saveKehadiran(): void
     {
         if (!$this->rombelId || !$this->semesterId) {
             $this->dispatch('swal:error', [
@@ -310,20 +311,6 @@ class InputKehadiran extends Component
 
         // Validasi input
         $this->validate();
-
-        $this->dispatch('swal:confirm', [
-            'title' => 'Simpan Kehadiran?',
-            'text' => 'Semua data kehadiran yang diinput akan disimpan.',
-            'nextEvent' => 'saveKehadiranConfirmed',
-        ]);
-    }
-
-    // 🔹 Simpan kehadiran
-    public function saveKehadiran(): void
-    {
-        if (!$this->rombelId || !$this->semesterId) {
-            return;
-        }
 
         // Validasi rombel
         $rombel = Rombel::find($this->rombelId);
@@ -436,15 +423,76 @@ class InputKehadiran extends Component
         ]);
     }
 
-    // 🔹 Helper untuk menghitung total ketidakhadiran
-    public function getTotalKetidakhadiran($pelajarId): int
+    // 🔹 NEW: Delete kehadiran
+    public function deleteKehadiran($pelajarId = null): void
     {
-        if (!isset($this->kehadiranInput[$pelajarId])) {
-            return 0;
+        // Handle array parameter dari JavaScript
+        if (is_array($pelajarId) && isset($pelajarId[0])) {
+            $pelajarId = $pelajarId[0];
         }
 
-        $data = $this->kehadiranInput[$pelajarId];
-        return ($data['sakit'] ?? 0) + ($data['izin'] ?? 0) + ($data['tanpa_keterangan'] ?? 0);
+        if (!$pelajarId || !$this->rombelId || !$this->semesterId) {
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'ID Pelajar tidak ditemukan atau data tidak valid.',
+            ]);
+            return;
+        }
+
+        try {
+            $deleted = Kehadiran::where('pelajar_id', $pelajarId)
+                ->where('rombel_id', $this->rombelId)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
+                ->delete();
+
+            if ($deleted) {
+                // Reset input nilai untuk pelajar yang dihapus
+                $this->kehadiranInput[$pelajarId] = [
+                    'sakit' => 0,
+                    'izin' => 0,
+                    'tanpa_keterangan' => 0,
+                ];
+
+                // Reload cache dan data
+                $this->cachedKehadiranExist = null;
+                $this->loadKehadiranPelajar();
+
+                $this->dispatch('swal:success', [
+                    'title' => 'Berhasil!',
+                    'text' => 'Data kehadiran berhasil dihapus.',
+                ]);
+            } else {
+                $this->dispatch('swal:info', [
+                    'title' => 'Info',
+                    'text' => 'Data kehadiran tidak ditemukan.',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error deleting kehadiran: ' . $e->getMessage(), [
+                'pelajar_id' => $pelajarId,
+                'user_id' => Auth::id(),
+            ]);
+
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'Terjadi kesalahan saat menghapus data kehadiran.',
+            ]);
+        }
+    }
+
+    // 🔹 Helper untuk menghitung total ketidakhadiran (MENGGUNAKAN DATA CACHE/TERSImPAN)
+    public function getTotalKetidakhadiran($pelajarId): int
+    {
+        // ✅ FIX: Safely access $this->cachedKehadiranExist by defaulting to an empty collection
+        $kehadiranCache = $this->cachedKehadiranExist ?? collect();
+
+        // ✅ Perubahan: Menggunakan data yang sudah tersimpan di cache untuk perhitungan total
+        $dataKehadiran = $kehadiranCache->get($pelajarId);
+
+        if ($dataKehadiran) {
+            return ($dataKehadiran->jumlah_sakit ?? 0) + ($dataKehadiran->jumlah_izin ?? 0) + ($dataKehadiran->jumlah_tanpa_keterangan ?? 0);
+        }
+        return 0;
     }
 
     // 🔹 Render view dengan data pelajar
@@ -475,13 +523,17 @@ class InputKehadiran extends Component
                     ];
                 }
 
+                // Ambil data kehadiran tersimpan untuk ditampilkan sebagai nilai saat ini
+                $existingKehadiran = $kehadiranExist->get($pelajarId);
+
                 return (object) [
                     'rombel_pelajar_id' => $rombelPelajar->id,
                     'pelajar_id' => $pelajarId,
                     'nama_lengkap' => $rombelPelajar->pelajar->nama_lengkap,
                     'nomor_induk' => $rombelPelajar->pelajar->nomor_induk,
                     'nisn' => $rombelPelajar->pelajar->nisn,
-                    'kehadiran_sekarang' => $kehadiranExist->get($pelajarId),
+                    'kehadiran_sekarang' => $existingKehadiran,
+                    // ✅ Perubahan: Total dihitung berdasarkan data *tersimpan*
                     'total_ketidakhadiran' => $this->getTotalKetidakhadiran($pelajarId),
                 ];
             });
