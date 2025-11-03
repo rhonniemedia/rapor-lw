@@ -358,14 +358,15 @@ class InputNilaiAkhir extends Component
     // 🔹 Hitung predikat berdasarkan nilai
     private function hitungPredikat(float $nilai): string
     {
-        if ($nilai >= 90) {
-            return 'A';
+        if ($nilai >= 91) {
+            return 'A'; // Sangat Baik
+        } elseif ($nilai >= 83) {
+            return 'B'; // Baik
         } elseif ($nilai >= 75) {
-            return 'B';
-        } elseif ($nilai >= 60) {
-            return 'C';
+            return 'C'; // Cukup / Tuntas minimal
+        } else {
+            return 'D'; // Kurang / Belum tuntas
         }
-        return 'D';
     }
 
     // 🔹 Simpan nilai

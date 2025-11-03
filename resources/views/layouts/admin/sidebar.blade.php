@@ -108,7 +108,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('admin/academic/manage-description') ? 'active' : '' }}"
-                            href="{{url('admin/academic/manage-description')}}">Deskripsi Capaian</a>
+                            href="{{url('admin/academic/manage-description')}}">Capaian</a>
                     </li>
                 </ul>
             </div>
