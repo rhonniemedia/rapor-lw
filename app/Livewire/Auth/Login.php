@@ -22,14 +22,16 @@ class Login extends Component
     {
         $this->validate();
 
-        // Cari user berdasarkan email atau NIP
-        $user = User::where(function ($query) {
-            if (filter_var($this->username, FILTER_VALIDATE_EMAIL)) {
-                $query->where('email', $this->username);
-            } else {
-                $query->where('nip', $this->username);
-            }
-        })->first();
+        // Cari user menggunakan helper method dari Model
+        $user = null;
+
+        if (filter_var($this->username, FILTER_VALIDATE_EMAIL)) {
+            // Login menggunakan email
+            $user = User::findByEmail($this->username);
+        } else {
+            // Login menggunakan NIP
+            $user = User::findByNip($this->username);
+        }
 
         // Cek user ada dan password cocok
         if ($user && Hash::check($this->password, $user->password)) {

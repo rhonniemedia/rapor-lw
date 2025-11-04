@@ -115,53 +115,9 @@
                         <div class="tab-pane fade show active" id="tab-nilai">
 
                             {{-- Input Search & Per Page --}}
-                            <div class="d-flex justify-content-between mb-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span>Show</span>
-                                    <select class="form-select form-select-sm h-100" wire:model.live="perPage">
-                                        <option value="5">5</option>
-                                        <option value="10">10</option>
-                                        <option value="25">25</option>
-                                        <option value="50">50</option>
-                                    </select>
-                                    <span>entries</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div>
-                                        <input type="text" class="form-control"
-                                            placeholder=""
-                                            wire:model.live.debounce.500ms="search" style="width:250px;">
-                                    </div>
-                                    <button type="button" wire:click="createMapel" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center h-100" data-bs-toggle="modal" data-bs-target="#modalNilai" style="padding: 0 0.75rem;">
-                                        <i class="mdi mdi-plus"></i>
-                                    </button>
-                                </div>
+                            <div class="tab-pane fade show active" id="tab-nilai">
+                                @livewire('admin.deskripsi-nilai')
                             </div>
-                            <table class="table table-bordered table-striped align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Mata Pelajaran</th>
-                                        <th>Rentang Min</th>
-                                        <th>Rentang Max</th>
-                                        <th>Predikat</th>
-                                        <th>Deskripsi</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Bahasa Indonesia</td>
-                                        <td>90</td>
-                                        <td>100</td>
-                                        <td><span class="badge bg-success">A</span></td>
-                                        <td>Menunjukkan pemahaman yang sangat baik terhadap materi pelajaran.</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-secondary"><i class="mdi mdi-pencil"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger"><i class="mdi mdi-delete"></i></button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
                         </div>
 
                         <!-- ================== TAB KOKURIKULER ================== -->
@@ -263,57 +219,6 @@
                 </div>
             </div>
             <!--datepicker ends-->
-        </div>
-    </div>
-</div>
-
-<!-- ========== MODAL TEMPLATE NILAI ========== -->
-<div class="modal fade" id="modalNilai" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Tambah Template Nilai</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form>
-                <div class="modal-body">
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <label class="form-label">Mata Pelajaran (opsional)</label>
-                            <select class="form-select form-select-sm">
-                                <option value="">Umum</option>
-                                <option>Bahasa Indonesia</option>=
-                                <option>Matematika</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Rentang Nilai</label>
-                            <div class="input-group input-group-sm">
-                                <input type="number" class="form-control" placeholder="Min">
-                                <span class="input-group-text">–</span>
-                                <input type="number" class="form-control" placeholder="Max">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Predikat</label>
-                            <select class="form-select form-select-sm">
-                                <option>A</option>
-                                <option>B</option>
-                                <option>C</option>
-                                <option>D</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <label class="form-label">Deskripsi</label>
-                        <textarea class="form-control form-control-sm" rows="4"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

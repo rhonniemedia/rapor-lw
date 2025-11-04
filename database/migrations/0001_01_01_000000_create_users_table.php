@@ -16,12 +16,31 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('slug')->unique();
-            $table->string('email')->unique();
+
+            // Email: TEXT untuk enkripsi, hash untuk indexing/login
+            $table->text('email');
+            $table->char('email_hash', 64)->unique()->index();
+            $table->timestamp('email_verified_at')->nullable();
+
             $table->string('password');
-            $table->string('nip')->nullable()->unique();
-            $table->string('telephone')->nullable();
+
+            // NIP: TEXT untuk enkripsi, hash untuk indexing/login
+            $table->text('nip')->nullable();
+            $table->char('nip_hash', 64)->nullable()->unique()->index();
+
+            // Telephone: TEXT untuk enkripsi (tidak perlu hash)
+            $table->text('telephone')->nullable();
+
             $table->boolean('is_teacher')->default(false);
-            $table->enum('status', ['aktif', 'nonaktif']);
+
+            // Guru agama
+            $table->boolean('is_guru_agama')->default(false);
+
+            // Spesialisasi agama: TEXT untuk enkripsi, hash untuk indexing
+            $table->text('spesialisasi_agama')->nullable();
+            $table->char('spesialisasi_agama_hash', 64)->nullable()->index();
+
+            $table->enum('status', ['aktif', 'nonaktif'])->default('aktif');
             $table->rememberToken();
             $table->timestamps();
         });

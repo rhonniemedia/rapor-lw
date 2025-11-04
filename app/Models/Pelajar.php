@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -24,6 +25,7 @@ class Pelajar extends Model
         'tanggal_lahir',
         'jenis_kelamin',
         'agama',
+        'agama_hash',
         'status_dalam_keluarga',
         'anak_ke',
         'alamat',
@@ -35,12 +37,30 @@ class Pelajar extends Model
 
     protected $casts = [
         'nisn'          => 'encrypted',
-        'agama'         => 'encrypted',
         'alamat'        => 'encrypted',
         'telepon'       => 'encrypted',
     ];
 
-    // Accessor untuk tanggal_lahir (saat dibaca)
+    protected function agama(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (empty($value)) return null;
+                try {
+                    return decrypt($value);
+                } catch (\Exception $e) {
+                    return null;
+                }
+            },
+            set: function ($value) {
+                if (empty($value)) {
+                    return null;
+                }
+                return encrypt($value);
+            }
+        );
+    }
+
     protected function tanggalLahir(): Attribute
     {
         return Attribute::make(
@@ -50,11 +70,9 @@ class Pelajar extends Model
                 }
 
                 try {
-                    // Decrypt dulu, lalu parse ke Carbon
                     $decrypted = decrypt($value);
                     return Carbon::parse($decrypted);
                 } catch (\Exception $e) {
-                    // Jika gagal decrypt, kembalikan null atau value asli
                     return null;
                 }
             },
@@ -63,7 +81,6 @@ class Pelajar extends Model
                     return null;
                 }
 
-                // Convert ke string date format, lalu encrypt
                 $date = $value instanceof Carbon ? $value->format('Y-m-d') : $value;
                 return encrypt($date);
             }
@@ -77,12 +94,22 @@ class Pelajar extends Model
             : null;
     }
 
+    // GABUNGKAN KEDUA METHOD BOOTED() MENJADI SATU
     protected static function booted()
     {
         static::saving(function ($model) {
+            // Hash NISN
             $model->nisn_hash = $model->nisn
                 ? hash('sha256', $model->nisn)
                 : null;
+
+            // Hash Agama
+            if (!empty($model->agama)) {
+                $agamaValue = $model->agama;
+                $model->agama_hash = hash('sha256', Str::lower($agamaValue));
+            } else {
+                $model->agama_hash = null;
+            }
         });
     }
 
@@ -105,7 +132,6 @@ class Pelajar extends Model
     {
         return $this->hasMany(Kokurikuler::class);
     }
-
 
     public function getIconAttribute()
     {

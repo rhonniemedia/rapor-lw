@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
             // TahunAjaranSeeder::class,
             SemesterSeeder::class,
             MataPelajaranSeeder::class,
-            // MataPelajaranKelompokSeeder::class,
+            MataPelajaranKelompokSeeder::class,
         ]);
     }
 }

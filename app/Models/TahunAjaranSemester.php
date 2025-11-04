@@ -12,6 +12,12 @@ class TahunAjaranSemester extends Model
 
     protected $guarded = ['id'];
 
+    // Scope untuk filter status aktif
+    public function scopeAktif($query)
+    {
+        return $query->where('status', 'aktif');
+    }
+
     // Relasi ke TahunAjaran
     public function tahunAjaran()
     {

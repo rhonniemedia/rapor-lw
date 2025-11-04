@@ -17,10 +17,10 @@ return new class extends Migration
             $table->string('nama_lengkap');
             $table->string('nomor_induk')->nullable()->unique();
 
-            // Gunakan TEXT agar cukup untuk hasil enkripsi (panjang bisa 255+ karakter)
+            // Data terenkripsi (TEXT untuk menampung string enkripsi yang panjang)
             $table->text('nisn')->nullable();
 
-            // Hash untuk menjaga nilai unik tanpa mengganggu enkripsi
+            // Hash untuk menjaga nilai unik NISN dan indexing yang cepat
             $table->string('nisn_hash', 64)->nullable()->unique();
 
             $table->string('tempat_lahir')->nullable();
@@ -28,7 +28,12 @@ return new class extends Migration
 
             $table->enum('jenis_kelamin', ['L', 'P'])->nullable(); // L = Laki-laki, P = Perempuan
 
+            // Kolom Agama (Sudah ada, diasumsikan terenkripsi)
             $table->text('agama')->nullable();
+
+            // 🆕 KOLOM BARU UNTUK INDEXED HASHING AGAMA
+            // Menggunakan CHAR(64) untuk Hash SHA-256 dan di-index untuk performa query cepat.
+            $table->char('agama_hash', 64)->nullable()->index();
 
             $table->string('status_dalam_keluarga')->nullable();
             $table->string('anak_ke')->nullable();

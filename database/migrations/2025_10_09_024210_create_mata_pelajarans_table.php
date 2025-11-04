@@ -15,6 +15,13 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('nama');
             $table->string('kode')->unique();
+
+            // --- Kolom Agama Ditambahkan TANPA AFTER() ---
+            $table->boolean('is_mapel_agama')->default(false);
+            $table->string('agama_terkait')->nullable();
+            $table->char('agama_terkait_hash', 64)->nullable()->index(); // Indexing untuk pencarian cepat
+            // ---------------------------------------------
+
             $table->enum('status', ['aktif', 'arsip'])->default('aktif');
             $table->timestamps();
         });

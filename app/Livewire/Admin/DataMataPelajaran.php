@@ -2,9 +2,10 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\MataPelajaran;
 use Livewire\Component;
+use Illuminate\Support\Str;
 use Livewire\WithPagination;
+use App\Models\MataPelajaran;
 
 class DataMataPelajaran extends Component
 {
@@ -16,18 +17,34 @@ class DataMataPelajaran extends Component
     public $search = '';
     public $perPage = 10;
 
-    // 🔹 Form field
+    // 🔹 Form field BARU
     public $mapel_id;
     public $nama;
     public $kode;
     public $status = 'aktif';
+    public $is_mapel_agama = false; // Default: Mata Pelajaran Umum
+    public $agama_terkait; // Hanya diisi jika is_mapel_agama = true
+
+    // 🔹 List Agama untuk Dropdown
+    public $agamaList = [
+        'islam',
+        'kristen',
+        'katolik',
+        'hindu',
+        'buddha',
+        'khonghucu'
+    ];
 
     public $isEdit = false;
 
+    // 🔹 Aturan Dasar Validasi
     protected $baseRules = [
         'nama' => 'required|min:3',
         'kode' => 'required|unique:mata_pelajarans,kode|max:10',
         'status' => 'required|in:aktif,arsip',
+        'is_mapel_agama' => 'required|boolean', // BARU: Harus boolean
+        // BARU: Aturan bersyarat untuk agama_terkait
+        'agama_terkait' => 'nullable|required_if:is_mapel_agama,true|in:islam,kristen,katolik,hindu,buddha,khonghucu',
     ];
 
     // 🔹 Event listener
@@ -76,6 +93,8 @@ class DataMataPelajaran extends Component
             'nama' => $this->nama,
             'kode' => strtoupper($this->kode),
             'status' => $this->status,
+            'is_mapel_agama' => $this->is_mapel_agama, // BARU
+            'agama_terkait' => $this->is_mapel_agama ? Str::lower($this->agama_terkait) : null, // BARU: Simpan lowercase jika mapel agama
         ]);
 
         $this->resetForm();
@@ -95,6 +114,8 @@ class DataMataPelajaran extends Component
         $this->nama = $mapel->nama;
         $this->kode = $mapel->kode;
         $this->status = $mapel->status;
+        $this->is_mapel_agama = (bool)$mapel->is_mapel_agama; // BARU: Pastikan boolean
+        $this->agama_terkait = $mapel->agama_terkait; // BARU
 
         $this->isEdit = true;
         $this->dispatch('openModal');
@@ -111,6 +132,8 @@ class DataMataPelajaran extends Component
             'nama' => $this->nama,
             'kode' => strtoupper($this->kode),
             'status' => $this->status,
+            'is_mapel_agama' => $this->is_mapel_agama, // BARU
+            'agama_terkait' => $this->is_mapel_agama ? Str::lower($this->agama_terkait) : null, // BARU
         ]);
 
         $this->resetForm();
@@ -149,8 +172,19 @@ class DataMataPelajaran extends Component
         $this->mapel_id = null;
         $this->nama = '';
         $this->kode = '';
-        $this->status = '';
+        $this->status = 'aktif'; // Set default status
+        $this->is_mapel_agama = false; // BARU: Reset ke default
+        $this->agama_terkait = null; // BARU: Reset ke null
         $this->resetErrorBag();
+    }
+
+    // 🔹 Handle perubahan is_mapel_agama
+    public function updatedIsMapelAgama($value)
+    {
+        if (!$value) {
+            // Jika diubah menjadi mapel umum, reset agama terkait
+            $this->agama_terkait = null;
+        }
     }
 
     // 🔹 Render data

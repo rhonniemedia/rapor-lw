@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\JurusanMataPelajaran;
 use Log;
 use App\Models\User;
 use App\Models\Rombel;
 use App\Models\Pelajar;
 use Livewire\Component;
-use Illuminate\Support\Str;
 use Livewire\WithPagination;
 
 use App\Models\MataPelajaran;
@@ -15,8 +15,6 @@ use App\Models\RombelPelajar;
 use App\Models\RombelPengajar;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
-use App\Models\JurusanMataPelajaran;
-use Illuminate\Support\Facades\Validator; // Tambahkan Validator
 
 class DataRombelPelajar extends Component
 {
@@ -57,7 +55,26 @@ class DataRombelPelajar extends Component
         $this->rombel = Rombel::findOrFail($rombelId);
     }
 
-    // Computed properties untuk dropdown (Logika pemfilteran kurikulum/jurusan tetap sama)
+    // Computed properties untuk dropdown
+    // public function getMataPelajaranListProperty()
+    // {
+    //     $tahunAjaranKurikulum = $this->rombel->tahunAjaranKurikulum;
+
+    //     if (!$tahunAjaranKurikulum) {
+    //         return collect();
+    //     }
+
+    //     $kurikulumId = $tahunAjaranKurikulum->kurikulum_id;
+    //     $tingkat = $this->rombel->tingkat;
+
+    //     return MataPelajaran::whereHas('kurikulumMataPelajarans', function ($query) use ($kurikulumId, $tingkat) {
+    //         $query->where('kurikulum_id', $kurikulumId)
+    //             ->where('tingkat', $tingkat);
+    //     })
+    //         ->orderBy('nama', 'asc')
+    //         ->get();
+    // }
+
     public function getMataPelajaranListProperty()
     {
         $tahunAjaranKurikulum = $this->rombel->tahunAjaranKurikulum;
@@ -104,7 +121,6 @@ class DataRombelPelajar extends Component
 
     public function getGuruListProperty()
     {
-        // Mengambil semua guru, nanti divalidasi saat penugasan
         return User::where('is_teacher', true)
             ->orderBy('name', 'asc')
             ->get();
@@ -117,7 +133,6 @@ class DataRombelPelajar extends Component
             return collect();
         }
 
-        // Hashing input pencarian TIDAK diperlukan di sini karena 'name' tidak dienkripsi
         return User::where('is_teacher', true)
             ->where('name', 'like', '%' . $this->guruSearch . '%')
             ->orderBy('name', 'asc')
@@ -165,52 +180,9 @@ class DataRombelPelajar extends Component
         $this->dispatch('openModalRombelPengajar');
     }
 
-    // Fungsi baru untuk validasi agama
-    private function validateAgamaCompatibility()
-    {
-        if (empty($this->mata_pelajaran_id) || empty($this->guru_id)) {
-            return; // Skip jika field kosong, akan ditangani oleh rules bawaan
-        }
-
-        $mapel = MataPelajaran::findOrFail($this->mata_pelajaran_id);
-        $guru = User::findOrFail($this->guru_id);
-
-        if ($mapel->is_mapel_agama) {
-            // Jika Mapel adalah Agama, cek kompatibilitas Guru
-
-            // 1. Guru WAJIB ditandai sebagai guru agama
-            if (!$guru->is_guru_agama) {
-                $this->addError('guru_id', 'Guru ini harus ditandai sebagai Guru Agama untuk mengajar mata pelajaran agama.');
-                return false;
-            }
-
-            // 2. Hash Agama Guru harus sama dengan Hash Agama Mapel
-            // Gunakan hash yang sudah dinormalisasi dari Model
-            if ($guru->spesialisasi_agama_hash !== $mapel->agama_terkait_hash) {
-                // Tampilkan pesan error dengan nama agama yang didekripsi
-                $this->addError('guru_id', 'Spesialisasi agama guru tidak cocok dengan mata pelajaran: ' . ucfirst($mapel->agama_terkait));
-                return false;
-            }
-        }
-
-        // Jika Mapel BUKAN Agama (Mapel Umum), cek Guru BUKAN Guru Agama Spesifik
-        if (!$mapel->is_mapel_agama && $guru->is_guru_agama && !empty($guru->spesialisasi_agama)) {
-            // Opsional: Batasi Guru Agama hanya mengajar Mapel Agama. 
-            // Namun, demi fleksibilitas, kita anggap Guru Agama boleh mengajar mapel umum.
-            // Tidak perlu menambahkan error di sini.
-        }
-
-        return true;
-    }
-
     public function storeMapel()
     {
         $this->validate($this->getRulesMapel());
-
-        // Validasi Kustom Kompatibilitas Agama
-        if (!$this->validateAgamaCompatibility()) {
-            return;
-        }
 
         RombelPengajar::create([
             'rombel_id' => $this->rombelId,
@@ -247,11 +219,6 @@ class DataRombelPelajar extends Component
     public function updateMapel()
     {
         $this->validate($this->getRulesMapel());
-
-        // Validasi Kustom Kompatibilitas Agama
-        if (!$this->validateAgamaCompatibility()) {
-            return;
-        }
 
         $data = RombelPengajar::findOrFail($this->rombel_pengajar_id);
 
@@ -372,10 +339,8 @@ class DataRombelPelajar extends Component
 
             if (!empty($this->search)) {
                 $query->whereHas('pelajar', function ($q) {
-                    // Filter pelajar berdasarkan nama_lengkap atau hash NISN (jika diperlukan)
                     $q->where('nama_lengkap', 'like', '%' . $this->search . '%')
-                        // Pencarian NISN menggunakan hash
-                        ->orWhere('nisn_hash', 'like', '%' . hash('sha256', Str::lower($this->search)) . '%');
+                        ->orWhere('nisn', 'like', '%' . $this->search . '%');
                 });
             }
 

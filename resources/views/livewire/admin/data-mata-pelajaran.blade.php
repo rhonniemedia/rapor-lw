@@ -25,15 +25,19 @@
     <table class="table table-hover mb-0">
         <thead class="bg-light">
             <tr>
-                <th style="width: 40%;">
+                <th style="width: 35%;">
                     <p class="mb-0">Mata Pelajaran</p>
                     <small>Nama Mata Pelajaran</small>
                 </th>
-                <th style="width: 25%;">
-                    <p class="mb-0">Kodes</p>
-                    <small>Mata Pelajaran</small>
+                <th style="width: 15%;">
+                    <p class="mb-0">Kode</p>
+                    <small>Singkatan</small>
                 </th>
                 <th style="width: 25%;">
+                    <p class="mb-0">Kategori</p>
+                    <small>Umum | Agama (Terkait)</small>
+                </th>
+                <th style="width: 15%;">
                     <p class="mb-0">Status</p>
                     <small>Aktif | Arsip</small>
                 </th>
@@ -48,6 +52,14 @@
             <tr>
                 <td>{{ $mapel->nama }}</td>
                 <td>{{ $mapel->kode }}</td>
+                <td>
+                    {{-- Menampilkan kategori dan agama terkait jika ada --}}
+                    @if($mapel->is_mapel_agama)
+                    <span class="badge bg-primary">Agama</span>
+                    @else
+                    <span class="badge bg-info">Umum</span>
+                    @endif
+                </td>
                 <td>
                     <span class="badge bg-{{ $mapel->status === 'aktif' ? 'success' : 'secondary' }}">
                         {{ ucfirst($mapel->status) }}
@@ -99,6 +111,33 @@
                         <input type="text" class="form-control" placeholder="Input kode mata pelajaran" wire:model="kode">
                         @error('kode') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
+
+                    {{-- Bidang Baru: Kategori Agama --}}
+                    <div class="mb-3 form-check">
+                        <input class="form-check-input" type="checkbox" id="is_mapel_agama" wire:model.live="is_mapel_agama">
+                        <label class="form-check-label" for="is_mapel_agama">
+                            Ini adalah Mata Pelajaran Agama?
+                        </label>
+                        @error('is_mapel_agama') <small class="text-danger d-block">{{ $message }}</small> @enderror
+                    </div>
+
+                    {{-- Bidang Baru: Agama Terkait (Conditional) --}}
+                    @if($is_mapel_agama)
+                    <div class="mb-3">
+                        <label for="agama_terkait" class="form-label">Agama Terkait</label>
+                        <select id="agama_terkait" class="form-select" wire:model="agama_terkait">
+                            <option value="" disabled>-- Pilih Agama --</option>
+                            @foreach ($agamaList as $agama)
+                            <option value="{{ $agama }}">{{ ucfirst($agama) }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Pilih agama yang terkait dengan mata pelajaran ini.</small>
+                        @error('agama_terkait')
+                        <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+                    @endif
+
                     <div class="mb-3">
                         <label for="status" class="form-label">Status Mata Pelajaran</label>
                         <select id="status" class="form-select" wire:model="status">
