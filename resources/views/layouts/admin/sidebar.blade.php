@@ -187,7 +187,7 @@
         </li>
         <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('home/nilai-akhir') ? 'active' : '' }}" href="{{url('home/nilai-akhir')}}">
-                <i class="mdi mdi-finance menu-icon"></i>
+                <i class="mdi mdi-settings menu-icon"></i>
                 <span class="menu-title">Pengaturan</span>
             </a>
         </li>

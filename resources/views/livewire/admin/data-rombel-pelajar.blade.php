@@ -50,50 +50,18 @@
     <ul class="nav nav-tabs mb-3" role="tablist">
         <li class="nav-item" role="presentation">
             <button
-                class="nav-link {{ $activeTab === 'pelajar' ? 'active' : '' }}"
+                class="nav-link {{ $activeTab === 'pelajar' ? 'active' : '' }} d-flex align-items-center gap-2"
                 wire:click="switchTab('pelajar')"
                 type="button">
-                📚 Daftar Pelajar
+                <i class="mdi mdi-account-group"></i> Daftar Pelajar
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button
-                class="nav-link {{ $activeTab === 'mapel' ? 'active' : '' }}"
+                class="nav-link {{ $activeTab === 'mapel' ? 'active' : '' }} d-flex align-items-center gap-2"
                 wire:click="switchTab('mapel')"
                 type="button">
-                📖 Mata Pelajaran & Pengajar
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button
-                class="nav-link {{ $activeTab === 'nilai' ? 'active' : '' }}"
-                wire:click="switchTab('nilai')"
-                type="button">
-                📝 Input Nilai
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button
-                class="nav-link {{ $activeTab === 'kehadiran' ? 'active' : '' }}"
-                wire:click="switchTab('kehadiran')"
-                type="button">
-                📝 Input Kehadiran
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button
-                class="nav-link {{ $activeTab === 'catatan' ? 'active' : '' }}"
-                wire:click="switchTab('catatan')"
-                type="button">
-                📝 Catatan Wali Kelas
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button
-                class="nav-link {{ $activeTab === 'ekskul' ? 'active' : '' }}"
-                wire:click="switchTab('ekskul')"
-                type="button">
-                🎨 Nilai Ekstrakurikuler
+                <i class="mdi mdi-book-open-variant"></i> Mata Pelajaran & Pengajar
             </button>
         </li>
     </ul>
@@ -279,37 +247,6 @@
     </div>
 
     @endif
-
-    <!-- Tab Content: Input Nilai (BARU) -->
-    <!-- Tambahkan setelah tab content Mata Pelajaran & Pengajar -->
-
-    @if($activeTab === 'nilai')
-    @livewire('input-nilai-rombel', ['rombelId' => $rombel->id], key('input-nilai-'.$rombel->id))
-    @endif
-
-    <!-- Tab Content: Input Kehadiran (BARU) -->
-    <!-- Tambahkan setelah tab content input Nilai -->
-
-    @if($activeTab === 'kehadiran')
-    @livewire('input-kehadiran-rombel', ['rombelId' => $rombel->id], key('input-kehadiran-'.$rombel->id))
-    @endif
-
-    <!-- Tab Content: Input Catatan Wali Kelas (BARU) -->
-    <!-- Tambahkan setelah tab content input Catatan Wali Kelas -->
-
-    {{-- Tab Content: Catatan Wali Kelas --}}
-    @if($activeTab === 'catatan')
-    @livewire('input-catatan-wali-kelas', ['rombelId' => $rombel->id], key('input-catatan-'.$rombel->id))
-    @endif
-
-    <!-- Tab Content: Input Ekstrakurikuler (BARU) -->
-    <!-- Tambahkan setelah tab content input Ekstrakurikuler -->
-
-    {{-- Tab Content: Nilai Ekstrakurikuler --}}
-    @if($activeTab === 'ekskul')
-    @livewire('input-nilai-ekskul', ['rombelId' => $rombel->id], key('input-ekskul-'.$rombel->id))
-    @endif
-
 
     {{-- Modal Form Mata Pelajaran & Pengajar --}}
     <div wire:ignore.self class="modal fade" id="modalRombelPengajar" tabindex="-1" aria-hidden="true">
