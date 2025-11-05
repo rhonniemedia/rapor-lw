@@ -74,7 +74,12 @@
                                 wire:key="delete-btn-{{ $template['mata_pelajaran_id'] }}-{{ $template['tingkat'] }}"
                                 id="delete-btn-{{ $template['mata_pelajaran_id'] }}-{{ $template['tingkat'] }}"
                                 class="btn btn-sm btn-outline-danger"
-                                onclick="confirmDeleteTemplate('{{ $template['mata_pelajaran_id'] }}', '{{ $template['tingkat'] }}', '{{ $template['mata_pelajaran_nama'] }}')"
+                                x-data
+                                @click="confirmDeleteTemplate(
+                                            '{{ $template['mata_pelajaran_id'] }}',
+                                            '{{ $template['tingkat'] }}',
+                                            '{{ e($template['mata_pelajaran_nama']) }}'
+                                        )"
                                 title="Hapus Template">
                                 <i class="mdi mdi-delete"></i>
                             </button>

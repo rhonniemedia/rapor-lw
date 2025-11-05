@@ -67,7 +67,11 @@
                             wire:key="delete-btn-{{ $ekskulId }}"
                             id="delete-btn-{{ $ekskulId }}"
                             class="btn btn-sm btn-outline-danger"
-                            onclick="confirmDeleteEkskul('{{ $ekskulId }}', '{{ $template['ekstrakurikuler_nama'] }}')"
+                            x-data
+                            @click="confirmDeleteEkskul(
+                                        '{{ $ekskulId }}',
+                                        '{{ e($template['ekstrakurikuler_nama']) }}'
+                                    )"
                             title="Hapus Template">
                             <i class="mdi mdi-delete"></i>
                         </button>

@@ -71,7 +71,11 @@
                             wire:key="delete-btn-{{ $template['subdimensi'] }}-{{ $template['tingkat'] }}"
                             id="delete-btn-{{ $template['subdimensi'] }}-{{ $template['tingkat'] }}"
                             class="btn btn-sm btn-outline-danger"
-                            onclick="confirmDeleteKokurikuler('{{ ucwords($template['subdimensi']) }}', '{{ $template['tingkat'] }}')" {{-- Kirim subdimensi yang rapi ke JS --}}
+                            x-data
+                            @click="confirmDeleteKokurikuler(
+                                        '{{ e(ucwords($template['subdimensi'])) }}',
+                                        '{{ e($template['tingkat']) }}'
+                                    )"
                             title="Hapus Template">
                             <i class="mdi mdi-delete"></i>
                         </button>

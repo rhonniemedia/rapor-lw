@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Models\TemplateNilaiCapaian;
 use Illuminate\Database\Eloquent\Builder;
 
 class InputNilaiAkhir extends Component
@@ -31,7 +32,7 @@ class InputNilaiAkhir extends Component
 
     // 🔹 Properti pencarian & pagination
     public $searchPelajar = '';
-    public $perPagePelajar = 50; // ✅ Reduced from 1000
+    public $perPagePelajar = 50;
 
     // 🔹 Data dropdown & display
     public $tahunAjaranList = [];
@@ -45,14 +46,20 @@ class InputNilaiAkhir extends Component
     public $nilaiInput = [];
 
     // 🔹 Cache untuk optimasi
-    private $cachedNilaiExist = null;
+    // private $cachedNilaiExist = null;
+
+    // 🔹 Properti untuk Generate Modal
+    public $generateMode = 'empty'; // 'empty' atau 'all'
+    // public $countPelajarWithNilai = 0;
+    // public $countCapaianKosong = 0;
+    // public $countTemplateAvailable = 0;
 
     // 🔹 Query string untuk persistensi state
     protected $queryString = [
-        'tahunAjaranId' => ['except' => null], // ✅ Fixed
-        'semesterId' => ['except' => null], // ✅ Fixed
-        'rombelId' => ['except' => null], // ✅ Fixed
-        'selectedRombelPengajarId' => ['except' => null], // ✅ Fixed
+        'tahunAjaranId' => ['except' => null],
+        'semesterId' => ['except' => null],
+        'rombelId' => ['except' => null],
+        'selectedRombelPengajarId' => ['except' => null],
         'searchPelajar' => ['except' => ''],
     ];
 
@@ -60,36 +67,36 @@ class InputNilaiAkhir extends Component
     protected $listeners = [
         'saveNilaiConfirmed' => 'saveNilai',
         'resetNilaiConfirmed' => 'resetNilai',
-        'deleteNilai' => 'deleteNilai', // ✅ NEW
+        'deleteNilai' => 'deleteNilai',
+        // 'resetModalState' => 'resetModalState', // Listener untuk membersihkan properti
     ];
 
     // 🔹 Validation rules
     protected $rules = [
         'nilaiInput.*' => 'nullable|numeric|min:0|max:100',
+        'generateMode' => 'required|in:empty,all',
     ];
 
     protected $messages = [
         'nilaiInput.*.numeric' => 'Nilai harus berupa angka',
         'nilaiInput.*.min' => 'Nilai minimal adalah 0',
         'nilaiInput.*.max' => 'Nilai maksimal adalah 100',
+        'generateMode.required' => 'Pilih mode generate',
+        'generateMode.in' => 'Mode generate tidak valid',
     ];
 
     public function mount()
     {
-        // Load tahun ajaran yang aktif
         $this->loadTahunAjaran();
 
-        // Set default tahun ajaran aktif
         $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
         if ($activeTahunAjaran && !$this->tahunAjaranId) {
             $this->tahunAjaranId = $activeTahunAjaran->id;
         }
 
-        // Load semester jika tahun ajaran sudah dipilih
         if ($this->tahunAjaranId) {
             $this->loadSemester();
 
-            // Set default semester aktif
             $activeSemester = TahunAjaranSemester::where('tahun_ajaran_id', $this->tahunAjaranId)
                 ->where('status', 'aktif')
                 ->first();
@@ -98,24 +105,20 @@ class InputNilaiAkhir extends Component
             }
         }
 
-        // Load rombel jika tahun ajaran dan semester sudah dipilih
         if ($this->tahunAjaranId && $this->semesterId) {
             $this->loadRombel();
         }
 
-        // Load mata pelajaran jika rombel sudah dipilih
         if ($this->rombelId) {
             $this->loadRombelData();
             $this->loadMataPelajaran();
         }
 
-        // Load data nilai jika mata pelajaran sudah terpilih
         if ($this->selectedRombelPengajarId) {
             $this->loadNilaiPelajar();
         }
     }
 
-    // 🔹 Load data tahun ajaran
     private function loadTahunAjaran(): void
     {
         $this->tahunAjaranList = TahunAjaran::orderBy('tgl_mulai', 'desc')->get();
@@ -133,7 +136,6 @@ class InputNilaiAkhir extends Component
             ->get();
     }
 
-    // 🔹 Load data rombel berdasarkan tahun ajaran
     private function loadRombel(): void
     {
         if (!$this->tahunAjaranId) {
@@ -149,7 +151,6 @@ class InputNilaiAkhir extends Component
             ->get();
     }
 
-    // 🔹 Load data rombel yang dipilih
     private function loadRombelData(): void
     {
         if (!$this->rombelId) {
@@ -162,9 +163,8 @@ class InputNilaiAkhir extends Component
             'tahunAjaranKurikulum.kurikulum',
             'waliKelas',
             'jurusan'
-        ])->find($this->rombelId); // ✅ Changed from findOrFail
+        ])->find($this->rombelId);
 
-        // ✅ Handle jika rombel tidak ditemukan
         if (!$this->rombel) {
             $this->rombelId = null;
             $this->dispatch('swal:error', [
@@ -174,13 +174,11 @@ class InputNilaiAkhir extends Component
         }
     }
 
-    // 🔹 Handler saat tahun ajaran berubah
     public function updatedTahunAjaranId(): void
     {
         $this->resetFilters();
         $this->loadSemester();
 
-        // Auto-select semester aktif
         $activeSemester = TahunAjaranSemester::where('tahun_ajaran_id', $this->tahunAjaranId)
             ->where('status', 'aktif')
             ->first();
@@ -192,7 +190,6 @@ class InputNilaiAkhir extends Component
         $this->resetPage();
     }
 
-    // 🔹 Handler saat semester berubah
     public function updatedSemesterId(): void
     {
         $this->rombelId = null;
@@ -201,19 +198,16 @@ class InputNilaiAkhir extends Component
         $this->mataPelajaranList = [];
         $this->nilaiInput = [];
         $this->rombel = null;
-        $this->cachedNilaiExist = null; // ✅ Clear cache
 
         $this->loadRombel();
         $this->resetPage();
     }
 
-    // 🔹 Handler saat rombel berubah
     public function updatedRombelId(): void
     {
         $this->selectedRombelPengajarId = null;
         $this->mataPelajaranList = [];
         $this->nilaiInput = [];
-        $this->cachedNilaiExist = null; // ✅ Clear cache
 
         if ($this->rombelId) {
             $this->loadRombelData();
@@ -225,22 +219,18 @@ class InputNilaiAkhir extends Component
         $this->resetPage();
     }
 
-    // 🔹 Handler saat mata pelajaran berubah
     public function updatedSelectedRombelPengajarId(): void
     {
         $this->resetPage();
         $this->searchPelajar = '';
-        $this->cachedNilaiExist = null; // ✅ Clear cache
         $this->loadNilaiPelajar();
     }
 
-    // 🔹 Reset pagination saat search berubah
     public function updatingSearchPelajar(): void
     {
         $this->resetPage();
     }
 
-    // ✅ Helper method untuk reset filters
     private function resetFilters(): void
     {
         $this->semesterId = null;
@@ -251,10 +241,8 @@ class InputNilaiAkhir extends Component
         $this->mataPelajaranList = [];
         $this->nilaiInput = [];
         $this->rombel = null;
-        $this->cachedNilaiExist = null;
     }
 
-    // 🔹 Load daftar mata pelajaran yang diajar di rombel
     private function loadMataPelajaran(): void
     {
         if (!$this->rombelId) {
@@ -265,63 +253,46 @@ class InputNilaiAkhir extends Component
         $query = RombelPengajar::with(['mataPelajaran', 'guru'])
             ->where('rombel_id', $this->rombelId);
 
-        // ✅ Otorisasi (uncomment jika diperlukan)
-        // if (!Auth::user()->hasAnyRole(['admin', 'kurikulum'])) { 
-        //     $query->where('guru_id', Auth::id());
-        // }
-
         $this->mataPelajaranList = $query->orderBy('mata_pelajaran_id')->get();
     }
 
-    // 🔹 Load data pelajar dan nilai mereka
     private function loadNilaiPelajar(): void
     {
         if (!$this->selectedRombelPengajarId || !$this->semesterId) {
             $this->nilaiInput = [];
             $this->guruName = null;
-            $this->cachedNilaiExist = null;
             return;
         }
 
-        // ✅ Improved: Use find instead of findOrFail
         $rombelPengajar = RombelPengajar::with('guru', 'mataPelajaran')
             ->find($this->selectedRombelPengajarId);
 
         if (!$rombelPengajar) {
             $this->nilaiInput = [];
             $this->guruName = null;
-            $this->cachedNilaiExist = null;
             $this->selectedRombelPengajarId = null;
             return;
         }
 
         $this->guruName = $rombelPengajar->guru->name ?? 'N/A';
 
-        // ✅ Cache nilai untuk menghindari query duplikat
-        $this->cachedNilaiExist = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+        // Populate input form dengan nilai existing
+        $nilaiExisting = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
             ->where('tahun_ajaran_semester_id', $this->semesterId)
             ->pluck('nilai_angka', 'pelajar_id');
 
-        // Reset array input nilai
-        $this->nilaiInput = [];
-
-        // Populate nilai input dengan data existing
-        foreach ($this->cachedNilaiExist as $pelajarId => $nilai) {
-            $this->nilaiInput[$pelajarId] = $nilai;
-        }
+        $this->nilaiInput = $nilaiExisting->toArray();
     }
 
-    // 🔹 Get query data pelajar dengan filter
     private function getPelajarQuery(): Builder
     {
         if (!$this->rombelId) {
-            return RombelPelajar::whereNull('id'); // Return empty query
+            return RombelPelajar::whereNull('id');
         }
 
         $query = RombelPelajar::where('rombel_id', $this->rombelId)
-            ->with(['pelajar']); // ✅ Ensure eager loading
+            ->with(['pelajar']);
 
-        // Filter pencarian
         if (!empty($this->searchPelajar)) {
             $query->whereHas('pelajar', function ($q) {
                 $search = $this->searchPelajar;
@@ -334,7 +305,6 @@ class InputNilaiAkhir extends Component
         return $query;
     }
 
-    // 🔹 Konfirmasi simpan nilai
     public function confirmSaveNilai(): void
     {
         if (!$this->selectedRombelPengajarId) {
@@ -345,7 +315,6 @@ class InputNilaiAkhir extends Component
             return;
         }
 
-        // Validasi input
         $this->validate();
 
         $this->dispatch('swal:confirm', [
@@ -355,28 +324,25 @@ class InputNilaiAkhir extends Component
         ]);
     }
 
-    // 🔹 Hitung predikat berdasarkan nilai
     private function hitungPredikat(float $nilai): string
     {
         if ($nilai >= 91) {
-            return 'A'; // Sangat Baik
+            return 'A';
         } elseif ($nilai >= 83) {
-            return 'B'; // Baik
+            return 'B';
         } elseif ($nilai >= 75) {
-            return 'C'; // Cukup / Tuntas minimal
+            return 'C';
         } else {
-            return 'D'; // Kurang / Belum tuntas
+            return 'D';
         }
     }
 
-    // 🔹 Simpan nilai
     public function saveNilai(): void
     {
         if (!$this->selectedRombelPengajarId || !$this->semesterId) {
             return;
         }
 
-        // Ambil data rombel pengajar
         $rombelPengajar = RombelPengajar::with('mataPelajaran')
             ->find($this->selectedRombelPengajarId);
 
@@ -392,7 +358,6 @@ class InputNilaiAkhir extends Component
         $mataPelajaranId = $rombelPengajar->mata_pelajaran_id;
         $guruId = $rombelPengajar->guru_id;
 
-        // ✅ Security: Validasi pelajar_id yang valid
         $validPelajarIds = RombelPelajar::where('rombel_id', $this->rombelId)
             ->pluck('pelajar_id')
             ->toArray();
@@ -402,27 +367,22 @@ class InputNilaiAkhir extends Component
             $savedCount = 0;
 
             foreach ($this->nilaiInput as $pelajarId => $nilai) {
-                // ✅ Security check: pastikan pelajar ada di rombel ini
                 if (!in_array($pelajarId, $validPelajarIds)) {
                     continue;
                 }
 
-                // Skip jika nilai kosong atau null
                 if ($nilai === null || $nilai === '') {
                     continue;
                 }
 
-                // Validasi dan bersihkan nilai
                 $nilaiBersih = is_numeric($nilai) ? floatval($nilai) : null;
 
                 if ($nilaiBersih === null || $nilaiBersih < 0 || $nilaiBersih > 100) {
-                    continue; // Skip nilai yang tidak valid
+                    continue;
                 }
 
-                // Hitung predikat
                 $predikat = $this->hitungPredikat($nilaiBersih);
 
-                // ✅ Use updateOrCreate for cleaner code
                 Nilai::updateOrCreate(
                     [
                         'pelajar_id' => $pelajarId,
@@ -435,7 +395,7 @@ class InputNilaiAkhir extends Component
                         'nilai_angka' => $nilaiBersih,
                         'predikat' => $predikat,
                         'updated_by' => Auth::id(),
-                        'created_by' => Auth::id(), // Only set on creation
+                        'created_by' => Auth::id(),
                     ]
                 );
 
@@ -449,8 +409,6 @@ class InputNilaiAkhir extends Component
                 'text' => "Berhasil menyimpan {$savedCount} nilai untuk mata pelajaran '{$mataPelajaran}'.",
             ]);
 
-            // ✅ Clear cache dan reload data pelajar
-            $this->cachedNilaiExist = null;
             $this->loadNilaiPelajar();
         } catch (\Exception $e) {
             DB::rollback();
@@ -467,7 +425,6 @@ class InputNilaiAkhir extends Component
         }
     }
 
-    // 🔹 Konfirmasi reset nilai
     public function confirmResetNilai(): void
     {
         $this->dispatch('swal:confirm', [
@@ -477,7 +434,6 @@ class InputNilaiAkhir extends Component
         ]);
     }
 
-    // 🔹 Reset semua input nilai
     public function resetNilai(): void
     {
         $this->nilaiInput = array_map(fn() => null, $this->nilaiInput);
@@ -488,10 +444,8 @@ class InputNilaiAkhir extends Component
         ]);
     }
 
-    // 🔹 NEW: Delete nilai
     public function deleteNilai($pelajarId = null): void
     {
-        // Handle array parameter dari JavaScript
         if (is_array($pelajarId) && isset($pelajarId[0])) {
             $pelajarId = $pelajarId[0];
         }
@@ -518,13 +472,10 @@ class InputNilaiAkhir extends Component
                 ->delete();
 
             if ($deleted) {
-                // Reset input nilai untuk pelajar yang dihapus
                 if (isset($this->nilaiInput[$pelajarId])) {
                     unset($this->nilaiInput[$pelajarId]);
                 }
 
-                // Reload cache dan data
-                $this->cachedNilaiExist = null;
                 $this->loadNilaiPelajar();
 
                 $this->dispatch('swal:success', [
@@ -550,27 +501,228 @@ class InputNilaiAkhir extends Component
         }
     }
 
-    // 🔹 Render view dengan data pelajar
+    public function openGenerateModal(): void
+    {
+        if (!$this->selectedRombelPengajarId || !$this->semesterId || !$this->rombel) {
+            $this->dispatch('swal:error', [
+                'title' => 'Error!',
+                'text' => 'Pastikan semua filter sudah dipilih.',
+            ]);
+            return;
+        }
+
+        $rombelPengajar = RombelPengajar::find($this->selectedRombelPengajarId);
+        if (!$rombelPengajar) {
+            $this->dispatch('swal:error', [
+                'title' => 'Error!',
+                'text' => 'Data mata pelajaran tidak ditemukan.',
+            ]);
+            return;
+        }
+
+        // ✅ HITUNG DI SINI tapi JANGAN simpan ke properti publik
+        $countPelajarWithNilai = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+            ->where('tahun_ajaran_semester_id', $this->semesterId)
+            ->count();
+
+        $countCapaianKosong = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+            ->where('tahun_ajaran_semester_id', $this->semesterId)
+            ->whereNull('capaian_kompetensi')
+            ->count();
+
+        $countTemplateAvailable = TemplateNilaiCapaian::where('tahun_ajaran_semester_id', $this->semesterId)
+            ->where('mata_pelajaran_id', $rombelPengajar->mata_pelajaran_id)
+            ->where('tingkat', $this->rombel->tingkat)
+            ->where('aktif', true)
+            ->count();
+
+        if ($countTemplateAvailable === 0) {
+            $this->dispatch('swal:error', [
+                'title' => 'Template Tidak Ditemukan!',
+                'text' => 'Belum ada template capaian untuk mata pelajaran dan tingkat kelas ini.',
+            ]);
+            return;
+        }
+
+        if ($countPelajarWithNilai === 0) {
+            $this->dispatch('swal:error', [
+                'title' => 'Tidak Ada Data!',
+                'text' => 'Belum ada pelajar yang memiliki nilai tersimpan.',
+            ]);
+            return;
+        }
+
+        // ✅ Kirim data langsung ke event, bukan simpan di properti
+        $this->dispatch('show-generate-modal', [
+            'countPelajarWithNilai' => $countPelajarWithNilai,
+            'countCapaianKosong' => $countCapaianKosong,
+            'countTemplateAvailable' => $countTemplateAvailable,
+        ]);
+    }
+
+    public function closeGenerateModal(): void
+    {
+        // Dispatch event ke JS untuk menutup modal
+        $this->dispatch('hide-generate-modal');
+    }
+
+    // 🆕 NEW: Reset State Modal (Dipanggil dari JS)
+    // public function resetModalState(): void
+    // {
+    //     $this->generateMode = 'empty';
+    //     $this->countPelajarWithNilai = 0;
+    //     $this->countCapaianKosong = 0;
+    //     $this->countTemplateAvailable = 0;
+    // }
+
+
+    public function generateCapaian(): void
+    {
+        $this->validate([
+            'generateMode' => 'required|in:empty,all',
+        ]);
+
+        if (!$this->selectedRombelPengajarId || !$this->semesterId || !$this->rombel) {
+            $this->dispatch('swal:error', [
+                'title' => 'Error!',
+                'text' => 'Data tidak lengkap.',
+            ]);
+            return;
+        }
+
+        $rombelPengajar = RombelPengajar::find($this->selectedRombelPengajarId);
+        if (!$rombelPengajar) {
+            $this->dispatch('swal:error', [
+                'title' => 'Error!',
+                'text' => 'Data mata pelajaran tidak ditemukan.',
+            ]);
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $query = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+                ->where('tahun_ajaran_semester_id', $this->semesterId);
+
+            if ($this->generateMode === 'empty') {
+                $query->whereNull('capaian_kompetensi');
+            }
+
+            $nilaiList = $query->get();
+
+            $successCount = 0;
+            $errorList = [];
+
+            foreach ($nilaiList as $nilai) {
+                $template = $this->getMatchingTemplate(
+                    $nilai->nilai_angka,
+                    $rombelPengajar->mata_pelajaran_id
+                );
+
+                if ($template) {
+                    $nilai->capaian_kompetensi = $template->deskripsi;
+                    $nilai->updated_by = Auth::id();
+                    $nilai->save();
+                    $successCount++;
+                } else {
+                    $pelajar = $nilai->pelajar;
+                    $errorList[] = [
+                        'nama' => $pelajar->nama_lengkap ?? 'N/A',
+                        'nilai' => $nilai->nilai_angka,
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            // Tutup modal: Gunakan closeGenerateModal yang akan dispatch event hide
+            $this->closeGenerateModal();
+
+            $this->loadNilaiPelajar();
+
+            if (count($errorList) === 0) {
+                $this->dispatch('swal:success', [
+                    'title' => 'Berhasil!',
+                    'text' => "Berhasil generate capaian untuk {$successCount} pelajar.",
+                ]);
+            } else {
+                $errorMessage = "Generate selesai dengan catatan:\n";
+                $errorMessage .= "- Berhasil: {$successCount} pelajar\n";
+                $errorMessage .= "- Gagal: " . count($errorList) . " pelajar (tidak ada template yang cocok)\n\n";
+                $errorMessage .= "Detail error:\n";
+
+                foreach ($errorList as $error) {
+                    $errorMessage .= "- {$error['nama']} (nilai: {$error['nilai']}) - Template tidak ditemukan\n";
+                }
+
+                $this->dispatch('swal:warning', [
+                    'title' => 'Generate Selesai!',
+                    'text' => $errorMessage,
+                ]);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            Log::error('Error generating capaian: ' . $e->getMessage(), [
+                'rombel_pengajar_id' => $this->selectedRombelPengajarId,
+                'semester_id' => $this->semesterId,
+                'user_id' => Auth::id(),
+            ]);
+
+            $this->dispatch('swal:error', [
+                'title' => 'Gagal!',
+                'text' => 'Terjadi kesalahan saat generate capaian.',
+            ]);
+        }
+    }
+
+    private function getMatchingTemplate(float $nilaiAngka, string $mataPelajaranId): ?TemplateNilaiCapaian
+    {
+        return TemplateNilaiCapaian::where('tahun_ajaran_semester_id', $this->semesterId)
+            ->where('mata_pelajaran_id', $mataPelajaranId)
+            ->where('tingkat', $this->rombel->tingkat)
+            ->where('aktif', true)
+            ->where('rentang_min', '<=', $nilaiAngka)
+            ->where('rentang_max', '>=', $nilaiAngka)
+            ->first();
+    }
+
+    // private function getCapaianKompetensi($pelajarId): ?string
+    // {
+    //     if (!$this->selectedRombelPengajarId || !$this->semesterId) {
+    //         return null;
+    //     }
+
+    //     $nilai = Nilai::where('pelajar_id', $pelajarId)
+    //         ->where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+    //         ->where('tahun_ajaran_semester_id', $this->semesterId)
+    //         ->first();
+
+    //     return $nilai->capaian_kompetensi ?? null;
+    // }
+
     public function render()
     {
         $pelajarData = collect();
 
         if ($this->selectedRombelPengajarId && $this->semesterId) {
-            // ✅ Use cached nilai instead of querying again
-            $nilaiExist = $this->cachedNilaiExist ?? collect();
+            // ✅ Query sekali saja untuk semua data nilai
+            $allNilai = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
+                ->get()
+                ->keyBy('pelajar_id'); // Index by pelajar_id
 
-            // Query pelajar dengan pagination
             $pelajarPaginated = $this->getPelajarQuery()
                 ->orderBy('id', 'asc')
                 ->paginate($this->perPagePelajar);
 
-            // Map data pelajar dengan nilai mereka
-            $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($nilaiExist) {
+            $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($allNilai) {
                 $pelajarId = $rombelPelajar->pelajar_id;
+                $nilaiRecord = $allNilai->get($pelajarId);
 
                 // Inisialisasi input nilai jika belum ada
-                if (!isset($this->nilaiInput[$pelajarId])) {
-                    $this->nilaiInput[$pelajarId] = $nilaiExist->get($pelajarId);
+                if (!isset($this->nilaiInput[$pelajarId]) && $nilaiRecord) {
+                    $this->nilaiInput[$pelajarId] = $nilaiRecord->nilai_angka;
                 }
 
                 return (object) [
@@ -579,7 +731,8 @@ class InputNilaiAkhir extends Component
                     'nama_lengkap' => $rombelPelajar->pelajar->nama_lengkap,
                     'nomor_induk' => $rombelPelajar->pelajar->nomor_induk,
                     'nisn' => $rombelPelajar->pelajar->nisn,
-                    'nilai_sekarang' => $nilaiExist->get($pelajarId),
+                    'nilai_sekarang' => $nilaiRecord->nilai_angka ?? null,
+                    'capaian_kompetensi' => $nilaiRecord->capaian_kompetensi ?? null,
                 ];
             });
         }

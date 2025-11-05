@@ -1,5 +1,4 @@
 <div>
-    <!-- Filter Data -->
     <div class="row">
         <div class="col-xl-12 col-md-12 grid-margin stretch-card">
             <div class="card">
@@ -14,7 +13,6 @@
                         </div>
                         <div class="col-lg-12">
                             <div class="mb-3 row">
-                                <!-- Filter Tahun Ajaran -->
                                 <div class="col-sm-3">
                                     <label class="form-label">Tahun Ajaran</label>
                                     <select wire:model.live="tahunAjaranId" class="form-select">
@@ -28,7 +26,6 @@
                                     </select>
                                 </div>
 
-                                <!-- Filter Semester -->
                                 <div class="col-sm-3">
                                     <label class="form-label">Semester</label>
                                     <select wire:model.live="semesterId" class="form-select"
@@ -43,7 +40,6 @@
                                     </select>
                                 </div>
 
-                                <!-- Filter Rombel -->
                                 <div class="col-sm-3">
                                     <label class="form-label">Rombongan Belajar</label>
                                     <select wire:model.live="rombelId" class="form-select"
@@ -57,7 +53,6 @@
                                     </select>
                                 </div>
 
-                                <!-- Filter Mata Pelajaran -->
                                 <div class="col-sm-3">
                                     <label class="form-label">Mata Pelajaran</label>
                                     <select wire:model.live="selectedRombelPengajarId" class="form-select"
@@ -74,13 +69,10 @@
                         </div>
                     </div>
 
-                    <!-- Info Rombel - Tampilkan jika semua filter sudah dipilih -->
                     @if($rombel && $selectedRombelPengajarId)
                     <div class="alert alert-success py-3 mt-3" role="alert">
                         <div class="row g-4">
-                            <!-- Kolom 1 -->
                             <div class="col-md-4">
-                                <!-- Kurikulum -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -94,7 +86,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Tahun Ajaran & Semester -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -114,9 +105,7 @@
                                 </div>
                             </div>
 
-                            <!-- Kolom 2 -->
                             <div class="col-md-4">
-                                <!-- Rombel -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -128,7 +117,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Wali Kelas -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -143,9 +131,7 @@
                                 </div>
                             </div>
 
-                            <!-- Kolom 3 -->
                             <div class="col-md-4">
-                                <!-- Mata Pelajaran -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -162,7 +148,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Guru Pengampu -->
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                                         style="width: 36px; height: 36px;">
@@ -182,34 +167,36 @@
         </div>
     </div>
 
-    <!-- Tabel Input Nilai - Hanya tampil jika semua filter sudah dipilih -->
     @if($selectedRombelPengajarId)
     <div class="row mt-1">
         <div class="col-xl-12 col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <!-- Header & Search -->
                     <div class="row mb-3 align-items-center">
                         <div class="col-lg-6">
                             <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Entri Data Nilai Akhir Pelajar</h5>
                         </div>
                         <div class="col-lg-6 d-flex justify-content-end">
-                            <div class="input-group" style="width: 250px;"> <input type="text"
+                            <div class="input-group" style="width: 250px;">
+                                <input
+                                    type="text"
                                     wire:model.live.debounce.300ms="searchPelajar"
                                     class="form-control"
                                     placeholder="Cari nama, atau nomor induk...">
                             </div>
 
-                            <button type="button"
-                                wire:click="create"
-                                class="btn btn-outline-light-muted btn-sm ms-2"
+                            <button
+                                type="button"
+                                class="btn btn-outline-primary btn-sm ms-2"
+                                wire:click="openGenerateModal"
+                                wire:key="btn-generate-capaian"
+                                title="Generate Capaian Kompetensi"
                                 style="padding: 0.25rem 0.5rem; width: 2.25rem; height: calc(2.25rem + 2px); display: flex; align-items: center; justify-content: center;">
-                                <i class="mdi mdi-plus"></i>
+                                <i class="mdi mdi-auto-fix"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Tabel Nilai -->
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead class="table-light">
@@ -242,7 +229,7 @@
                             </thead>
                             <tbody>
                                 @forelse($pelajarData as $index => $pelajar)
-                                <tr>
+                                <tr wire:key="pelajar-row-{{ $pelajar->pelajar_id }}"> {{-- KUNCI ISOLASI: wire:key pada baris --}}
                                     <td class="text-center">
                                         {{ $pelajarData->firstItem() + $index }}
                                     </td>
@@ -251,7 +238,8 @@
                                         <small>{{ $pelajar->nomor_induk ?? '-' }} | {{ $pelajar->nisn ?? '-' }}</small>
                                     </td>
                                     <td>
-                                        <input type="number"
+                                        <input
+                                            type="number"
                                             wire:model.defer="nilaiInput.{{ $pelajar->pelajar_id }}"
                                             class="form-control form-control-sm text-center"
                                             min="0"
@@ -271,16 +259,22 @@
                                         <span class="text-muted">-</span>
                                         @endif
                                     </td>
-                                    <td>
-
+                                    <td style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 300px;">
+                                        @if($pelajar->capaian_kompetensi)
+                                        <span class="fs-7 text-muted">{{ Str::limit($pelajar->capaian_kompetensi, 100) }}</span>
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
                                     </td>
                                     <td>
                                         @if($pelajar->nilai_sekarang)
-                                        <button type="button"
+                                        <button
+                                            type="button"
                                             wire:key="delete-btn-{{ $pelajar->pelajar_id }}"
                                             id="delete-btn-{{ $pelajar->pelajar_id }}"
                                             class="btn btn-sm btn-outline-danger"
-                                            onclick="confirmDeleteNilai('{{ $pelajar->pelajar_id }}')"
+                                            x-data
+                                            @click="confirmDeleteNilai('{{ $pelajar->pelajar_id }}')"
                                             title="Hapus Nilai">
                                             <i class="mdi mdi-delete"></i>
                                         </button>
@@ -301,7 +295,6 @@
                         </table>
                     </div>
 
-                    <!-- Pagination -->
                     @if($pelajarData->hasPages())
                     <div class="mt-3">
                         {{ $pelajarData->links() }}
@@ -309,8 +302,6 @@
                     @endif
 
                     <div class="d-flex justify-content-end mt-3">
-
-                        {{-- Tombol Reset --}}
                         <button
                             type="button"
                             class="btn btn-labeled btn-outline-secondary me-2"
@@ -323,7 +314,6 @@
                             Reset
                         </button>
 
-                        {{-- Tombol Simpan --}}
                         <button
                             type="button"
                             class="btn btn-labeled btn-primary"
@@ -331,25 +321,20 @@
                             wire:loading.attr="disabled"
                             wire:target="saveNilai">
                             <span class="btn-label">
-                                {{-- Icon loading tampil hanya saat saveNilai aktif --}}
-                                <i class="mdi mdi-loading mdi-spin d-none"
+                                <i
+                                    class="mdi mdi-loading mdi-spin d-none"
                                     wire:loading.class.remove="d-none"
                                     wire:target="saveNilai">
                                 </i>
-
-                                {{-- Icon simpan hilang saat loading --}}
-                                <i class="mdi mdi-content-save"
+                                <i
+                                    class="mdi mdi-content-save"
                                     wire:loading.class="d-none"
                                     wire:target="saveNilai">
                                 </i>
                             </span>
-
-                            {{-- Teks tombol normal --}}
                             <span class="text-normal" wire:loading.class="d-none" wire:target="saveNilai">
                                 Simpan
                             </span>
-
-                            {{-- Teks saat loading --}}
                             <span class="text-loading d-none" wire:loading.class.remove="d-none" wire:target="saveNilai">
                                 Menyimpan...
                             </span>
@@ -360,7 +345,6 @@
         </div>
     </div>
     @else
-    <!-- Pesan jika belum memilih filter -->
     <div class="row">
         <div class="col-12">
             <div class="alert alert-danger text-center" role="alert">
@@ -370,13 +354,153 @@
         </div>
     </div>
     @endif
+
+    <div
+        class="modal fade"
+        id="generateModal"
+        tabindex="-1"
+        aria-labelledby="generateModalLabel"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="generateModalLabel">
+                        <i class="mdi mdi-auto-fix me-2"></i>
+                        Generate Capaian Kompetensi
+                    </h5>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal" {{-- Ditutup via Bootstrap JS --}}
+                        aria-label="Close">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <h6 class="alert-heading mb-2">
+                            <i class="mdi mdi-information-outline me-2"></i>
+                            Informasi Data
+                        </h6>
+                        <ul class="mb-0 ps-3">
+                            <li>Pelajar dengan nilai tersimpan: <strong><span id="modal-count-nilai">0</span> orang</strong></li>
+                            <li>Capaian yang belum terisi: <strong><span id="modal-count-kosong">0</span> orang</strong></li>
+                            <li>Template tersedia: <strong><span id="modal-count-template">0</span> template</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih Mode Generate:</label>
+                        <div class="form-check mb-2">
+                            <input
+                                class="form-check-input"
+                                type="radio"
+                                wire:model="generateMode"
+                                value="empty"
+                                id="modeEmpty">
+                            <label class="form-check-label" for="modeEmpty">
+                                <strong>Generate Capaian Kosong</strong>
+                                <br>
+                                <small class="text-muted">
+                                    Hanya mengisi capaian yang masih kosong/NULL (<span id="modal-count-kosong-2">0</span> pelajar)
+                                </small>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input
+                                class="form-check-input"
+                                type="radio"
+                                wire:model="generateMode"
+                                value="all"
+                                id="modeAll">
+                            <label class="form-check-label" for="modeAll">
+                                <strong>Regenerate Semua Capaian</strong>
+                                <br>
+                                <small class="text-muted">
+                                    Menimpa semua capaian, termasuk yang sudah ada (<span id="modal-count-nilai-2">0</span> pelajar)
+                                </small>
+                            </label>
+                        </div>
+                        @error('generateMode')
+                        <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+
+                    @if($generateMode === 'all')
+                    <div class="alert alert-warning mb-0">
+                        <i class="mdi mdi-alert me-2"></i>
+                        <strong>Perhatian!</strong> Mode ini akan menimpa semua capaian yang sudah ada sebelumnya.
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        wire:click="generateCapaian"
+                        wire:loading.attr="disabled"
+                        wire:target="generateCapaian">
+                        <i class="mdi mdi-check me-1"
+                            wire:loading.class="mdi-loading mdi-spin"
+                            wire:loading.class.remove="mdi-check"
+                            wire:target="generateCapaian">
+                        </i>
+                        Generate
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const generateModalEl = document.getElementById('generateModal');
+        let generateModal = null;
 
-        // Function untuk handle delete confirmation dengan loading state
+        if (typeof bootstrap !== 'undefined' && generateModalEl) {
+            generateModal = new bootstrap.Modal(generateModalEl, {
+                backdrop: 'static',
+                keyboard: true
+            });
+
+            // Reset mode ke 'empty' saat modal ditutup
+            generateModalEl.addEventListener('hidden.bs.modal', function() {
+                Livewire.dispatch('$set', ['generateMode', 'empty']);
+            });
+        }
+
+        // ✅ Listener untuk membuka modal
+        window.addEventListener('show-generate-modal', event => {
+            const data = event.detail[0] || event.detail;
+
+            // Update nilai di modal
+            document.getElementById('modal-count-nilai').textContent = data.countPelajarWithNilai || 0;
+            document.getElementById('modal-count-nilai-2').textContent = data.countPelajarWithNilai || 0;
+            document.getElementById('modal-count-kosong').textContent = data.countCapaianKosong || 0;
+            document.getElementById('modal-count-kosong-2').textContent = data.countCapaianKosong || 0;
+            document.getElementById('modal-count-template').textContent = data.countTemplateAvailable || 0;
+
+            if (generateModal) {
+                generateModal.show();
+            }
+        });
+
+        // ✅ Listener untuk menutup modal
+        window.addEventListener('hide-generate-modal', event => {
+            if (generateModal) {
+                generateModal.hide();
+            }
+        });
+
+        // ✅ Function delete confirmation
         window.confirmDeleteNilai = function(pelajarId) {
             Swal.fire({
                 icon: 'warning',
@@ -389,20 +513,17 @@
                 cancelButtonColor: '#3085d6',
             }).then(result => {
                 if (result.isConfirmed) {
-                    // Tampilkan loading pada tombol spesifik
                     const btn = document.getElementById(`delete-btn-${pelajarId}`);
                     if (btn) {
                         btn.disabled = true;
                         btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
                     }
-
-                    // Dispatch ke backend
                     Livewire.dispatch('deleteNilai', [pelajarId]);
                 }
             });
         };
 
-        // Handler untuk response dari backend
+        // ✅ Handler SweetAlert Success
         window.addEventListener('swal:success', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
 
@@ -423,6 +544,7 @@
             }
         });
 
+        // ✅ Handler SweetAlert Error
         window.addEventListener('swal:error', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
 
@@ -443,6 +565,7 @@
             }
         });
 
+        // ✅ Handler SweetAlert Info
         window.addEventListener('swal:info', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
 
@@ -461,6 +584,29 @@
                     text: detail.text ?? '',
                     timer: 2000,
                     showConfirmButton: false
+                });
+            }
+        });
+
+        // ✅ Handler SweetAlert Warning
+        window.addEventListener('swal:warning', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Peringatan',
+                    html: detail.replace(/\n/g, '<br>'),
+                    confirmButtonText: 'Tutup',
+                    width: '600px',
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: detail.title ?? 'Peringatan',
+                    html: (detail.text ?? '').replace(/\n/g, '<br>'),
+                    confirmButtonText: 'Tutup',
+                    width: '600px',
                 });
             }
         });
