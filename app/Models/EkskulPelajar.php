@@ -21,6 +21,15 @@ class EkskulPelajar extends Model
         'pelajar_id',
         'nilai',
         'deskripsi',
+
+        // 🚨 PERBAIKAN: Tambahkan kolom audit untuk mass assignment
+        'created_by',
+        'updated_by',
+    ];
+
+    // Default nilai untuk kolom yang mungkin tidak selalu ada di input
+    protected $attributes = [
+        'deskripsi' => '',
     ];
 
     // Relasi ke Ekstrakurikuler
@@ -33,5 +42,16 @@ class EkskulPelajar extends Model
     public function pelajar()
     {
         return $this->belongsTo(Pelajar::class, 'pelajar_id');
+    }
+
+    // Relasi ke User (opsional, jika Anda perlu melacak siapa yang membuat/memperbarui)
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function editor()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

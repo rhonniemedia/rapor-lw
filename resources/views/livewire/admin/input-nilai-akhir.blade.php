@@ -205,7 +205,7 @@
                                         <p class="mb-0">No</p>
                                         <small>Urut</small>
                                     </th>
-                                    <th width="40%">
+                                    <th width="35%">
                                         <p class="mb-0">Nama Lengkap</p>
                                         <small>Nomor Induk Sekolah & Nasional</small>
                                     </th>
@@ -217,7 +217,7 @@
                                         <p class="mb-0">Nilai</p>
                                         <small>Tersimpan</small>
                                     </th>
-                                    <th width="30%">
+                                    <th width="35%">
                                         <p class="mb-0">Capaian</p>
                                         <small>Telah atau Belum Tercapai</small>
                                     </th>

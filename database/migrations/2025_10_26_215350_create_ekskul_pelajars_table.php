@@ -18,6 +18,11 @@ return new class extends Migration
             $table->uuid('pelajar_id');
             $table->enum('nilai', ['A', 'B', 'C', 'D']);
             $table->text('deskripsi')->nullable();
+
+            // 🚨 PENAMBAHAN KOLOM AUDIT UNTUK MENGHINDARI ERROR SQL (created_by/updated_by)
+            $table->uuid('created_by')->nullable();
+            $table->uuid('updated_by')->nullable();
+
             $table->timestamps();
 
             // Relasi foreign key
@@ -30,6 +35,11 @@ return new class extends Migration
             $table->foreign('pelajar_id')
                 ->references('id')->on('pelajars')
                 ->onDelete('cascade');
+
+            // Opsional: Jika Anda menggunakan tabel 'users' untuk audit
+            // $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
+            // $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
+
 
             // Unik per semester agar 1 siswa hanya punya 1 nilai per ekskul tiap semester
             $table->unique(
