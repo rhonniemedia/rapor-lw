@@ -87,9 +87,9 @@ class DeskripsiNilai extends Component
     {
         $this->reset(['selectedMataPelajaran', 'tingkat', 'editMode', 'templates']);
         $this->templates = [
-            'A' => ['rentang_min' => '91', 'rentang_max' => '100', 'deskripsi' => ''],
-            'B' => ['rentang_min' => '83', 'rentang_max' => '90', 'deskripsi' => ''],
-            'C' => ['rentang_min' => '75', 'rentang_max' => '82', 'deskripsi' => ''],
+            'A' => ['rentang_min' => '92', 'rentang_max' => '100', 'deskripsi' => ''],
+            'B' => ['rentang_min' => '84', 'rentang_max' => '91', 'deskripsi' => ''],
+            'C' => ['rentang_min' => '75', 'rentang_max' => '83', 'deskripsi' => ''],
             'D' => ['rentang_min' => '0', 'rentang_max' => '74', 'deskripsi' => ''],
         ];
         $this->dispatch('open-modal-nilai');

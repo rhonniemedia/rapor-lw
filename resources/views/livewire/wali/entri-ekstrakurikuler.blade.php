@@ -447,24 +447,38 @@
                 <div class="modal-footer">
                     <button
                         type="button"
-                        class="btn btn-secondary"
+                        class="btn btn-labeled btn-outline-secondary"
                         wire:click="closeGenerateModal"
                         wire:loading.attr="disabled"
                         wire:target="generateDeskripsi">
+                        <span class="btn-label">
+                            <i class="mdi mdi-close"></i>
+                        </span>
                         Batal
                     </button>
+
                     <button
                         type="button"
-                        class="btn btn-primary"
+                        class="btn btn-labeled btn-primary"
                         wire:click="generateDeskripsi"
                         wire:loading.attr="disabled"
                         wire:target="generateDeskripsi">
-                        <i class="mdi mdi-check me-1"
-                            wire:loading.class="mdi-loading mdi-spin"
-                            wire:loading.class.remove="mdi-check"
-                            wire:target="generateDeskripsi">
-                        </i>
-                        Generate
+                        <span class="btn-label">
+                            <i class="mdi mdi-loading mdi-spin d-none"
+                                wire:loading.class.remove="d-none"
+                                wire:target="generateDeskripsi">
+                            </i>
+                            <i class="mdi mdi-check"
+                                wire:loading.class="d-none"
+                                wire:target="generateDeskripsi">
+                            </i>
+                        </span>
+                        <span wire:loading.class="d-none" wire:target="generateDeskripsi">
+                            Generate
+                        </span>
+                        <span class="d-none" wire:loading.class.remove="d-none" wire:target="generateDeskripsi">
+                            Memproses...
+                        </span>
                     </button>
                 </div>
             </div>

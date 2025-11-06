@@ -190,8 +190,8 @@ class EntriNilai extends Component
 
     private function hitungPredikat(float $nilai): string
     {
-        if ($nilai >= 91) return 'A'; // Sangat Baik
-        if ($nilai >= 83) return 'B'; // Baik
+        if ($nilai >= 92) return 'A'; // Sangat Baik
+        if ($nilai >= 84) return 'B'; // Baik
         if ($nilai >= 75) return 'C'; // Cukup / Tuntas
         return 'D'; // Kurang / Belum Tuntas
     }

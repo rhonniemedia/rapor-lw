@@ -639,8 +639,8 @@ class InputNilaiAkhir extends Component
 
     private function hitungPredikat(float $nilai): string
     {
-        if ($nilai >= 91) return 'A';
-        if ($nilai >= 83) return 'B';
+        if ($nilai >= 92) return 'A';
+        if ($nilai >= 84) return 'B';
         if ($nilai >= 75) return 'C';
         return 'D';
     }

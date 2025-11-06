@@ -25,9 +25,9 @@
                 @if($searchRombel)
                 <div class="input-group-append">
                     <button type="button"
-                        class="btn btn-secondary"
+                        class="btn btn-info"
                         wire:click="$set('searchRombel', '')">
-                        <i class="fas fa-times"></i>
+                        <i class="mdi mdi-close"></i>
                     </button>
                 </div>
                 @endif
@@ -58,7 +58,7 @@
                     </th>
                     <th style="width: 30%;">
                         <p class="mb-0">Wali Kelas</p>
-                        <small>Nama | NIP</small>
+                        <small>Nama | Telepon</small>
                     </th>
                     <th style="width: 30%;">
                         <p class="mb-0">Peserta Didik</p>

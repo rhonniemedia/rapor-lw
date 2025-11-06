@@ -194,7 +194,7 @@
                                     </th>
                                     <th width="35%">
                                         <p class="mb-0">Capaian</p>
-                                        <small>Teks Capaian</small>
+                                        <small>Deskripsi Capaian Tersimpan</small>
                                     </th>
                                     <th width="5%">
                                         <p class="mb-0">Aksi</p>

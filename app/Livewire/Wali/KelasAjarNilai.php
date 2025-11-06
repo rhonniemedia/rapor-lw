@@ -14,6 +14,7 @@ use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\TemplateNilaiCapaian; // Pastikan model ini ada
 
 class KelasAjarNilai extends Component
 {
@@ -33,8 +34,9 @@ class KelasAjarNilai extends Component
     public $searchPelajar = '';
     public $perPagePelajar = 50;
 
-    // Input nilai
+    // Input nilai & Generate
     public $nilaiInput = [];
+    public $generateMode = 'empty'; // Tambahkan properti ini
 
     // Cache
     private $cachedNilaiExist = null;
@@ -47,15 +49,18 @@ class KelasAjarNilai extends Component
     // Validation
     protected $rules = [
         'nilaiInput.*' => 'nullable|numeric|min:0|max:100',
+        'generateMode' => 'required|in:empty,all',
     ];
 
     protected $messages = [
         'nilaiInput.*.numeric' => 'Nilai harus berupa angka',
         'nilaiInput.*.min' => 'Nilai minimal adalah 0',
         'nilaiInput.*.max' => 'Nilai maksimal adalah 100',
+        'generateMode.required' => 'Pilih mode generate',
+        'generateMode.in' => 'Mode generate tidak valid',
     ];
 
-    protected $listeners = ['deleteNilai'];
+    protected $listeners = ['deleteNilai', 'closeGenerateModal'];
 
     public function mount($rombelId, $mataPelajaranId)
     {
@@ -67,6 +72,10 @@ class KelasAjarNilai extends Component
         $this->validateAccess();
         $this->loadNilaiPelajar();
     }
+
+    // ========================================
+    // DATA LOADING & INITIALIZATION
+    // ========================================
 
     private function loadRombelData()
     {
@@ -130,9 +139,11 @@ class KelasAjarNilai extends Component
             return;
         }
 
+        // Muat seluruh objek Nilai, bukan hanya nilai_angka
         $this->cachedNilaiExist = Nilai::where('rombel_pengajar_id', $this->rombelPengajar->id)
             ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
-            ->pluck('nilai_angka', 'pelajar_id');
+            ->get()
+            ->keyBy('pelajar_id');
     }
 
     private function getPelajarQuery(): Builder
@@ -158,11 +169,16 @@ class KelasAjarNilai extends Component
 
     private function hitungPredikat(float $nilai): string
     {
-        if ($nilai >= 90) return 'A';
-        if ($nilai >= 75) return 'B';
-        if ($nilai >= 60) return 'C';
+        // Sesuaikan rentang predikat
+        if ($nilai >= 92) return 'A';
+        if ($nilai >= 84) return 'B';
+        if ($nilai >= 75) return 'C';
         return 'D';
     }
+
+    // ========================================
+    // SAVE & RESET NILAI
+    // ========================================
 
     public function saveNilai()
     {
@@ -175,7 +191,8 @@ class KelasAjarNilai extends Component
         }
 
         try {
-            $this->validate();
+            // Hanya validasi nilai angka
+            $this->validate(['nilaiInput.*' => $this->rules['nilaiInput.*']]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed', ['errors' => $e->errors()]);
             $this->dispatch('swal:error', [
@@ -199,64 +216,43 @@ class KelasAjarNilai extends Component
                     continue;
                 }
 
-                if ($nilai === null || $nilai === '') {
-                    continue;
-                }
-
                 $nilaiBersih = is_numeric($nilai) ? floatval($nilai) : null;
+                $predikat = $nilaiBersih !== null ? $this->hitungPredikat($nilaiBersih) : null;
+                $isNilaiValid = $nilaiBersih !== null && $nilaiBersih >= 0 && $nilaiBersih <= 100;
 
-                if ($nilaiBersih === null || $nilaiBersih < 0 || $nilaiBersih > 100) {
+                $existingNilai = Nilai::where([
+                    'pelajar_id' => $pelajarId,
+                    'mata_pelajaran_id' => $this->mataPelajaranId,
+                    'tahun_ajaran_semester_id' => $this->semesterAktif->id,
+                ])->first();
+
+                if (!$isNilaiValid) {
+                    // Jika input kosong atau tidak valid, hapus data yang sudah ada
+                    if ($existingNilai) {
+                        $existingNilai->delete();
+                    }
                     continue;
                 }
 
-                $predikat = $this->hitungPredikat($nilaiBersih);
+                $dataToSave = [
+                    'rombel_pengajar_id' => $this->rombelPengajar->id,
+                    'guru_id' => $userId,
+                    'nilai_angka' => $nilaiBersih,
+                    'predikat' => $predikat,
+                    'updated_by' => $userId,
+                ];
 
-                try {
-                    $existingNilai = Nilai::where([
-                        'pelajar_id' => $pelajarId,
-                        'mata_pelajaran_id' => $this->mataPelajaranId,
-                        'tahun_ajaran_semester_id' => $this->semesterAktif->id,
-                    ])->lockForUpdate()->first();
+                if ($existingNilai) {
+                    $existingNilai->update($dataToSave);
+                } else {
+                    $dataToSave['pelajar_id'] = $pelajarId;
+                    $dataToSave['mata_pelajaran_id'] = $this->mataPelajaranId;
+                    $dataToSave['tahun_ajaran_semester_id'] = $this->semesterAktif->id;
+                    $dataToSave['created_by'] = $userId;
 
-                    $dataToSave = [
-                        'rombel_pengajar_id' => $this->rombelPengajar->id,
-                        'guru_id' => $userId,
-                        'nilai_angka' => $nilaiBersih,
-                        'predikat' => $predikat,
-                        'updated_by' => $userId,
-                    ];
-
-                    if ($existingNilai) {
-                        $existingNilai->update($dataToSave);
-                    } else {
-                        $dataToSave['pelajar_id'] = $pelajarId;
-                        $dataToSave['mata_pelajaran_id'] = $this->mataPelajaranId;
-                        $dataToSave['tahun_ajaran_semester_id'] = $this->semesterAktif->id;
-                        $dataToSave['created_by'] = $userId;
-
-                        Nilai::create($dataToSave);
-                    }
-
-                    $savedCount++;
-                } catch (\Illuminate\Database\QueryException $e) {
-                    if ($e->errorInfo[1] == 1062) {
-                        Nilai::where([
-                            'pelajar_id' => $pelajarId,
-                            'mata_pelajaran_id' => $this->mataPelajaranId,
-                            'tahun_ajaran_semester_id' => $this->semesterAktif->id,
-                        ])->update([
-                            'rombel_pengajar_id' => $this->rombelPengajar->id,
-                            'guru_id' => $userId,
-                            'nilai_angka' => $nilaiBersih,
-                            'predikat' => $predikat,
-                            'updated_by' => $userId,
-                        ]);
-
-                        $savedCount++;
-                    } else {
-                        throw $e;
-                    }
+                    Nilai::create($dataToSave);
                 }
+                $savedCount++;
             }
 
             DB::commit();
@@ -274,7 +270,6 @@ class KelasAjarNilai extends Component
 
             Log::error('Error saving nilai', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
                 'rombel_pengajar_id' => $this->rombelPengajar->id,
                 'semester_id' => $this->semesterAktif->id,
             ]);
@@ -292,31 +287,15 @@ class KelasAjarNilai extends Component
             $this->loadNilaiPelajar();
         }
 
+        // Reset input ke nilai yang ada di cache
         foreach ($this->nilaiInput as $pelajarId => $nilai) {
-            if ($this->cachedNilaiExist && $this->cachedNilaiExist->has($pelajarId)) {
-                $this->nilaiInput[$pelajarId] = $this->cachedNilaiExist->get($pelajarId);
-            } else {
-                $this->nilaiInput[$pelajarId] = null;
-            }
+            $existing = $this->cachedNilaiExist->get($pelajarId);
+            $this->nilaiInput[$pelajarId] = $existing ? $existing->nilai_angka : null;
         }
 
         $this->dispatch('swal:info', [
             'title' => 'Direset!',
             'text' => 'Input nilai telah dikembalikan ke nilai tersimpan.',
-        ]);
-    }
-
-    // ✅ PERBAIKAN: Jangan ubah state, langsung trigger SweetAlert dari frontend
-    public function confirmDelete($pelajarId): void
-    {
-        // Hanya dispatch event, TIDAK ubah state apapun
-        $this->dispatch('swal:confirm', [
-            'title' => 'Hapus Nilai Pelajar?',
-            'text' => 'Anda yakin ingin menghapus nilai ini?',
-            'icon' => 'warning',
-            'confirmButtonText' => 'Ya, Hapus!',
-            'nextEvent' => 'deleteNilai',
-            'id' => $pelajarId
         ]);
     }
 
@@ -338,16 +317,14 @@ class KelasAjarNilai extends Component
             $deleted = Nilai::where('pelajar_id', $pelajarId)
                 ->where('mata_pelajaran_id', $this->mataPelajaranId)
                 ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
-                ->where('guru_id', Auth::id()) // ✅ Pastikan hanya guru yang bersangkutan
+                ->where('guru_id', Auth::id())
                 ->delete();
 
             if ($deleted) {
-                // ✅ Reset input nilai untuk pelajar yang dihapus
                 if (isset($this->nilaiInput[$pelajarId])) {
-                    unset($this->nilaiInput[$pelajarId]);
+                    $this->nilaiInput[$pelajarId] = null;
                 }
 
-                // ✅ Reload cache dan data
                 $this->cachedNilaiExist = null;
                 $this->loadNilaiPelajar();
 
@@ -362,11 +339,7 @@ class KelasAjarNilai extends Component
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error('Error deleting nilai: ' . $e->getMessage(), [
-                'pelajar_id' => $pelajarId,
-                'mata_pelajaran_id' => $this->mataPelajaranId,
-                'guru_id' => Auth::id(),
-            ]);
+            Log::error('Error deleting nilai: ' . $e->getMessage());
 
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
@@ -375,10 +348,199 @@ class KelasAjarNilai extends Component
         }
     }
 
-    public function kembali()
+    // ========================================
+    // GENERATE DESKRIPSI METHODS
+    // ========================================
+
+    public function openGenerateModal(): void
     {
-        return redirect()->route('guru.kelas-ajar');
+        if (!$this->validateGenerateContext()) {
+            return;
+        }
+
+        $statistics = $this->calculateGenerateStatistics();
+
+        if (!$this->validateGenerateStatistics($statistics)) {
+            return;
+        }
+
+        $this->dispatch('show-generate-modal', $statistics);
     }
+
+    private function validateGenerateContext(): bool
+    {
+        if (!$this->rombelPengajar || !$this->semesterAktif) {
+            $this->dispatch('swal:error', ['title' => 'Error!', 'text' => 'Data Rombel atau Semester tidak valid.']);
+            return false;
+        }
+        return true;
+    }
+
+    private function calculateGenerateStatistics(): array
+    {
+        if (!$this->cachedNilaiExist) {
+            $this->loadNilaiPelajar();
+        }
+
+        $countPelajarWithNilai = $this->cachedNilaiExist->filter(fn($nilai) => $nilai->nilai_angka !== null)->count();
+
+        $countDeskripsiKosong = $this->cachedNilaiExist->filter(
+            fn($nilai) =>
+            $nilai->nilai_angka !== null && (empty($nilai->deskripsi) || $nilai->deskripsi === null)
+        )->count();
+
+        $countTemplateAvailable = TemplateNilaiCapaian::where('mata_pelajaran_id', $this->mataPelajaranId)
+            ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+            ->count();
+
+        return [
+            'countPelajarWithNilai' => $countPelajarWithNilai,
+            'countDeskripsiKosong' => $countDeskripsiKosong,
+            'countTemplateAvailable' => $countTemplateAvailable,
+        ];
+    }
+
+    private function validateGenerateStatistics(array $statistics): bool
+    {
+        if ($statistics['countTemplateAvailable'] === 0) {
+            $this->dispatch('swal:error', ['title' => 'Template Tidak Ditemukan!', 'text' => 'Belum ada template deskripsi untuk mata pelajaran ini.']);
+            return false;
+        }
+
+        if ($statistics['countPelajarWithNilai'] === 0) {
+            $this->dispatch('swal:error', ['title' => 'Tidak Ada Data!', 'text' => 'Belum ada pelajar yang memiliki nilai angka tersimpan.']);
+            return false;
+        }
+
+        return true;
+    }
+
+    public function closeGenerateModal(): void
+    {
+        $this->dispatch('hide-generate-modal');
+        $this->generateMode = 'empty';
+    }
+
+    public function generateDeskripsi(): void
+    {
+        $this->validate(['generateMode' => 'required|in:empty,all']);
+
+        if (!$this->validateGenerateContext()) {
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $result = $this->processDeskripsiGeneration();
+
+            DB::commit();
+
+            $this->closeGenerateModal();
+            $this->cachedNilaiExist = null;
+            $this->loadNilaiPelajar();
+
+            $this->dispatchGenerateResult($result);
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error generating deskripsi nilai', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            $this->dispatch('swal:error', ['title' => 'Gagal!', 'text' => 'Terjadi kesalahan saat generate deskripsi.']);
+        }
+    }
+
+    private function processDeskripsiGeneration(): array
+    {
+        $query = Nilai::where('rombel_pengajar_id', $this->rombelPengajar->id)
+            ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+            ->whereNotNull('nilai_angka');
+
+        if ($this->generateMode === 'empty') {
+            $query->where(function (Builder $q) {
+                $q->whereNull('capaian_kompetensi')
+                    ->orWhere('capaian_kompetensi', '');
+            });
+        }
+
+        $nilaiList = $query->get();
+        $successCount = 0;
+        $errorList = [];
+
+        foreach ($nilaiList as $nilai) {
+            $template = $this->getMatchingTemplate($nilai->predikat);
+
+            if ($template) {
+                $deskripsi = $this->replacePlaceholders($template->deskripsi, $nilai);
+
+                $nilai->capaian_kompetensi = $deskripsi;
+                $nilai->updated_by = Auth::id();
+                $nilai->save();
+                $successCount++;
+            } else {
+                $pelajar = $nilai->pelajar()->first();
+                $errorList[] = [
+                    'nama' => $pelajar->nama_lengkap ?? 'N/A',
+                    'predikat' => $nilai->predikat,
+                ];
+            }
+        }
+
+        return ['successCount' => $successCount, 'errorList' => $errorList];
+    }
+
+    private function getMatchingTemplate(string $predikat): ?TemplateNilaiCapaian
+    {
+        return TemplateNilaiCapaian::where('mata_pelajaran_id', $this->mataPelajaranId)
+            ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+            ->where('predikat', $predikat)
+            ->first();
+    }
+
+    private function replacePlaceholders(string $deskripsi, $nilai): string
+    {
+        $predikatLabel = match ($nilai->predikat) {
+            'A' => 'Sangat Baik',
+            'B' => 'Baik',
+            'C' => 'Cukup',
+            default => 'Kurang'
+        };
+
+        $placeholders = [
+            '{NILAI_ANGKA}' => number_format($nilai->nilai_angka, 2),
+            '{PREDIKAT}' => $nilai->predikat,
+            '{PREDIKAT_LABEL}' => $predikatLabel,
+            '{MATA_PELAJARAN}' => $this->mataPelajaran->nama ?? '',
+        ];
+
+        return str_replace(array_keys($placeholders), array_values($placeholders), $deskripsi);
+    }
+
+    private function dispatchGenerateResult(array $result): void
+    {
+        if (empty($result['errorList'])) {
+            $this->dispatch('swal:success', ['title' => 'Berhasil!', 'text' => "Berhasil generate deskripsi untuk {$result['successCount']} pelajar."]);
+            return;
+        }
+
+        $errorMessage = $this->buildGenerateErrorMessage($result);
+        $this->dispatch('swal:error', ['title' => 'Generate Selesai dengan Error!', 'text' => $errorMessage]);
+    }
+
+    private function buildGenerateErrorMessage(array $result): string
+    {
+        $message = "Generate selesai dengan catatan:\n";
+        $message .= "- Berhasil: {$result['successCount']} pelajar\n";
+        $message .= "- Gagal: " . count($result['errorList']) . " pelajar (Template tidak ditemukan untuk predikat)\n\n";
+        $message .= "Detail error:\n";
+
+        foreach ($result['errorList'] as $error) {
+            $message .= "- {$error['nama']} (Predikat: {$error['predikat']}) \n";
+        }
+
+        return $message;
+    }
+
+    // ========================================
+    // RENDER METHOD
+    // ========================================
 
     public function render()
     {
@@ -398,9 +560,10 @@ class KelasAjarNilai extends Component
 
             $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($nilaiExist) {
                 $pelajarId = $rombelPelajar->pelajar_id;
+                $existingNilai = $nilaiExist->get($pelajarId);
 
                 if (!array_key_exists($pelajarId, $this->nilaiInput)) {
-                    $this->nilaiInput[$pelajarId] = $nilaiExist->get($pelajarId);
+                    $this->nilaiInput[$pelajarId] = $existingNilai ? $existingNilai->nilai_angka : null;
                 }
 
                 return (object) [
@@ -409,7 +572,9 @@ class KelasAjarNilai extends Component
                     'nama_lengkap' => $rombelPelajar->pelajar->nama_lengkap,
                     'nomor_induk' => $rombelPelajar->pelajar->nomor_induk,
                     'nisn' => $rombelPelajar->pelajar->nisn,
-                    'nilai_sekarang' => $nilaiExist->get($pelajarId),
+                    'nilai_sekarang' => $existingNilai ? $existingNilai->nilai_angka : null,
+                    'predikat_sekarang' => $existingNilai ? $existingNilai->predikat : null,
+                    'deskripsi_sekarang' => $existingNilai ? $existingNilai->capaian_kompetensi : null,
                 ];
             });
         }
@@ -417,7 +582,7 @@ class KelasAjarNilai extends Component
         return view('livewire.wali.kelas-ajar-nilai', [
             'pelajarData' => $pelajarData,
             'totalSiswa' => $totalSiswa,
-            'cachedNilaiExist' => $this->cachedNilaiExist ?? collect(), // ✅ TAMBAHKAN INI
+            'cachedNilaiExist' => $this->cachedNilaiExist ?? collect(),
         ]);
     }
 }

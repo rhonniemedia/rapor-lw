@@ -23,9 +23,7 @@
     <div class="card border-success shadow-sm mb-4">
         <div class="card-body">
             <div class="row g-4">
-                <!-- Kolom 1 -->
                 <div class="col-md-4">
-                    <!-- Kurikulum -->
                     <div class="d-flex align-items-center mb-3">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
@@ -39,7 +37,6 @@
                         </div>
                     </div>
 
-                    <!-- Tahun Ajaran -->
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
@@ -54,9 +51,7 @@
                     </div>
                 </div>
 
-                <!-- Kolom 2 -->
                 <div class="col-md-4">
-                    <!-- Rombel -->
                     <div class="d-flex align-items-center mb-3">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
@@ -70,7 +65,6 @@
                         </div>
                     </div>
 
-                    <!-- Wali Kelas -->
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
@@ -85,9 +79,7 @@
                     </div>
                 </div>
 
-                <!-- Kolom 3 -->
                 <div class="col-md-4">
-                    <!-- Guru Mata Pelajaran -->
                     <div class="d-flex align-items-center mb-3">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-primary rounded-3"
                             style="width: 36px; height: 36px;">
@@ -101,7 +93,6 @@
                         </div>
                     </div>
 
-                    <!-- Mata Pelajaran -->
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-danger rounded-3"
                             style="width: 36px; height: 36px;">
@@ -192,7 +183,7 @@
         <div class="col-lg-6">
             <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Entri Data Nilai Akhir Pelajar</h5>
         </div>
-        <div class="col-lg-6 d-flex justify-content-end">
+        <div class="col-lg-6 d-flex justify-content-end gap-2">
             <div class="input-group w-50">
                 <input type="text"
                     wire:model.live.debounce.300ms="searchPelajar"
@@ -206,6 +197,15 @@
                 </button>
                 @endif
             </div>
+            {{-- TOMBOL GENERATE DESKRIPSI (Updated) --}}
+            <button
+                type="button"
+                class="btn btn-outline-primary"
+                wire:click="openGenerateModal"
+                title="Generate Deskripsi Capaian"
+                style="width: 2.5rem; display: flex; align-items: center; justify-content: center;">
+                <i class="mdi mdi-auto-fix"></i>
+            </button>
         </div>
     </div>
 
@@ -217,7 +217,7 @@
                         <p class="mb-0">No</p>
                         <small>Urut</small>
                     </th>
-                    <th width="40%">
+                    <th width="35%">
                         <p class="mb-0">Nama Lengkap</p>
                         <small>Nomor Induk Sekolah & Nasional</small>
                     </th>
@@ -226,16 +226,12 @@
                         <small>Entri Nilai</small>
                     </th>
                     <th width="10%">
-                        <p class="mb-0">Nilai</p>
+                        <p class="mb-0">Nilai & Predikat</p>
                         <small>Tersimpan</small>
                     </th>
-                    <th width="10%">
-                        <p class="mb-0">Predikat</p>
-                        <small>A, B, C, D</small>
-                    </th>
-                    <th width="20%">
+                    <th width="35%">
                         <p class="mb-0">Capaian Kompetensi</p>
-                        <small>Status Pencapaian</small>
+                        <small>Deskripsi Capaian Tersimpan</small>
                     </th>
                     <th width="5%">
                         <p class="mb-0">Aksi</p>
@@ -263,57 +259,45 @@
                             step="0.01"
                             placeholder="0-100">
                         @error('nilaiInput.' . $pelajar->pelajar_id)
-                        <small class="text-danger">{{ $message }}</small>
+                        <small class="text-danger d-block">{{ $message }}</small>
                         @enderror
                     </td>
-                    <td class="text-center">
+                    <td>
                         @if($pelajar->nilai_sekarang)
-                        <span class="badge bg-info">
-                            {{ number_format($pelajar->nilai_sekarang, 2) }}
+                        <span class="badge bg-primary">
+                            {{ number_format($pelajar->nilai_sekarang, 0) }}
+                        </span>
+                        <span class="badge 
+                            @if($pelajar->predikat_sekarang == 'A') bg-success
+                            @elseif($pelajar->predikat_sekarang == 'B') bg-info
+                            @elseif($pelajar->predikat_sekarang == 'C') bg-warning text-dark
+                            @else bg-danger
+                            @endif">
+                            {{ $pelajar->predikat_sekarang }}
                         </span>
                         @else
                         <span class="text-muted">-</span>
                         @endif
                     </td>
-                    <td class="text-center">
-                        @if($pelajar->nilai_sekarang)
+                    <td style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 300px;">
+                        @if($pelajar->deskripsi_sekarang)
                         @php
-                        $nilai = $pelajar->nilai_sekarang;
-                        if ($nilai >= 90) {
-                        $predikat = 'A';
-                        $badgeClass = 'bg-success';
-                        } elseif ($nilai >= 75) {
-                        $predikat = 'B';
-                        $badgeClass = 'bg-primary';
-                        } elseif ($nilai >= 60) {
-                        $predikat = 'C';
-                        $badgeClass = 'bg-warning';
-                        } else {
-                        $predikat = 'D';
-                        $badgeClass = 'bg-danger';
-                        }
+                        $deskripsi = $pelajar->deskripsi_sekarang;
+                        $teksPendek = Str::limit($deskripsi, 100);
                         @endphp
-                        <span class="badge {{ $badgeClass }}">{{ $predikat }}</span>
+                        <p class="mb-0">
+                            <a href="javascript:void(0)"
+                                class="text-muted text-decoration-none"
+                                onclick="showFullDeskripsi('{{ addslashes($pelajar->nama_lengkap) }}', `{{ addslashes($deskripsi) }}`)"
+                                title="Klik untuk melihat deskripsi lengkap">
+                                <span class="text-muted fs-7">{{ $teksPendek }}</span>
+                            </a>
+                        </p>
                         @else
                         <span class="text-muted">-</span>
                         @endif
                     </td>
                     <td>
-                        @if($pelajar->nilai_sekarang)
-                        @if($pelajar->nilai_sekarang >= 75)
-                        <span class="badge bg-success">
-                            <i class="mdi mdi-check-circle me-1"></i>Tercapai
-                        </span>
-                        @else
-                        <span class="badge bg-danger">
-                            <i class="mdi mdi-close-circle me-1"></i>Belum Tercapai
-                        </span>
-                        @endif
-                        @else
-                        <span class="text-muted">-</span>
-                        @endif
-                    </td>
-                    <td class="text-center">
                         @if($pelajar->nilai_sekarang)
                         <button type="button"
                             wire:key="delete-btn-{{ $pelajar->pelajar_id }}"
@@ -380,7 +364,7 @@
                 </i>
             </span>
             <span wire:loading.class="d-none" wire:target="saveNilai">
-                Simpan Nilai
+                Simpan
             </span>
             <span class="d-none" wire:loading.class.remove="d-none" wire:target="saveNilai">
                 Menyimpan...
@@ -394,9 +378,105 @@
     </div>
     @endif
 
+    {{-- MODAL GENERATE DESKRIPSI --}}
+    <div class="modal fade"
+        id="generateModal"
+        tabindex="-1"
+        aria-labelledby="generateModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="generateModalLabel">
+                        <i class="mdi mdi-auto-fix me-2"></i>
+                        Generate Deskripsi Capaian
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <h6 class="alert-heading mb-2"><i class="mdi mdi-information-outline me-2"></i> Informasi Data</h6>
+                        <ul class="mb-0 ps-3">
+                            <li>Pelajar dengan nilai tersimpan: <strong><span id="modal-count-nilai">0</span> orang</strong></li>
+                            <li>Deskripsi yang belum terisi: <strong><span id="modal-count-kosong">0</span> orang</strong></li>
+                            <li>Template tersedia: <strong><span id="modal-count-template">0</span> template</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih Mode Generate:</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" wire:model="generateMode" value="empty" id="modeEmpty">
+                            <label class="form-check-label" for="modeEmpty">
+                                <strong>Generate Deskripsi Kosong</strong>
+                                <br>
+                                <small class="text-muted">Hanya mengisi deskripsi yang masih kosong/NULL.</small>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" wire:model="generateMode" value="all" id="modeAll">
+                            <label class="form-check-label" for="modeAll">
+                                <strong>Regenerate Semua Deskripsi</strong>
+                                <br>
+                                <small class="text-muted">Menimpa semua deskripsi yang sudah ada.</small>
+                            </label>
+                        </div>
+                        @error('generateMode')
+                        <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+
+                    @if($generateMode === 'all')
+                    <div class="alert alert-warning mb-0">
+                        <i class="mdi mdi-alert me-2"></i>
+                        <strong>Perhatian!</strong> Mode ini akan menimpa semua deskripsi yang sudah ada.
+                    </div>
+                    @endif
+                </div>
+                {{-- FOOTER MENGGUNAKAN ACUAN YANG ANDA BERIKAN --}}
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn btn-labeled btn-outline-secondary"
+                        wire:click="closeGenerateModal"
+                        wire:loading.attr="disabled"
+                        wire:target="generateDeskripsi">
+                        <span class="btn-label">
+                            <i class="mdi mdi-close"></i>
+                        </span>
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-labeled btn-primary"
+                        wire:click="generateDeskripsi"
+                        wire:loading.attr="disabled"
+                        wire:target="generateDeskripsi">
+                        <span class="btn-label">
+                            <i class="mdi mdi-loading mdi-spin d-none"
+                                wire:loading.class.remove="d-none"
+                                wire:target="generateDeskripsi">
+                            </i>
+                            <i class="mdi mdi-check"
+                                wire:loading.class="d-none"
+                                wire:target="generateDeskripsi">
+                            </i>
+                        </span>
+                        <span wire:loading.class="d-none" wire:target="generateDeskripsi">
+                            Generate
+                        </span>
+                        <span class="d-none" wire:loading.class.remove="d-none" wire:target="generateDeskripsi">
+                            Memproses...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Loading Overlay --}}
     <div wire:loading.flex
-        wire:target="saveNilai,searchPelajar"
+        wire:target="saveNilai,searchPelajar,generateDeskripsi"
         class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center"
         style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: none;">
         <div class="spinner-border text-primary" role="status">
@@ -408,6 +488,46 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Inisialisasi Modal Generate
+        const generateModalEl = document.getElementById('generateModal');
+        let generateModal = null;
+
+        if (typeof bootstrap !== 'undefined' && generateModalEl) {
+            generateModal = new bootstrap.Modal(generateModalEl, {
+                backdrop: 'static',
+                keyboard: true
+            });
+        }
+
+        // Event Listeners for Modal
+        window.addEventListener('show-generate-modal', event => {
+            const data = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            document.getElementById('modal-count-nilai').textContent = data.countPelajarWithNilai || 0;
+            document.getElementById('modal-count-kosong').textContent = data.countDeskripsiKosong || 0;
+            document.getElementById('modal-count-template').textContent = data.countTemplateAvailable || 0;
+
+            if (generateModal) {
+                generateModal.show();
+            }
+        });
+
+        window.addEventListener('hide-generate-modal', event => {
+            if (generateModal) {
+                generateModal.hide();
+            }
+        });
+
+        // Function untuk menampilkan deskripsi lengkap
+        window.showFullDeskripsi = function(namaPelajar, deskripsi) {
+            Swal.fire({
+                title: 'Deskripsi Capaian - ' + namaPelajar,
+                html: '<div style="text-align: left; white-space: pre-wrap;">' + deskripsi + '</div>',
+                width: '600px',
+                confirmButtonText: 'Tutup',
+                confirmButtonColor: '#3085d6',
+            });
+        };
 
         // ✅ Function untuk handle delete confirmation dengan loading state
         window.confirmDeleteNilai = function(pelajarId) {
@@ -422,7 +542,7 @@
                 cancelButtonColor: '#3085d6',
             }).then(result => {
                 if (result.isConfirmed) {
-                    // ✅ Tampilkan loading pada tombol spesifik
+                    // Tampilkan loading pada tombol spesifik
                     const btn = document.getElementById(`delete-btn-${pelajarId}`);
                     if (btn) {
                         btn.disabled = true;
@@ -438,6 +558,12 @@
         // Handler untuk response dari backend
         window.addEventListener('swal:success', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            // Jika response adalah hasil dari delete, muat ulang halaman untuk menghapus loading state
+            if (detail && detail.text && detail.text.includes('Nilai berhasil dihapus')) {
+                // Tidak perlu reload, karena Livewire sudah me-render ulang, cukup pastikan spinner hilang
+                // Logika ini sudah ditangani oleh Livewire render, jadi biarkan saja.
+            }
 
             if (typeof detail === 'string') {
                 Swal.fire({

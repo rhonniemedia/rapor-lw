@@ -219,7 +219,7 @@
                                     </th>
                                     <th width="35%">
                                         <p class="mb-0">Capaian</p>
-                                        <small>Telah atau Belum Tercapai</small>
+                                        <small>Deskripsi Capaian Tersimpan</small>
                                     </th>
                                     <th width="5%">
                                         <p class="mb-0">Aksi</p>
