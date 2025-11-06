@@ -55,7 +55,7 @@
                         </span>
                     </td>
                     <td style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 300px;">
-                        {{ $template['deskripsi'] }}
+                        <p class="mb-0"><span class="text-muted">{{ $template['deskripsi'] }}</span></p>
                     </td>
                     @if ($index === 0)
                     <td rowspan="{{ $rowspan }}">

@@ -23,9 +23,7 @@
     <div class="card border-success shadow-sm mb-4">
         <div class="card-body">
             <div class="row g-4">
-                <!-- Kolom 1 -->
                 <div class="col-md-4">
-                    <!-- Kurikulum -->
                     <div class="d-flex align-items-center mb-3">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
@@ -39,7 +37,6 @@
                         </div>
                     </div>
 
-                    <!-- Tahun Ajaran -->
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
@@ -54,9 +51,7 @@
                     </div>
                 </div>
 
-                <!-- Kolom 2 -->
                 <div class="col-md-4">
-                    <!-- Rombel -->
                     <div class="d-flex align-items-center mb-3">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
@@ -70,7 +65,6 @@
                         </div>
                     </div>
 
-                    <!-- Wali Kelas -->
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
@@ -85,9 +79,7 @@
                     </div>
                 </div>
 
-                <!-- Kolom 3 -->
                 <div class="col-md-4">
-                    <!-- Guru Mata Pelajaran -->
                     <div class="d-flex align-items-center mb-3">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
@@ -105,7 +97,6 @@
                         </div>
                     </div>
 
-                    <!-- Mata Pelajaran -->
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-danger rounded-3"
                             style="width: 36px; height: 36px;">
@@ -140,12 +131,13 @@
     @if($rombel && $semesterAktif)
     <div class="card shadow-sm mb-4">
         <div class="card-body">
+            <div class="page-header mb-0 border-bottom mb-3">
+                <div class="d-flex align-items-center">
+                    <h5 class="text-dark"><i class="mdi mdi-filter"></i> Filter dan Generate Data</h5>
+                </div>
+            </div>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">
-                        <i class="mdi mdi-book-open-page-variant me-1"></i>
-                        Pilih Mata Pelajaran <span class="text-danger">*</span>
-                    </label>
                     <select wire:model.live="selectedRombelPengajarId" class="form-select">
                         <option value="">-- Pilih Mata Pelajaran --</option>
                         @foreach($mataPelajaranList as $rp)
@@ -159,15 +151,24 @@
                     </select>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">
-                        <i class="mdi mdi-magnify me-1"></i> Cari Siswa
-                    </label>
+                <div class="col-md-6 d-flex align-items-start gap-2">
                     <input type="text"
                         wire:model.live.debounce.300ms="searchPelajar"
                         class="form-control"
-                        placeholder="Nama, NIS, atau NISN..."
+                        placeholder="Cari nama atau nomor induk..."
                         @if(!$selectedRombelPengajarId) disabled @endif>
+
+                    {{-- TOMBOL GENERATE CAPAIAN DITAMBAHKAN --}}
+                    <button
+                        type="button"
+                        class="btn btn-outline-primary"
+                        wire:click="openGenerateModal"
+                        wire:key="btn-generate-capaian"
+                        title="Generate Capaian Kompetensi"
+                        @if(!$selectedRombelPengajarId) disabled @endif
+                        style="width: 2.5rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="mdi mdi-auto-fix"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -188,7 +189,7 @@
                         <p class="mb-0">No</p>
                         <small>Urut</small>
                     </th>
-                    <th width="40%">
+                    <th width="30%">
                         <p class="mb-0">Nama Lengkap</p>
                         <small>Nomor Induk Sekolah & Nasional</small>
                     </th>
@@ -200,7 +201,7 @@
                         <p class="mb-0">Nilai</p>
                         <small>Tersimpan</small>
                     </th>
-                    <th width="30%">
+                    <th width="40%">
                         <p class="mb-0">Capaian Kompetensi</p>
                         <small>Telah atau Belum Tercapai</small>
                     </th>
@@ -242,7 +243,27 @@
                         <span class="text-muted">-</span>
                         @endif
                     </td>
-                    <td></td>
+                    <td style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 300px;">
+                        @if($pelajar->capaian_kompetensi)
+                        @php
+                        $capaian = $pelajar->capaian_kompetensi;
+                        @endphp
+                        @if (strlen($capaian) > 100)
+                        <p class="mb-0">
+                            <a href="javascript:void(0)"
+                                onclick="showFullCapaian('{{ addslashes($pelajar->nama_lengkap) }}', `{{ addslashes($capaian) }}`)"
+                                class="fs-7 text-muted text-decoration-none"
+                                title="Klik untuk lihat selengkapnya">
+                                {{ Str::limit($capaian, 100) }}
+                            </a>
+                        </p>
+                        @else
+                        <span class="fs-7 text-muted">{{ $capaian }}</span>
+                        @endif
+                        @else
+                        <span class="text-muted">-</span>
+                        @endif
+                    </td>
                     <td>
                         @if($pelajar->nilai_sekarang)
                         <button type="button"
@@ -281,15 +302,16 @@
     <div class="d-flex justify-content-end mt-3">
         <button type="button"
             class="btn btn-labeled btn-outline-secondary me-2"
-            wire:click="resetNilai"
+            wire:click="confirmResetNilai"
             wire:loading.attr="disabled"
-            wire:target="resetNilai">
+            wire:target="resetNilai, confirmResetNilai">
             <span class="btn-label">
                 <i class="mdi mdi-delete-sweep-outline"></i>
             </span>
             Reset
         </button>
 
+        {{-- WIRE:CLICK DIUBAH DARI confirmSaveNilai MENJADI saveNilai --}}
         <button type="button"
             class="btn btn-labeled btn-primary"
             wire:click="saveNilai"
@@ -329,11 +351,168 @@
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
+
+    {{-- MODAL GENERATE CAPAIAN --}}
+    <div
+        class="modal fade"
+        id="generateModal"
+        tabindex="-1"
+        aria-labelledby="generateModalLabel"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="generateModalLabel">
+                        <i class="mdi mdi-auto-fix me-2"></i>
+                        Generate Capaian Kompetensi
+                    </h5>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <h6 class="alert-heading mb-2">
+                            <i class="mdi mdi-information-outline me-2"></i>
+                            Informasi Data
+                        </h6>
+                        <ul class="mb-0 ps-3">
+                            <li>Pelajar dengan nilai tersimpan: <strong><span id="modal-count-nilai">0</span> orang</strong></li>
+                            <li>Capaian yang belum terisi: <strong><span id="modal-count-kosong">0</span> orang</strong></li>
+                            <li>Template tersedia: <strong><span id="modal-count-template">0</span> template</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih Mode Generate:</label>
+                        <div class="form-check mb-2">
+                            <input
+                                class="form-check-input"
+                                type="radio"
+                                wire:model="generateMode"
+                                value="empty"
+                                id="modeEmpty">
+                            <label class="form-check-label" for="modeEmpty">
+                                <strong>Generate Capaian Kosong</strong>
+                                <br>
+                                <small class="text-muted">
+                                    Hanya mengisi capaian yang masih kosong/NULL (<span id="modal-count-kosong-2">0</span> pelajar)
+                                </small>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input
+                                class="form-check-input"
+                                type="radio"
+                                wire:model="generateMode"
+                                value="all"
+                                id="modeAll">
+                            <label class="form-check-label" for="modeAll">
+                                <strong>Regenerate Semua Capaian</strong>
+                                <br>
+                                <small class="text-muted">
+                                    Menimpa semua capaian, termasuk yang sudah ada (<span id="modal-count-nilai-2">0</span> pelajar)
+                                </small>
+                            </label>
+                        </div>
+                        @error('generateMode')
+                        <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+
+                    @if($generateMode === 'all')
+                    <div class="alert alert-warning mb-0">
+                        <i class="mdi mdi-alert me-2"></i>
+                        <strong>Perhatian!</strong> Mode ini akan menimpa semua capaian yang sudah ada sebelumnya.
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn btn-labeled btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                        <span class="btn-label">
+                            <i class="mdi mdi-close"></i>
+                        </span>
+                        Batal
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-labeled btn-primary"
+                        wire:click="generateCapaian"
+                        wire:loading.attr="disabled"
+                        wire:target="generateCapaian">
+                        <span class="btn-label">
+                            <i class="mdi mdi-loading mdi-spin d-none"
+                                wire:loading.class.remove="d-none"
+                                wire:target="generateCapaian">
+                            </i>
+                            <i class="mdi mdi-check"
+                                wire:loading.class="d-none"
+                                wire:target="generateCapaian">
+                            </i>
+                        </span>
+                        <span wire:loading.class="d-none" wire:target="generateCapaian">
+                            Generate
+                        </span>
+                        <span class="d-none" wire:loading.class.remove="d-none" wire:target="generateCapaian">
+                            Memproses...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // INISIALISASI MODAL GENERATE
+        const generateModalEl = document.getElementById('generateModal');
+        let generateModal = null;
+
+        if (typeof bootstrap !== 'undefined' && generateModalEl) {
+            generateModal = new bootstrap.Modal(generateModalEl, {
+                backdrop: 'static',
+                keyboard: true
+            });
+
+            // Reset mode ke 'empty' saat modal ditutup
+            generateModalEl.addEventListener('hidden.bs.modal', function() {
+                // Menggunakan Livewire.dispatch('$set', ...) untuk Livewire 3
+                Livewire.dispatch('$set', ['generateMode', 'empty']);
+            });
+        }
+
+        // ✅ Listener untuk membuka modal
+        window.addEventListener('show-generate-modal', event => {
+            const data = event.detail[0] || event.detail;
+
+            // Update nilai di modal
+            document.getElementById('modal-count-nilai').textContent = data.countPelajarWithNilai || 0;
+            document.getElementById('modal-count-nilai-2').textContent = data.countPelajarWithNilai || 0;
+            document.getElementById('modal-count-kosong').textContent = data.countCapaianKosong || 0;
+            document.getElementById('modal-count-kosong-2').textContent = data.countCapaianKosong || 0;
+            document.getElementById('modal-count-template').textContent = data.countTemplateAvailable || 0;
+
+            if (generateModal) {
+                generateModal.show();
+            }
+        });
+
+        // ✅ Listener untuk menutup modal
+        window.addEventListener('hide-generate-modal', event => {
+            if (generateModal) {
+                generateModal.hide();
+            }
+        });
 
         // ✅ Function untuk handle delete confirmation dengan loading state
         window.confirmDeleteNilai = function(pelajarId) {
@@ -348,7 +527,7 @@
                 cancelButtonColor: '#3085d6',
             }).then(result => {
                 if (result.isConfirmed) {
-                    // ✅ Tampilkan loading pada tombol spesifik
+                    // Tampilkan loading pada tombol spesifik
                     const btn = document.getElementById(`delete-btn-${pelajarId}`);
                     if (btn) {
                         btn.disabled = true;
@@ -361,7 +540,7 @@
             });
         };
 
-        // Handler untuk response dari backend
+        // SweetAlert Handlers
         window.addEventListener('swal:success', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
 
@@ -420,6 +599,53 @@
                     text: detail.text ?? '',
                     timer: 2000,
                     showConfirmButton: false
+                });
+            }
+        });
+
+        // Handler untuk konfirmasi umum (Simpan/Reset) - Tetap dipertahankan untuk RESET dan DELETE
+        window.addEventListener('swal:confirm', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            Swal.fire({
+                title: detail.title ?? 'Konfirmasi',
+                text: detail.text ?? 'Anda yakin?',
+                icon: detail.icon ?? 'warning',
+                showCancelButton: true,
+                confirmButtonColor: detail.confirmButtonColor ?? '#3085d6',
+                cancelButtonColor: detail.cancelButtonColor ?? '#d33',
+                confirmButtonText: detail.confirmButtonText ?? 'Ya',
+                cancelButtonText: detail.cancelButtonText ?? 'Batal',
+            }).then(result => {
+                if (result.isConfirmed) {
+                    if (detail.nextEvent) {
+                        Livewire.dispatch(detail.nextEvent);
+                    }
+                    if (detail.nextAction) {
+                        Livewire.dispatch(detail.nextAction, [detail.id]);
+                    }
+                }
+            });
+        });
+
+        window.addEventListener('swal:warning', event => {
+            let detail = event.detail.params ?? event.detail[0] ?? event.detail;
+
+            if (typeof detail === 'string') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Peringatan',
+                    html: detail.replace(/\n/g, '<br>'),
+                    confirmButtonText: 'Tutup',
+                    width: '600px',
+                });
+            } else if (typeof detail === 'object' && detail !== null) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: detail.title ?? 'Peringatan',
+                    html: (detail.text ?? '').replace(/\n/g, '<br>'),
+                    confirmButtonText: 'Tutup',
+                    width: '600px',
                 });
             }
         });
