@@ -12,9 +12,6 @@
             </span>
         </h3>
         <div class="d-flex">
-            <!-- <button type="button" class="btn btn-labeled btn-info" onclick="Livewire.dispatch('createRombel')">
-                <span class="btn-label"><i class="mdi mdi-note-plus"></i></span>Tambah
-            </button> -->
         </div>
     </div>
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -42,6 +43,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_teacher' => 'boolean',
+        'is_guru_agama' => 'boolean',
     ];
 
     // --- ACCESSOR/MUTATOR UNTUK ENKRIPSI DAN HASHING ---
@@ -57,14 +60,21 @@ class User extends Authenticatable
                 try {
                     return decrypt($value);
                 } catch (\Exception $e) {
+                    Log::error('Error decrypting email: ' . $e->getMessage());
                     return null;
                 }
             },
             set: function (?string $value) {
                 if (empty($value)) {
-                    return null;
+                    return [
+                        'email' => null,
+                        'email_hash' => null,
+                    ];
                 }
-                return encrypt($value);
+                return [
+                    'email' => encrypt($value),
+                    'email_hash' => hash('sha256', Str::lower($value)),
+                ];
             }
         );
     }
@@ -80,14 +90,21 @@ class User extends Authenticatable
                 try {
                     return decrypt($value);
                 } catch (\Exception $e) {
+                    Log::error('Error decrypting nip: ' . $e->getMessage());
                     return null;
                 }
             },
             set: function (?string $value) {
                 if (empty($value)) {
-                    return null;
+                    return [
+                        'nip' => null,
+                        'nip_hash' => null,
+                    ];
                 }
-                return encrypt($value);
+                return [
+                    'nip' => encrypt($value),
+                    'nip_hash' => hash('sha256', $value),
+                ];
             }
         );
     }
@@ -103,6 +120,7 @@ class User extends Authenticatable
                 try {
                     return decrypt($value);
                 } catch (\Exception $e) {
+                    Log::error('Error decrypting telephone: ' . $e->getMessage());
                     return null;
                 }
             },
@@ -116,7 +134,8 @@ class User extends Authenticatable
     }
 
     /**
-     * Enkripsi spesialisasi agama
+     * PERBAIKAN: Enkripsi spesialisasi agama dengan nama method yang benar (snake_case)
+     * Nama method harus sesuai dengan nama kolom database
      */
     protected function spesialisasiAgama(): Attribute
     {
@@ -126,43 +145,27 @@ class User extends Authenticatable
                 try {
                     return decrypt($value);
                 } catch (\Exception $e) {
+                    Log::error('Error decrypting spesialisasi_agama: ' . $e->getMessage());
                     return null;
                 }
             },
             set: function (?string $value) {
                 if (empty($value)) {
-                    return null;
+                    return [
+                        'spesialisasi_agama' => null,
+                        'spesialisasi_agama_hash' => null,
+                    ];
                 }
-                return encrypt($value);
+                return [
+                    'spesialisasi_agama' => encrypt($value),
+                    'spesialisasi_agama_hash' => hash('sha256', Str::lower($value)),
+                ];
             }
         );
     }
 
     protected static function booted()
     {
-        static::saving(function ($user) {
-            // Hash email untuk login/pencarian
-            if (!empty($user->email)) {
-                $user->email_hash = hash('sha256', Str::lower($user->email));
-            } else {
-                $user->email_hash = null;
-            }
-
-            // Hash NIP untuk login/pencarian
-            if (!empty($user->nip)) {
-                $user->nip_hash = hash('sha256', $user->nip);
-            } else {
-                $user->nip_hash = null;
-            }
-
-            // Hash spesialisasi agama
-            if (!empty($user->spesialisasi_agama)) {
-                $user->spesialisasi_agama_hash = hash('sha256', Str::lower($user->spesialisasi_agama));
-            } else {
-                $user->spesialisasi_agama_hash = null;
-            }
-        });
-
         static::creating(function ($user) {
             // Generate slug jika belum diisi
             if (empty($user->slug)) {

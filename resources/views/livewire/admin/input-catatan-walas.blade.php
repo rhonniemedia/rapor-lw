@@ -184,9 +184,11 @@
                             <tbody>
                                 @forelse ($pelajarData as $index => $pelajar)
                                 <tr>
-                                    <td class="text-center align-top">{{ $pelajarData->firstItem() + $index }}</td>
+                                    <td class="text-center align-top">
+                                        <p class="mb-0">{{ $pelajarData->firstItem() + $index }}</p>
+                                    </td>
                                     <td class="align-top">
-                                        <strong>{{ $pelajar->nama_lengkap }}</strong><br>
+                                        <p class="mb-0"><span class="font-weight-medium">{{ $pelajar->nama_lengkap }}</span></p>
                                         <small class="text-muted">{{ $pelajar->nomor_induk }} | {{ $pelajar->nisn }}</small>
                                     </td>
                                     <td class=" align-top">
