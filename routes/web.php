@@ -71,7 +71,7 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
 
     //  Class Management
     Route::prefix('class')->group(function () {
-        Route::get('/list', fn() => view('contents.admin.rombel', ['title' => 'Daftar Rombel']));
+        Route::get('/list', fn() => view('contents.admin.rombel', ['title' => 'Daftar Rombel']))->name('rombel.list');
         Route::get('/teachers', fn() => view('contents.admin.pendidik', ['title' => 'Daftar Pendidik']));
         Route::get('/detail/{id}', function ($id) {
             return view('contents.admin.rombel-pelajar', [

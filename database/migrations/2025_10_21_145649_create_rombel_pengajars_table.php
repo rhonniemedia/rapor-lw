@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('rombel_id');
             $table->uuid('mata_pelajaran_id');
-            $table->uuid('guru_id');
+            $table->uuid('guru_id')->nullable();
             $table->timestamps();
 
             // Foreign keys
@@ -32,7 +32,7 @@ return new class extends Migration
             $table->foreign('guru_id')
                 ->references('id')
                 ->on('users')
-                ->onDelete('cascade');
+                ->onDelete('set null');
 
             // Unique constraint: satu mata pelajaran hanya bisa diajar oleh satu guru di satu rombel
             $table->unique(['rombel_id', 'mata_pelajaran_id'], 'unique_rombel_mapel');

@@ -97,7 +97,8 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('homeroom/teaching') ? 'active' : '' }}" href="{{url('homeroom/teaching')}}">
+            <a class="nav-link {{ Request::is('homeroom/teaching*') ? 'active' : '' }}"
+                href="{{ url('homeroom/teaching') }}">
                 <i class="mdi mdi-ungroup menu-icon"></i>
                 <span class="menu-title">Rombongan Belajar</span>
             </a>

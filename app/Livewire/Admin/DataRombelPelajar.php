@@ -4,12 +4,13 @@ namespace App\Livewire\Admin;
 
 use Log;
 use App\Models\User;
+use App\Models\Nilai;
 use App\Models\Rombel;
 use App\Models\Pelajar;
 use Livewire\Component;
 use Illuminate\Support\Str;
-use Livewire\WithPagination;
 
+use Livewire\WithPagination;
 use App\Models\MataPelajaran;
 use App\Models\RombelPelajar;
 use App\Models\RombelPengajar;
@@ -168,8 +169,13 @@ class DataRombelPelajar extends Component
     // Fungsi baru untuk validasi agama
     private function validateAgamaCompatibility()
     {
-        if (empty($this->mata_pelajaran_id) || empty($this->guru_id)) {
-            return; // Skip jika field kosong, akan ditangani oleh rules bawaan
+        if (empty($this->mata_pelajaran_id)) {
+            return true; // Mata pelajaran wajib diisi, jika kosong biarkan rules yang menangani
+        }
+
+        // 🚨 MODIFIKASI: Jika guru_id kosong/null, anggap valid (diizinkan tanpa guru)
+        if (empty($this->guru_id)) {
+            return true;
         }
 
         $mapel = MataPelajaran::findOrFail($this->mata_pelajaran_id);
@@ -212,10 +218,13 @@ class DataRombelPelajar extends Component
             return;
         }
 
+        // 🚨 SOLUSI: Konversi string kosong menjadi NULL sebelum create
+        $guruIdToStore = $this->guru_id === '' ? null : $this->guru_id;
+
         RombelPengajar::create([
             'rombel_id' => $this->rombelId,
             'mata_pelajaran_id' => $this->mata_pelajaran_id,
-            'guru_id' => $this->guru_id,
+            'guru_id' => $guruIdToStore,
         ]);
 
         $this->dispatch('closeModalRombelPengajar');
@@ -255,9 +264,12 @@ class DataRombelPelajar extends Component
 
         $data = RombelPengajar::findOrFail($this->rombel_pengajar_id);
 
+        // 🚨 SOLUSI: Konversi string kosong menjadi NULL sebelum update
+        $guruIdToUpdate = $this->guru_id === '' ? null : $this->guru_id;
+
         $data->update([
             'mata_pelajaran_id' => $this->mata_pelajaran_id,
-            'guru_id' => $this->guru_id,
+            'guru_id' => $guruIdToUpdate,
         ]);
 
         $this->dispatch('closeModalRombelPengajar');
@@ -280,6 +292,8 @@ class DataRombelPelajar extends Component
 
     public function deleteConfirmedRombelPengajar($id)
     {
+        Nilai::where('rombel_pengajar_id', $id)->delete();
+
         RombelPengajar::findOrFail($id)->delete();
 
         $this->dispatch('swal:success', [
@@ -296,7 +310,7 @@ class DataRombelPelajar extends Component
                 'uuid',
                 'exists:mata_pelajarans,id',
             ],
-            'guru_id' => 'required|uuid|exists:users,id',
+            'guru_id' => 'nullable|uuid|exists:users,id',
         ];
 
         // Unique validation untuk kombinasi rombel + mata pelajaran

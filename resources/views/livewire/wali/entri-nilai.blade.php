@@ -424,12 +424,6 @@
                         @enderror
                     </div>
 
-                    @if($generateMode === 'all')
-                    <div class="alert alert-warning mb-0">
-                        <i class="mdi mdi-alert me-2"></i>
-                        <strong>Perhatian!</strong> Mode ini akan menimpa semua capaian yang sudah ada sebelumnya.
-                    </div>
-                    @endif
                 </div>
                 <div class="modal-footer">
                     <button

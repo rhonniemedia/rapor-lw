@@ -28,7 +28,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    <livewire:wali.kelas-ajar-nilai
+                    <livewire:guru.kelas-ajar-nilai
                         :rombelId="$rombelId"
                         :mataPelajaranId="$mataPelajaranId" />
 

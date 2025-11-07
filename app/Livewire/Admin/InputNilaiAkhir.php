@@ -6,14 +6,15 @@ use App\Models\Nilai;
 use App\Models\Rombel;
 use Livewire\Component;
 use App\Models\TahunAjaran;
+use Illuminate\Support\Str;
 use Livewire\WithPagination;
 use App\Models\RombelPelajar;
 use App\Models\RombelPengajar;
 use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Models\TemplateNilaiCapaian;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 
 class InputNilaiAkhir extends Component
@@ -41,6 +42,7 @@ class InputNilaiAkhir extends Component
     // Main Data
     public $rombel;
     public $guruName = null;
+    public $agamaTerkait = null;
     public $nilaiInput = [];
     public $generateMode = 'empty';
 
@@ -202,6 +204,7 @@ class InputNilaiAkhir extends Component
         if (!$this->selectedRombelPengajarId || !$this->semesterId) {
             $this->nilaiInput = [];
             $this->guruName = null;
+            $this->agamaTerkait = null;
             return;
         }
 
@@ -212,6 +215,9 @@ class InputNilaiAkhir extends Component
             $this->clearNilaiData();
             return;
         }
+
+        // Jika Mata Pelajaran adalah Agama, ambil nilai 'agama_terkait' dari model MataPelajaran.
+        $this->agamaTerkait = $rombelPengajar->mataPelajaran->agama_terkait ?? null;
 
         $this->guruName = $rombelPengajar->guru->name ?? 'N/A';
 
@@ -292,6 +298,20 @@ class InputNilaiAkhir extends Component
 
         $query = RombelPelajar::where('rombel_id', $this->rombelId)
             ->with(['pelajar']);
+
+        // 🚨 MODIFIKASI: Filter Pelajar berdasarkan Agama Terkait
+        if ($this->agamaTerkait) {
+            // 1. Normalisasi string agama dari Mapel (misalnya dari "Islam" menjadi "islam")
+            $agamaFilterNormalized = Str::lower($this->agamaTerkait);
+
+            // 2. Hitung hash dari string yang dinormalisasi tersebut
+            $agamaHashToFind = hash('sha256', $agamaFilterNormalized);
+
+            $query->whereHas('pelajar', function ($q) use ($agamaHashToFind) {
+                // 3. Bandingkan dengan kolom agama_hash di tabel pelajars
+                $q->where('agama_hash', $agamaHashToFind);
+            });
+        }
 
         if (!empty($this->searchPelajar)) {
             $query->whereHas('pelajar', function ($q) {

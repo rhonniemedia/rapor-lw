@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Wali;
+namespace App\Livewire\Guru;
 
 use App\Models\Nilai;
 use App\Models\Rombel;
@@ -147,7 +147,7 @@ class KelasAjar extends Component
             ];
         });
 
-        return view('livewire.wali.kelas-ajar', [
+        return view('livewire.guru.kelas-ajar', [
             'rombels' => $rombels,
         ]);
     }

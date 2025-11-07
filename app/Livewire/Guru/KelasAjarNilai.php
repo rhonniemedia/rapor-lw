@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Wali;
+namespace App\Livewire\Guru;
 
 use App\Models\Nilai;
 use App\Models\Rombel;
@@ -598,7 +598,7 @@ class KelasAjarNilai extends Component
             });
         }
 
-        return view('livewire.wali.kelas-ajar-nilai', [
+        return view('livewire.guru.kelas-ajar-nilai', [
             'pelajarData' => $pelajarData,
             'totalSiswa' => $totalSiswa,
             'cachedNilaiExist' => $this->cachedNilaiExist ?? collect(),

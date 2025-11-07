@@ -5,14 +5,15 @@ namespace App\Livewire\Wali;
 use App\Models\Nilai;
 use App\Models\Rombel;
 use Livewire\Component;
+use Illuminate\Support\Str;
 use Livewire\WithPagination;
 use App\Models\RombelPelajar;
 use App\Models\RombelPengajar;
 use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Models\TemplateNilaiCapaian;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 
 class EntriNilai extends Component
@@ -27,6 +28,7 @@ class EntriNilai extends Component
     public $selectedRombelPengajarId = null;
     public $mataPelajaranList = [];
     public $guruName = null;
+    public $agamaTerkait = null;
 
     // Search & Pagination
     public $searchPelajar = '';
@@ -144,6 +146,7 @@ class EntriNilai extends Component
             $this->nilaiInput = [];
             $this->guruName = null;
             $this->cachedNilaiExist = null;
+            $this->agamaTerkait = null;
             return;
         }
 
@@ -155,10 +158,14 @@ class EntriNilai extends Component
             $this->guruName = null;
             $this->cachedNilaiExist = null;
             $this->selectedRombelPengajarId = null;
+            $this->agamaTerkait = null;
             return;
         }
 
         $this->guruName = $rombelPengajar->guru->name ?? 'N/A';
+
+        // Asumsi: Model MataPelajaran memiliki kolom 'agama_terkait'
+        $this->agamaTerkait = $rombelPengajar->mataPelajaran->agama_terkait ?? null;
 
         $this->cachedNilaiExist = Nilai::where('rombel_pengajar_id', $this->selectedRombelPengajarId)
             ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
@@ -175,6 +182,20 @@ class EntriNilai extends Component
 
         $query = RombelPelajar::where('rombel_id', $this->rombel->id)
             ->with(['pelajar']);
+
+        // 🚨 MODIFIKASI: Filter Pelajar berdasarkan Hash Agama
+        if ($this->agamaTerkait) {
+            // 1. Normalisasi string agama dari Mata Pelajaran
+            $agamaFilterNormalized = Str::lower($this->agamaTerkait);
+
+            // 2. Hitung hash yang dicari
+            $agamaHashToFind = hash('sha256', $agamaFilterNormalized);
+
+            $query->whereHas('pelajar', function ($q) use ($agamaHashToFind) {
+                // 3. Bandingkan dengan kolom agama_hash di tabel pelajars
+                $q->where('agama_hash', $agamaHashToFind);
+            });
+        }
 
         if (!empty($this->searchPelajar)) {
             $query->whereHas('pelajar', function ($q) {

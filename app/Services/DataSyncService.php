@@ -96,7 +96,7 @@ class DataSyncService
                 [
                     'tahun_ajaran_id' => $item['tahun_ajaran_id'] ?? null,
                     'jurusan_id' => $item['jurusan_id'] ?? null,
-                    'tahun_ajaran_kurikulum_id' => null, // dikosongkan saat sync dari API
+                    // 'tahun_ajaran_kurikulum_id' => null, // dikosongkan saat sync dari API
                     'wali_kelas_slug' => $item['wali_kelas'] ?? null,
                     'tingkat' => $this->getTingkatFromNama($item['nama_rombel'] ?? ''),
                     'nama' => $item['nama_rombel'] ?? null,

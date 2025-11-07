@@ -57,17 +57,17 @@
             <table class="table table-hover mb-0">
                 <thead class="bg-light">
                     <tr>
-                        <th style="width: 35%;">
+                        <th style="width: 30%;">
                             <p class="mb-0">Tenaga Pendidik</p>
                             <small>Nama | Kontak</small>
 
                         </th>
-                        <th style="width: 35%;">
+                        <th style="width: 30%;">
                             <p class="mb-0">Penugasan</p>
                             <small>Mata Pelajaran | Rombel</small>
 
                         </th>
-                        <th style="width: 20%;">
+                        <th style="width: 30%;">
                             <p class="mb-0">Status</p>
                             <small>Aktif | Nonaktif</small>
 
@@ -162,12 +162,12 @@
                                 <label class="form-label">Mata Pelajaran Agama <span class="text-danger">*</span></label>
                                 <select class="form-select" wire:model.live="editSpesialisasiAgama">
                                     <option value="">-- Pilih --</option>
-                                    <option value="Islam">Islam</option>
-                                    <option value="Kristen">Kristen</option>
-                                    <option value="Katolik">Katolik</option>
-                                    <option value="Hindu">Hindu</option>
-                                    <option value="Buddha">Buddha</option>
-                                    <option value="Konghucu">Konghucu</option>
+                                    <option value="islam">Islam</option>
+                                    <option value="kristen">Kristen</option>
+                                    <option value="katolik">Katolik</option>
+                                    <option value="hindu">Hindu</option>
+                                    <option value="buddha">Buddha</option>
+                                    <option value="konghucu">Konghucu</option>
                                 </select>
                             </div>
                             @endif

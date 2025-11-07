@@ -21,7 +21,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    <livewire:wali.kelas-ajar />
+                    <livewire:guru.kelas-ajar />
 
                 </div>
             </div>

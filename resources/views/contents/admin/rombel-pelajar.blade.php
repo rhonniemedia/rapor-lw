@@ -11,6 +11,13 @@
                 Detil
             </span>
         </h3>
+        <div class="d-flex">
+            <form action="{{ route('admin.rombel.list') }}" method="get" style="display:inline">
+                <button type="submit" class="btn btn-labeled btn-success">
+                    <span class="btn-label"><i class="mdi mdi-arrow-left-bold"></i></span>Kembali
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Ekstrakurikuler -->
