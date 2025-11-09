@@ -2,7 +2,7 @@
     <!-- ========================= -->
     <!-- BAGIAN FILTER DATA -->
     <!-- ========================= -->
-    <div class="row mb-2">
+    <div class="row">
         <div class="col-xl-12 col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
