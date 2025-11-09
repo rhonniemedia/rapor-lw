@@ -1,5 +1,7 @@
 <?php
 
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Livewire\Admin\GeneratePdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -94,7 +96,7 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
     Route::prefix('finalization')->group(function () {
         Route::get('/settings', fn() => view('contents.admin.pengaturan', ['title' => 'Pengaturan Rapor']));
         Route::get('/preview', fn() => view('contents.admin.preview', ['title' => 'Preview Rapor']));
-        Route::get('/pdf', fn() => view('contents.admin.pdf', ['title' => 'Generate PDF']));
+        Route::get('/generate', fn() => view('contents.admin.generate', ['title' => 'Generate PDF']));
         Route::get('/archive', fn() => view('contents.admin.arsip', ['title' => 'Arsip Rapor']));
     });
 

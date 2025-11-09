@@ -186,25 +186,25 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('home/nilai-akhir') ? 'active' : '' }}" href="{{url('home/nilai-akhir')}}">
+            <a class="nav-link {{ request()->url() === url('admin/finalization/settings') ? 'active' : '' }}" href="{{url('admin/finalization/settings')}}">
                 <i class="mdi mdi-settings menu-icon"></i>
                 <span class="menu-title">Pengaturan</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('home/kokurikuler') ? 'active' : '' }}" href="{{url('home/kokurikuler')}}">
+            <a class="nav-link {{ request()->url() === url('admin/finalization/preview') ? 'active' : '' }}" href="{{url('admin/finalization/preview')}}">
                 <i class="mdi mdi-school-outline menu-icon"></i>
                 <span class="menu-title">Preview</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('home/keharidan') ? 'active' : '' }}" href="{{url('home/keharidan')}}">
+            <a class="nav-link {{ request()->url() === url('admin/finalization/generate') ? 'active' : '' }}" href="{{url('admin/finalization/generate')}}">
                 <i class="mdi mdi-calendar-text-outline menu-icon"></i>
                 <span class="menu-title">Generate PDF</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('home/catatan-wali-kelas') ? 'active' : '' }}" href="{{url('home/catatan-wali-kelas')}}">
+            <a class="nav-link {{ request()->url() === url('admin/finalization/archive') ? 'active' : '' }}" href="{{url('admin/finalization/archive')}}">
                 <i class="mdi mdi-note-text-outline menu-icon"></i>
                 <span class="menu-title">Arsip</span>
             </a>
