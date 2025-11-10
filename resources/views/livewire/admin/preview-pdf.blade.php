@@ -135,9 +135,12 @@
 
                     <!-- Preview PDF -->
                     <div class="ratio ratio-16x9 border rounded shadow-sm mb-3">
-                        <iframe src="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" title="Preview Laporan Hasil Belajar" frameborder="0"></iframe>
+                        <iframe
+                            src="{{ $this->pdfUrl }}"
+                            title="Preview Laporan Hasil Belajar Dummy"
+                            frameborder="0">
+                        </iframe>
                     </div>
-
                 </div>
             </div>
         </div>

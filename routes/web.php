@@ -4,6 +4,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Livewire\Admin\GeneratePdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PdfController;
+use App\Livewire\Template\PreviewRapor;
 
 // Redirect root ke login
 Route::get('/', function () {
@@ -160,3 +162,5 @@ Route::middleware(['auth', 'role:guru'])->prefix('teacher')->name('guru.')->grou
 
     // Route guru lainnya...
 });
+
+Route::get('/rapor/preview-dummy', [PdfController::class, 'generateDummyPdf'])->name('report.dummy');
