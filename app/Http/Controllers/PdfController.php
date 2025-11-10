@@ -2,11 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Dompdf\Dompdf;
-use Dompdf\Options;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\View;
 
 class PdfController extends Controller
 {
@@ -26,13 +23,30 @@ class PdfController extends Controller
             return response('Error saat mendekode data: ' . $e->getMessage(), 500);
         }
 
-        // 3. Render PDF menggunakan Laravel-DomPDF
-        $pdf = Pdf::loadView('Livewire.admin.preview-file-pdf', $data);
+        // 3. Pisahkan nilai berdasarkan kelompok
+        $nilaiKelompokA = [];
+        $nilaiKelompokB = [];
 
-        // 4. Set paper size
+        if (isset($data['nilai']) && is_array($data['nilai'])) {
+            foreach ($data['nilai'] as $nilai) {
+                if ($nilai['kelompok'] === 'A. Kelompok Mata Pelajaran') {
+                    $nilaiKelompokA[] = $nilai;
+                } else {
+                    $nilaiKelompokB[] = $nilai;
+                }
+            }
+        }
+
+        $data['nilai_kelompok_a'] = $nilaiKelompokA;
+        $data['nilai_kelompok_b'] = $nilaiKelompokB;
+
+        // 4. Render PDF menggunakan Laravel-DomPDF
+        $pdf = Pdf::loadView('livewire.admin.preview-file-pdf', $data);
+
+        // 5. Set paper size
         $pdf->setPaper('A4', 'portrait');
 
-        // 5. Stream PDF ke browser
-        return $pdf->stream('dummy_raport.pdf');
+        // 6. Stream PDF ke browser
+        return $pdf->stream('raport_' . $data['nama'] . '.pdf');
     }
 }

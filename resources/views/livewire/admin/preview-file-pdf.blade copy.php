@@ -1,20 +1,9 @@
 <div>
     <style>
-        /* 1. Atur margin halaman bawaan dompdf ke 0 */
-        @page {
-            margin: 0;
-        }
-
         body {
             font-family: Arial, sans-serif;
             font-size: 14px;
-            margin: 15mm;
-
-            /* Tambahkan ini untuk memastikan tidak ada padding atas bawaan */
-            padding-top: 0;
-
-            /* Atur ulang margin atas secara eksplisit */
-            margin-top: 1cm !important;
+            margin: 20px;
         }
 
         table {
@@ -26,12 +15,15 @@
         td {
             padding: 4px;
             vertical-align: top;
+            /* td tetap top untuk content */
         }
 
         th {
             padding: 4px;
             vertical-align: middle;
+            /* th di tengah vertikal */
             text-align: center;
+            /* th di tengah horizontal */
             background-color: #e9e7e7ff;
         }
 
@@ -50,6 +42,19 @@
             text-align: center;
         }
 
+        /* --- Tambahan perataan dan layout --- */
+        .table-half {
+            width: 49%;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .table-space {
+            width: 2%;
+            display: inline-block;
+        }
+
+        /* ===== STYLE UNTUK TITLE HEADER ===== */
         .title-header {
             font-size: 18px;
             font-weight: bold;
@@ -68,27 +73,27 @@
         <tbody>
             <tr>
                 <td style="width: 15%;"><b>Nama Murid</b></td>
-                <td style="width: 45%;">: {{ $nama ?? '-' }}</td>
+                <td style="width: 45%;">: AHMAD FIKRI</td>
                 <td style="width: 15%;"><b>Kelas</b></td>
-                <td style="width: 25%;">: {{ $kelas ?? '-' }}</td>
+                <td style="width: 25%;">: X RPL 1</td>
             </tr>
             <tr>
                 <td><b>NIS/NISN</b></td>
-                <td>: {{ $nis ?? '-' }} / {{ $nisn ?? '-' }}</td>
+                <td>: 123456 / 0058745623</td>
                 <td><b>Fase</b></td>
-                <td>: {{ $fase ?? '-' }}</td>
+                <td>: E</td>
             </tr>
             <tr>
                 <td><b>Sekolah</b></td>
-                <td>: {{ $sekolah ?? '-' }}</td>
+                <td>: SMKN 1 Rejang Lebong</td>
                 <td><b>Semester</b></td>
-                <td>: {{ $semester ?? '-' }}</td>
+                <td>: 1 (Satu)</td>
             </tr>
             <tr>
                 <td><b>Alamat</b></td>
-                <td>: {{ $alamat ?? '-' }}</td>
+                <td>: Jl. Merdeka No. 10, Curup</td>
                 <td><b>Tahun Ajaran</b></td>
-                <td>: {{ $tahun_ajaran ?? '-' }}</td>
+                <td>: 2025/2026</td>
             </tr>
         </tbody>
     </table>
@@ -104,52 +109,56 @@
                 <th style="width: 8%;">Nilai Akhir</th>
                 <th style="width: 57%;">Capaian Kompetensi</th>
             </tr>
-
-            {{-- Kelompok A --}}
-            @if(isset($nilai_kelompok_a) && count($nilai_kelompok_a) > 0)
             <tr>
                 <td colspan="4"><strong>A. Kelompok Mata Pelajaran</strong></td>
             </tr>
-            @foreach($nilai_kelompok_a as $nilai)
             <tr>
-                <td class="center">{{ $nilai['no'] }}</td>
-                <td>{{ $nilai['mapel'] }}</td>
-                <td class="center">{{ $nilai['nilai'] }}</td>
-                <td>{{ $nilai['capaian'] }}</td>
+                <td class="center">1</td>
+                <td>Pendidikan Agama dan Budi Pekerti</td>
+                <td class="center">88</td>
+                <td>Sangat baik dalam memahami nilai-nilai keagamaan dan moral.</td>
             </tr>
-            @endforeach
-            @endif
-
-            {{-- Kelompok B --}}
-            @if(isset($nilai_kelompok_b) && count($nilai_kelompok_b) > 0)
+            <tr>
+                <td class="center">2</td>
+                <td>Bahasa Indonesia</td>
+                <td class="center">85</td>
+                <td>Mampu menulis dan berbicara dengan baik serta aktif berdiskusi.</td>
+            </tr>
+            <tr>
+                <td class="center">3</td>
+                <td>Matematika</td>
+                <td class="center">79</td>
+                <td>Perlu meningkatkan ketelitian dalam berhitung dan memahami konsep.</td>
+            </tr>
             <tr>
                 <td colspan="4"><strong>B. Mata Pelajaran Kejuruan</strong></td>
             </tr>
-            @foreach($nilai_kelompok_b as $nilai)
             <tr>
-                <td class="center">{{ $nilai['no'] }}</td>
-                <td>{{ $nilai['mapel'] }}</td>
-                <td class="center">{{ $nilai['nilai'] }}</td>
-                <td>{{ $nilai['capaian'] }}</td>
+                <td class="center">1</td>
+                <td>Pemrograman Dasar</td>
+                <td class="center">92</td>
+                <td>Mampu memahami logika pemrograman dan membuat program sederhana.</td>
             </tr>
-            @endforeach
-            @endif
+            <tr>
+                <td class="center">2</td>
+                <td>Sistem Komputer</td>
+                <td class="center">87</td>
+                <td>Menunjukkan pemahaman baik dalam konsep perangkat keras dan lunak.</td>
+            </tr>
         </tbody>
     </table>
 
-    {{-- Kokurikuler --}}
     <table class="bordered">
         <tbody>
             <tr>
                 <th class="center">Kokurikuler</th>
             </tr>
             <tr>
-                <td>{{ $kokurikuler ?? 'Tidak ada catatan kokurikuler.' }}</td>
+                <td>Aktif mengikuti kegiatan pramuka dan literasi sekolah.</td>
             </tr>
         </tbody>
     </table>
 
-    {{-- Ekstrakurikuler --}}
     <table class="bordered">
         <tbody>
             <tr class="center">
@@ -157,19 +166,16 @@
                 <th style="width: 25%;">Ekstrakurikuler</th>
                 <th style="width: 70%;">Keterangan</th>
             </tr>
-            @if(isset($ekstrakurikuler) && count($ekstrakurikuler) > 0)
-            @foreach($ekstrakurikuler as $index => $ekskul)
             <tr>
-                <td class="center">{{ $index + 1 }}</td>
-                <td>{{ $ekskul['nama'] }}</td>
-                <td>{{ $ekskul['keterangan'] }}</td>
+                <td class="center">1</td>
+                <td>Pramuka</td>
+                <td>Baik</td>
             </tr>
-            @endforeach
-            @else
             <tr>
-                <td colspan="3" class="center">Tidak mengikuti ekstrakurikuler</td>
+                <td class="center">2</td>
+                <td>Futsal</td>
+                <td>Sangat Baik</td>
             </tr>
-            @endif
         </tbody>
     </table>
 
@@ -191,29 +197,23 @@
         <tr>
             <!-- Baris 1 Ketidakhadiran -->
             <td style="width: 24%; border: 1px solid #000; padding: 5px;">Sakit</td>
-            <td style="width: 24%; border: 1px solid #000; padding: 5px;">
-                {{ $ketidakhadiran['sakit'] ?? 0 }} Hari
-            </td>
+            <td style="width: 24%; border: 1px solid #000; padding: 5px;">2 Hari</td>
             <td style="border: none;">&nbsp;</td>
             <!-- Catatan dengan rowspan -->
             <td rowspan="3" style="border: 1px solid #000; padding: 5px; vertical-align: top;">
-                {{ $catatan_wali ?? 'Tidak ada catatan.' }}
+                Siswa menunjukkan kedisiplinan yang baik dan aktif dalam kegiatan kelas.
             </td>
         </tr>
         <tr>
             <!-- Baris 2 Ketidakhadiran -->
             <td style="border: 1px solid #000; padding: 5px;">Izin</td>
-            <td style="border: 1px solid #000; padding: 5px;">
-                {{ $ketidakhadiran['izin'] ?? 0 }} Hari
-            </td>
+            <td style="border: 1px solid #000; padding: 5px;">3 Hari</td>
             <td style="border: none;">&nbsp;</td>
         </tr>
         <tr>
             <!-- Baris 3 Ketidakhadiran -->
             <td style="border: 1px solid #000; padding: 5px;">Tanpa Keterangan</td>
-            <td style="border: 1px solid #000; padding: 5px;">
-                {{ $ketidakhadiran['tanpa_keterangan'] ?? 0 }} Hari
-            </td>
+            <td style="border: 1px solid #000; padding: 5px;">0 Hari</td>
             <td style="border: none;">&nbsp;</td>
         </tr>
     </table>
@@ -227,7 +227,7 @@
                 <th class="center"><strong>Tanggapan Orang Tua/Wali Murid</strong></th>
             </tr>
             <tr>
-                <td>{{ $tanggapan_ortu ?? 'Tidak ada tanggapan.' }}</td>
+                <td>Kami bangga dengan hasil belajar anak kami, semoga terus berkembang dan menjadi pribadi yang lebih baik.</td>
             </tr>
         </tbody>
     </table>
@@ -240,7 +240,7 @@
             <tr>
                 <td style="width: 33%;"></td>
                 <td style="width: 33%;"></td>
-                <td style="width: 33%;">Rejang Lebong, {{ date('d F Y') }}</td>
+                <td style="width: 33%;">Rejang Lebong, 20 Desember 2025</td>
             </tr>
             <tr>
                 <td>Orang Tua/Wali Murid</td>
@@ -253,14 +253,14 @@
                 <td></td>
             </tr>
             <tr>
-                <td>({{ $orang_tua ?? '-' }})</td>
-                <td>({{ $kepala_sekolah['nama'] ?? '-' }})</td>
-                <td>({{ $wali_kelas['nama'] ?? '-' }})</td>
+                <td>(Sudirman)</td>
+                <td>(Drs. Bambang Sudarno, M.M)</td>
+                <td>(Siti Nurhaliza, S.Pd)</td>
             </tr>
             <tr>
                 <td></td>
-                <td>NIP. {{ $kepala_sekolah['nip'] ?? '-' }}</td>
-                <td>NIP. {{ $wali_kelas['nip'] ?? '-' }}</td>
+                <td>NIP. 19670505 199003 1 001</td>
+                <td>NIP. 19850715 201001 2 002</td>
             </tr>
         </tbody>
     </table>

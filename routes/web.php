@@ -163,4 +163,13 @@ Route::middleware(['auth', 'role:guru'])->prefix('teacher')->name('guru.')->grou
     // Route guru lainnya...
 });
 
-Route::get('/rapor/preview-dummy', [PdfController::class, 'generateDummyPdf'])->name('report.dummy');
+// Route untuk halaman preview
+Route::get('/admin/rapor/preview', function () {
+    return view('contents.admin.preview', [
+        'title' => 'Preview Rapor'
+    ]);
+})->name('rapor.preview');
+
+// Route untuk generate PDF
+Route::get('/pdf/generate', [PdfController::class, 'generateDummyPdf'])
+    ->name('pdf.generate');
