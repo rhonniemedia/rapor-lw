@@ -172,6 +172,7 @@
 
                     <!-- Preview PDF -->
                     @if($pdfUrl)
+                    <!-- Biodata -->
                     <div class="ratio ratio-16x9 border rounded shadow-sm mb-3" style="height: 600px;">
                         <iframe
                             src="{{ $pdfUrl }}"
@@ -180,6 +181,16 @@
                             key="{{ $currentStudent['id'] }}">
                         </iframe>
                     </div>
+
+                    <!-- Rapor -->
+                    <!-- <div class="ratio ratio-16x9 border rounded shadow-sm mb-3" style="height: 600px;">
+                        <iframe
+                            src="{{ $pdfUrl }}"
+                            title="Preview Laporan Hasil Belajar - {{ $currentStudent['nama'] }}"
+                            frameborder="0"
+                            key="{{ $currentStudent['id'] }}">
+                        </iframe>
+                    </div> -->
                     @else
                     <div class="alert alert-warning">
                         <i class="mdi mdi-alert me-2"></i>

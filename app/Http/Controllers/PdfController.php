@@ -41,7 +41,8 @@ class PdfController extends Controller
         $data['nilai_kelompok_b'] = $nilaiKelompokB;
 
         // 4. Render PDF menggunakan Laravel-DomPDF
-        $pdf = Pdf::loadView('livewire.admin.preview-file-pdf', $data);
+        // $pdf = Pdf::loadView('livewire.admin.preview-pdf-rapor', $data);
+        $pdf = Pdf::loadView('livewire.admin.preview-pdf-biodata', $data);
 
         // 5. Set paper size
         $pdf->setPaper('A4', 'portrait');
