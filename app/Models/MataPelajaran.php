@@ -58,4 +58,21 @@ class MataPelajaran extends Model
     {
         return $this->hasMany(RombelPengajar::class, 'mata_pelajaran_id');
     }
+
+    public function kelompok()
+    {
+        // Coba salah satu dari opsi ini sesuai struktur database Anda:
+
+        // OPSI 1: Jika foreign key bernama 'mata_pelajaran_kelompok_id'
+        return $this->belongsTo(MataPelajaranKelompok::class, 'mata_pelajaran_kelompok_id');
+
+        // OPSI 2: Jika foreign key bernama 'kelompok_id'
+        // return $this->belongsTo(MataPelajaranKelompok::class, 'kelompok_id');
+    }
+
+    // Relasi lainnya yang mungkin sudah ada
+    public function nilais()
+    {
+        return $this->hasMany(Nilai::class);
+    }
 }

@@ -267,12 +267,12 @@
 
             <div class="name-section">
                 <p>Nama Peserta Didik</p>
-                <div class="nama-murid">ELFISON DAHSANANRANCA SYAWTUFAN</div>
+                <div class="nama-murid">{{ strtoupper($nama ?? 'N/A') }}</div>
             </div>
 
             <div class="nis-section">
                 <p>NISN / NIS</p>
-                <div class="nis-murid">0082716354 / 1234567</div>
+                <div class="nis-murid">{{ $nisn ?? 'N/A' }} / {{ $nis ?? 'N/A' }}</div>
             </div>
 
             <div class="footer-section">
@@ -370,61 +370,61 @@
                     <td style="width: 3%;">1.</td>
                     <td colspan="2">Nama Lengkap Peserta Didik</td>
                     <td style="width: 3%;">:</td>
-                    <td><strong>ERLINA WULANDARI</strong></td>
+                    <td><strong>{{ strtoupper($nama ?? 'N/A') }}</strong></td>
                 </tr>
                 <tr>
                     <td>2.</td>
                     <td colspan="2">Nomor Induk/NISN</td>
                     <td>:</td>
-                    <td>9113 / 0037817477</td>
+                    <td>{{ $nis ?? 'N/A' }} / {{ $nisn ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td>3.</td>
                     <td colspan="2">Tempat, Tanggal Lahir</td>
                     <td>:</td>
-                    <td>TUMBANG ATEI, 28 Agustus 2003</td>
+                    <td>{{ $tempat_lahir ?? 'N/A' }}, {{ \Carbon\Carbon::parse($tanggal_lahir ?? now())->translatedFormat('d F Y') }}</td>
                 </tr>
                 <tr>
                     <td>4.</td>
                     <td colspan="2">Jenis Kelamin</td>
                     <td>:</td>
-                    <td>Perempuan</td>
+                    <td>{{ ($jenis_kelamin ?? 'L') == 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
                 </tr>
                 <tr>
                     <td>5.</td>
                     <td colspan="2">Agama</td>
                     <td>:</td>
-                    <td>Hindu</td>
+                    <td>{{ ucfirst($agama ?? 'N/A') }}</td>
                 </tr>
                 <tr>
                     <td>6.</td>
                     <td colspan="2">Status dalam Keluarga</td>
                     <td>:</td>
-                    <td>Anak Kandung</td>
+                    <td>{{ ucwords(str_replace('-', ' ', $status_dalam_keluarga ?? 'N/A')) }}</td>
                 </tr>
                 <tr>
                     <td>7.</td>
                     <td colspan="2">Anak ke</td>
                     <td>:</td>
-                    <td>2</td>
+                    <td>{{ $anak_ke ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td>8.</td>
                     <td colspan="2">Alamat Peserta Didik</td>
                     <td>:</td>
-                    <td>JL. MANJUHAN III NO. 1</td>
+                    <td>{{ $alamat ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td>9.</td>
                     <td colspan="2">Nomor Telepon Rumah</td>
                     <td>:</td>
-                    <td></td>
+                    <td>{{ $telepon ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>10.</td>
                     <td colspan="2">Sekolah Asal</td>
                     <td>:</td>
-                    <td>SMPN 2 SANAMAN MANTIKEI</td>
+                    <td>{{ $sekolah_asal ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td rowspan="3">11.</td>
@@ -435,12 +435,12 @@
                 <tr>
                     <td colspan="2">Di kelas</td>
                     <td>:</td>
-                    <td>X</td>
+                    <td>{{ $diterima_di_kelas ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td colspan="2">Pada tanggal</td>
                     <td>:</td>
-                    <td>01 Juli 2018</td>
+                    <td>{{ $pada_tanggal ? \Carbon\Carbon::parse($pada_tanggal)->translatedFormat('d F Y') : 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td rowspan="3">12.</td>
@@ -450,24 +450,24 @@
                     <td style="width: 3%;">a.</td>
                     <td style="width: 30%;">Ayah</td>
                     <td>:</td>
-                    <td style="width: 64%;">CHANDRA WILOTAMA</td>
+                    <td style="width: 64%;">{{ $ayah['nama'] ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td>b.</td>
                     <td>Ibu</td>
                     <td>:</td>
-                    <td>JUMARIAH</td>
+                    <td>{{ $ibu['nama'] ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td rowspan="2">13.</td>
                     <td colspan="2">Alamat Orang Tua</td>
                     <td>:</td>
-                    <td>JL. MANJUHAN III NO. 1</td>
+                    <td>{{ $ayah['alamat'] ?? ($ibu['alamat'] ?? $alamat ?? 'N/A') }}</td>
                 </tr>
                 <tr>
                     <td colspan="2">Nomor Telepon</td>
                     <td>:</td>
-                    <td></td>
+                    <td>{{ $ayah['telepon'] ?? ($ibu['telepon'] ?? '-') }}</td>
                 </tr>
                 <tr>
                     <td rowspan="3">14.</td>
@@ -477,13 +477,13 @@
                     <td>a.</td>
                     <td>Ayah</td>
                     <td>:</td>
-                    <td>PNS</td>
+                    <td>{{ ucwords(str_replace(['-', '_'], ' ', $ayah['pekerjaan'] ?? 'N/A')) }}</td>
                 </tr>
                 <tr>
                     <td>b.</td>
                     <td>Ibu</td>
                     <td>:</td>
-                    <td>IBU RUMAH TANGGA</td>
+                    <td>{{ ucwords(str_replace(['-', '_'], ' ', $ibu['pekerjaan'] ?? 'N/A')) }}</td>
                 </tr>
                 <tr>
                     <td rowspan="5">15.</td>
@@ -493,25 +493,25 @@
                     <td>a.</td>
                     <td>Nama Wali</td>
                     <td>:</td>
-                    <td>SIMSON BOMBO</td>
+                    <td>{{ $wali['nama'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>b.</td>
                     <td>Nomor Telepon</td>
                     <td>:</td>
-                    <td></td>
+                    <td>{{ $wali['telepon'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>c.</td>
                     <td>Alamat</td>
                     <td>:</td>
-                    <td>JL. MANJUHAN III NO. 1</td>
+                    <td>{{ $wali['alamat'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>d.</td>
                     <td>Pekerjaan</td>
                     <td>:</td>
-                    <td>PNS</td>
+                    <td>{{ $wali['pekerjaan'] ?? '-' }}</td>
                 </tr>
             </table>
 
@@ -529,11 +529,11 @@
                     </td>
                     <td style="width: 45%;">
                         <div class="signature">
-                            <div>Palangka Raya, 01 Juli 2018</div>
+                            <div>{{ $alamat_sekolah ?? 'Curup' }}, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</div>
                             <div>Kepala Sekolah,</div>
                             <br><br><br><br>
-                            <div><strong>Dr. ASEP SUPARMAN, S.Pd. , M.Pd.</strong></div>
-                            <div>NIP 197306042005012010</div>
+                            <div><strong>{{ $kepala_sekolah['nama'] ?? 'N/A' }}</strong></div>
+                            <div>NIP {{ $kepala_sekolah['nip'] ?? 'N/A' }}</div>
                         </div>
                     </td>
                 </tr>
@@ -559,12 +559,12 @@
                 <tr>
                     <td>Nama Peserta Didik</td>
                     <td>:</td>
-                    <td>.....................................................................................</td>
+                    <td>{{ strtoupper($nama ?? 'N/A') }}</td>
                 </tr>
                 <tr>
                     <td>Nomor Induk</td>
                     <td>:</td>
-                    <td>.....................................................................................</td>
+                    <td>{{ $nis ?? 'N/A' }}</td>
 
                 </tr>
             </table>
@@ -664,12 +664,12 @@
                 <tr>
                     <td>Nama Peserta Didik</td>
                     <td>:</td>
-                    <td>.....................................................................................</td>
+                    <td>{{ strtoupper($nama ?? 'N/A') }}</td>
                 </tr>
                 <tr>
                     <td>Nomor Induk</td>
                     <td>:</td>
-                    <td>.....................................................................................</td>
+                    <td>{{ $nis ?? 'N/A' }}</td>
 
                 </tr>
             </table>

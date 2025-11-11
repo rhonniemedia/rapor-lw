@@ -57,9 +57,9 @@ class InputEkstrakurikuler extends Component
 
     // Predikat Options
     public $predikatOptions = [
-        'A' => 'Mahir',
-        'B' => 'Cakap',
-        'C' => 'Berkembang',
+        'A' => 'Sangat Baik',
+        'B' => 'Baik',
+        'C' => 'Cukup',
     ];
 
     // Query string

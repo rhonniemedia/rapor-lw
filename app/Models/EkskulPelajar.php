@@ -54,4 +54,19 @@ class EkskulPelajar extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function tahunAjaranSemester()
+    {
+        return $this->belongsTo(TahunAjaranSemester::class);
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
 }

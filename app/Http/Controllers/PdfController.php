@@ -7,10 +7,12 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PdfController extends Controller
 {
-    public function generateDummyPdf(Request $request)
+    public function generatePdf(Request $request)
     {
-        // 1. Ambil data dari query string (parameter 'data')
+        // 1. Ambil data dari query string (parameter 'data' DAN 'view')
         $dataParam = $request->query('data');
+        // Ambil parameter 'view'. Default ke 'cover' (biodata) jika tidak ada.
+        $selectedView = $request->query('view', 'cover');
 
         if (empty($dataParam)) {
             return response('Data PDF tidak ditemukan.', 400);
@@ -40,14 +42,23 @@ class PdfController extends Controller
         $data['nilai_kelompok_a'] = $nilaiKelompokA;
         $data['nilai_kelompok_b'] = $nilaiKelompokB;
 
-        // 4. Render PDF menggunakan Laravel-DomPDF
-        // $pdf = Pdf::loadView('livewire.admin.preview-pdf-rapor', $data);
-        $pdf = Pdf::loadView('livewire.admin.preview-pdf-biodata', $data);
+        // 4. Tentukan View yang akan di-Render
+        $viewPath = '';
+        if ($selectedView === 'content') {
+            // Jika 'content' (Halaman Nilai/Rapor) dipilih
+            $viewPath = 'livewire.admin.preview-pdf-rapor';
+        } else {
+            // Default: 'cover' (Halaman Sampul/Biodata)
+            $viewPath = 'livewire.admin.preview-pdf-biodata';
+        }
 
-        // 5. Set paper size
+        // 5. Render PDF menggunakan Laravel-DomPDF
+        $pdf = Pdf::loadView($viewPath, $data);
+
+        // 6. Set paper size
         $pdf->setPaper('A4', 'portrait');
 
-        // 6. Stream PDF ke browser
-        return $pdf->stream('raport_' . $data['nama'] . '.pdf');
+        // 7. Stream PDF ke browser
+        return $pdf->stream('raport_' . ($data['nama'] ?? 'siswa') . '.pdf');
     }
 }

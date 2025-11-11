@@ -2,17 +2,11 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\Nilai;
 use App\Models\Pelajar;
 use App\Models\Rombel;
 use Livewire\Component;
-use App\Models\Kehadiran;
-use App\Models\Kokurikuler;
 use App\Models\TahunAjaran;
-use App\Models\Pengaturan;
 use App\Models\RombelPelajar;
-use App\Models\EkskulPelajar;
-use App\Models\CatatanWaliKelas;
 use App\Models\TahunAjaranSemester;
 
 class PreviewPdf extends Component
@@ -156,7 +150,7 @@ class PreviewPdf extends Component
 
     private function loadStudents(): void
     {
-        if (!$this->rombelId || !$this->semesterId) {
+        if (!$this->rombelId) {
             $this->studentsList = [];
             $this->currentStudent = null;
             $this->currentIndex = 0;
@@ -176,13 +170,6 @@ class PreviewPdf extends Component
         $this->studentsList = $rombelPelajars->map(function ($rombelPelajar) {
             $pelajar = $rombelPelajar->pelajar;
             $orangTuaWalis = $pelajar->orangTuaWalis ?? collect();
-
-            // Load data nilai untuk siswa ini
-            $nilaiData = $this->loadNilaiPelajar($pelajar->id);
-            $kokurikulerData = $this->loadKokurikuler($pelajar->id);
-            $ekskulData = $this->loadEkstrakurikuler($pelajar->id);
-            $kehadiranData = $this->loadKehadiran($pelajar->id);
-            $catatanData = $this->loadCatatanWali($pelajar->id);
 
             return [
                 'id' => $pelajar->id,
@@ -206,15 +193,13 @@ class PreviewPdf extends Component
                 'ayah' => $orangTuaWalis->firstWhere('hubungan', 'ayah'),
                 'ibu' => $orangTuaWalis->firstWhere('hubungan', 'ibu'),
                 'wali' => $orangTuaWalis->firstWhere('hubungan', 'wali'),
-                // Data Nilai & Kegiatan
-                'nilai' => $nilaiData['nilai'],
-                'nilai_kelompok_a' => $nilaiData['nilai_kelompok_a'],
-                'nilai_kelompok_b' => $nilaiData['nilai_kelompok_b'],
-                'kokurikuler' => $kokurikulerData,
-                'ekstrakurikuler' => $ekskulData,
-                'ketidakhadiran' => $kehadiranData,
-                'catatan_wali' => $catatanData,
-                'tanggapan_ortu' => '', // Kosong untuk diisi manual
+                // Untuk nilai (akan diisi kemudian)
+                'nilai' => [],
+                'kokurikuler' => '',
+                'ekstrakurikuler' => [],
+                'ketidakhadiran' => ['sakit' => 0, 'izin' => 0, 'tanpa_keterangan' => 0],
+                'catatan_wali' => '',
+                'tanggapan_ortu' => '',
             ];
         })->toArray();
 
@@ -223,136 +208,6 @@ class PreviewPdf extends Component
             $this->currentIndex = 0;
             $this->loadCurrentStudent();
         }
-    }
-
-    private function loadNilaiPelajar($pelajarId): array
-    {
-        // Load nilai tanpa eager load kelompok (karena relasi belum ada)
-        $nilais = Nilai::with(['mataPelajaran'])
-            ->where('pelajar_id', $pelajarId)
-            ->where('tahun_ajaran_semester_id', $this->semesterId)
-            ->get();
-
-        $nilaiArray = [];
-        $nilaiKelompokA = [];
-        $nilaiKelompokB = [];
-        $counter = 1;
-
-        foreach ($nilais as $nilai) {
-            // Ambil kelompok dari kurikulum_mata_pelajarans
-            $kelompokNama = $this->getKelompokFromKurikulum($nilai->mata_pelajaran_id);
-
-            $item = [
-                'no' => $counter++,
-                'mapel' => $nilai->mataPelajaran->nama ?? 'N/A',
-                'kelompok' => $kelompokNama,
-                'nilai' => $nilai->nilai_angka ?? 0,
-                'predikat' => $nilai->predikat ?? '-',
-                'capaian' => $nilai->capaian_kompetensi ?? '',
-            ];
-
-            $nilaiArray[] = $item;
-
-            // Kelompokkan berdasarkan kelompok
-            if (strpos($kelompokNama, 'A') !== false || strpos($kelompokNama, 'Umum') !== false) {
-                $nilaiKelompokA[] = $item;
-            } else {
-                $nilaiKelompokB[] = $item;
-            }
-        }
-
-        return [
-            'nilai' => $nilaiArray,
-            'nilai_kelompok_a' => $nilaiKelompokA,
-            'nilai_kelompok_b' => $nilaiKelompokB,
-        ];
-    }
-
-    /**
-     * Get kelompok from kurikulum_mata_pelajarans table
-     */
-    private function getKelompokFromKurikulum($mataPelajaranId): string
-    {
-        try {
-            // Ambil kurikulum_id dari rombel
-            $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
-
-            if (!$kurikulumId) {
-                return 'N/A';
-            }
-
-            // Query ke tabel kurikulum_mata_pelajarans
-            $kurikulumMapel = \DB::table('kurikulum_mata_pelajarans')
-                ->join('mata_pelajaran_kelompoks', 'kurikulum_mata_pelajarans.mata_pelajaran_kelompok_id', '=', 'mata_pelajaran_kelompoks.id')
-                ->where('kurikulum_mata_pelajarans.kurikulum_id', $kurikulumId)
-                ->where('kurikulum_mata_pelajarans.mata_pelajaran_id', $mataPelajaranId)
-                ->select('mata_pelajaran_kelompoks.nama as kelompok_nama')
-                ->first();
-
-            return $kurikulumMapel->kelompok_nama ?? 'N/A';
-        } catch (\Exception $e) {
-            return 'N/A';
-        }
-    }
-
-    private function loadKokurikuler($pelajarId): string
-    {
-        $kokurikuler = Kokurikuler::where('pelajar_id', $pelajarId)
-            ->where('tahun_ajaran_semester_id', $this->semesterId)
-            ->first();
-
-        return $kokurikuler ? ($kokurikuler->capaian ?? '') : '';
-    }
-
-    private function loadEkstrakurikuler($pelajarId): array
-    {
-        $ekskuls = EkskulPelajar::with('ekstrakurikuler')
-            ->where('pelajar_id', $pelajarId)
-            ->where('tahun_ajaran_semester_id', $this->semesterId)
-            ->get();
-
-        return $ekskuls->map(function ($ekskul) {
-            return [
-                'nama' => $ekskul->ekstrakurikuler->nama ?? 'N/A',
-                'keterangan' => $this->convertPredikatEkskul($ekskul->nilai ?? '-')
-            ];
-        })->toArray();
-    }
-
-    private function loadKehadiran($pelajarId): array
-    {
-        $kehadiran = Kehadiran::where('pelajar_id', $pelajarId)
-            ->where('rombel_id', $this->rombelId)
-            ->where('tahun_ajaran_semester_id', $this->semesterId)
-            ->first();
-
-        return [
-            'sakit' => $kehadiran->jumlah_sakit ?? 0,
-            'izin' => $kehadiran->jumlah_izin ?? 0,
-            'tanpa_keterangan' => $kehadiran->jumlah_tanpa_keterangan ?? 0,
-        ];
-    }
-
-    private function loadCatatanWali($pelajarId): string
-    {
-        $catatan = CatatanWaliKelas::where('pelajar_id', $pelajarId)
-            ->where('tahun_ajaran_semester_id', $this->semesterId)
-            ->first();
-
-        return $catatan ? ($catatan->catatan ?? '') : '';
-    }
-
-    private function convertPredikatEkskul($nilai): string
-    {
-        // Convert A/B/C/D ke text
-        $mapping = [
-            'A' => 'Sangat Baik',
-            'B' => 'Baik',
-            'C' => 'Cukup',
-            'D' => 'Kurang',
-        ];
-
-        return $mapping[$nilai] ?? $nilai;
     }
 
     // ========================================
@@ -465,11 +320,6 @@ class PreviewPdf extends Component
         $selectedTahunAjaran = $this->tahunAjaranList->firstWhere('id', $this->tahunAjaranId);
         $selectedSemester = $this->semesterList->firstWhere('id', $this->semesterId);
 
-        // Get kepala sekolah dari pengaturans
-        $pengaturan = Pengaturan::with('kepalaSekolah')
-            ->where('tahun_ajaran_semester_id', $this->semesterId)
-            ->first();
-
         // Prepare biodata untuk PDF
         $pdfData = [
             'nama' => $this->currentStudent['nama'],
@@ -489,18 +339,16 @@ class PreviewPdf extends Component
             'diterima_di_kelas' => $this->currentStudent['diterima_di_kelas'],
             'pada_tanggal' => $this->currentStudent['pada_tanggal'],
             // Sekolah info
-            'sekolah' => 'SMKN 1 Rejang Lebong', // Bisa diambil dari config/setting
-            'alamat_sekolah' => 'Jl. Merdeka No. 10, Curup',
+            'sekolah' => 'SMK Negeri 1 Rejang Lebong', // Bisa diambil dari config/setting
+            'alamat_sekolah' => 'Rejang Lebong',
             'semester' => $selectedSemester->semester->nama ?? 'N/A',
             'tahun_ajaran' => $selectedTahunAjaran->nama ?? 'N/A',
             // Orang Tua / Wali
             'ayah' => $this->formatOrangTua($this->currentStudent['ayah']),
             'ibu' => $this->formatOrangTua($this->currentStudent['ibu']),
             'wali' => $this->formatOrangTua($this->currentStudent['wali']),
-            // Untuk halaman nilai
+            // Untuk halaman nilai (akan diisi kemudian)
             'nilai' => $this->currentStudent['nilai'],
-            'nilai_kelompok_a' => $this->currentStudent['nilai_kelompok_a'],
-            'nilai_kelompok_b' => $this->currentStudent['nilai_kelompok_b'],
             'kokurikuler' => $this->currentStudent['kokurikuler'],
             'ekstrakurikuler' => $this->currentStudent['ekstrakurikuler'],
             'ketidakhadiran' => $this->currentStudent['ketidakhadiran'],
@@ -512,10 +360,9 @@ class PreviewPdf extends Component
                 'nip' => $this->rombel->waliKelas->nip ?? 'N/A'
             ],
             'kepala_sekolah' => [
-                'nama' => $pengaturan->kepalaSekolah->name ?? 'N/A',
-                'nip' => $pengaturan->kepalaSekolah->nip ?? 'N/A'
+                'nama' => 'Dr. ASEP SUPARMAN, S.Pi., M.Pd', // Dari setting
+                'nip' => '19791116 200604 1 009'
             ],
-            'tanggal_rapor' => $pengaturan->tanggal_rapor ?? null,
         ];
 
         // Encode data

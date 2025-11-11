@@ -171,5 +171,5 @@ Route::get('/admin/rapor/preview', function () {
 })->name('rapor.preview');
 
 // Route untuk generate PDF
-Route::get('/pdf/generate', [PdfController::class, 'generateDummyPdf'])
+Route::get('/pdf/generate', [PdfController::class, 'generatePdf'])
     ->name('pdf.generate');
