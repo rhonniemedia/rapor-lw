@@ -148,7 +148,7 @@
                 <div class="card-body">
                     <!-- Header Preview -->
                     <div class="row align-items-center mb-3">
-                        <div class="col-lg-5">
+                        <div class="col-lg-4">
                             <h5 class="text-dark mb-0">
                                 <i class="mdi mdi-file-document-outline me-2"></i>
                                 Preview Laporan Hasil Belajar
@@ -158,15 +158,15 @@
                                 <strong>{{ $currentStudent['nama'] }}</strong>
                             </small>
                         </div>
-                        <div class="col-lg-7 d-flex justify-content-end align-items-center flex-wrap gap-1">
+                        <div class="col-lg-8 d-flex justify-content-end align-items-center flex-wrap gap-1">
                             <!-- Dropdown Pilih Content -->
                             <div class="input-group me-2" style="width: 300px; height: 38px;">
                                 <label class="input-group-text bg-light border rounded-start-3 h-100 d-flex align-items-center justify-content-center px-2" style="width: 40px;">
                                     <i class="mdi mdi-file-document"></i>
                                 </label>
                                 <select class="form-select border rounded-end-3 h-100" wire:model.live="selectedPage">
-                                    <option value="cover">Halaman Sampul (Biodata)</option>
-                                    <option value="content">Halaman Nilai</option>
+                                    <option value="cover">Halaman Biodata (Cover)</option>
+                                    <option value="content">Halaman Nilai (Content)</option>
                                 </select>
                             </div>
 
