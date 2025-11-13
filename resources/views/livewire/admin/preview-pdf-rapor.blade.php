@@ -12,52 +12,12 @@
             padding-top: 0;
         }
 
-        table {
-            border-collapse: collapse;
-            margin-bottom: 10px;
-            width: 100%;
-        }
-
-        td {
-            padding: 4px;
-            vertical-align: top;
-        }
-
-        th {
-            padding: 4px;
-            vertical-align: middle;
-            text-align: center;
-            background-color: #e9e7e7ff;
-        }
-
-        .bordered,
-        .bordered td,
-        .bordered th {
-            border: 1px solid black;
-        }
-
-        .no-border td,
-        .no-border th {
-            border: none;
-        }
-
         .center {
             text-align: center;
         }
 
-        .justify {
-            text-align: justify;
-        }
-
-        .identitas {
-            line-height: 0.9rem;
-        }
-
-        hr {
-            height: 1.5px;
-            background-color: black;
-            border: none;
-            /* margin-bottom: 15px; */
+        .bold {
+            font-weight: bold;
         }
 
         .title-header {
@@ -69,18 +29,80 @@
             text-transform: uppercase;
         }
 
-        .signature-table {
-            /* Mengatur jarak baris (line-height) dan ukuran font untuk tabel tanda tangan */
-            line-height: 0.7rem;
+        table {
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            width: 100%;
         }
 
-        .signature-space td {
-            /* Targetkan semua sel TD di dalam baris signature-space */
+        th {
+            background-color: #e9e7e7ff;
+        }
+
+        /* Aturan Generik TD (Ini akan memengaruhi semua TD kecuali ditimpa) */
+        td {
+            padding: 4px;
+            vertical-align: top;
+            line-height: 1rem;
+        }
+
+        /* Aturan untuk Tabel IDENTITAS */
+        table.identitas td {
+            padding: 4px;
+            vertical-align: top;
+            line-height: 0.9rem;
+        }
+
+        /* Aturan untuk Tabel NILAI */
+        table.bordered td,
+        table.bordered th {
+            padding: 4px;
+            border: 1px solid black;
+        }
+
+        table.bordered.nilai td {
+            line-height: 1rem;
+        }
+
+        /* Aturan untuk Tabel KEHADIRAN */
+        .bordered {
+            border: 1px solid black;
+            padding: 4px 0;
+        }
+
+        .no-border td,
+        .no-border th {
+            border: none;
+        }
+
+        /* Kunci TD di tabel .kehadiran (karena memiliki aturan padding 0 4px) */
+        .section-kehadiran table.kehadiran td {
+            padding: 0 4px;
+            vertical-align: middle;
+        }
+
+        /* Tanda Tangan: Kontainer Utama */
+        .signature-table {
+            width: 100%;
+        }
+
+        /* Tanda Tangan: Sel Khusus */
+        .signature-table .signature td {
+            padding-left: 3.5rem;
+            line-height: 0.8rem;
+        }
+
+        /* Tanda Tangan: Spasi Khusus untuk TTD */
+        .signature-table .signature-space td {
             height: 2cm;
             min-height: 2cm;
-            /* Tambahkan min-height untuk memastikan ketinggian minimum */
-            padding: 0;
-            /* Hapus padding jika ada, untuk kontrol tinggi yang lebih baik */
+            padding: 0 !important;
+        }
+
+        /* Jika Anda ingin tanda tangan Kepala Sekolah berada di tengah-kanan dokumen: */
+        .kepala-sekolah td[colspan="2"] {
+            text-align: left;
+            padding-left: 40%;
         }
 
         .page-break {
@@ -114,7 +136,7 @@
             <tr>
                 <td><b>Sekolah</b></td>
                 <td>:</td>
-                <td> {{ $sekolah ?? '-' }}</td>
+                <td> {{ $sekolah['nama_sekolah'] ?? '-' }}</td>
                 <td><b>Semester</b></td>
                 <td>:</td>
                 <td> {{ $semester_urutan ?? '-' }} ({{ $semester_nama ?? '-' }})</td>
@@ -122,7 +144,7 @@
             <tr>
                 <td><b>Alamat</b></td>
                 <td>:</td>
-                <td> {{ $alamat_sekolah ?? '-' }}</td>
+                <td> {{ $sekolah['alamat'] ?? '-' }}, {{ $sekolah['kelurahan'] ?? '-' }}</td>
                 <td><b>Tahun Ajaran</b></td>
                 <td>:</td>
                 <td> {{ $tahun_ajaran ?? '-' }}</td>
@@ -141,7 +163,7 @@
                     <p class="title-header"><strong>LAPORAN HASIL BELAJAR</strong></p>
 
                     <!-- 2. TABEL NILAI & CATATAN -->
-                    <table class="bordered">
+                    <table class="bordered nilai">
                         <thead>
                             <tr class="center" style="vertical-align: middle;">
                                 <th style="width: 5%;">No</th>
@@ -238,34 +260,36 @@
                     <div class="section-kehadiran">
                         <table class="kehadiran">
                             <tr>
-                                <th colspan="2" class="center bordered" style="width: 40%;">
+                                <th colspan="2" class="center bordered" style="width: 39%;">
                                     Ketidakhadiran
                                 </th>
-                                <td style="width: 1%;"></td>
+                                <td style="width: 2%;"></td>
                                 <th class="center bordered" style="width: 59%;">
                                     Catatan Wali Kelas
                                 </th>
                             </tr>
                             <tr>
-                                <td class="bordered">Sakit</td>
-                                <td class="bordered">
+                                <td class="bordered kehadiran">Sakit</td>
+                                <td class="bordered kehadiran">
                                     {{ $ketidakhadiran['sakit'] ?? 0 }} Hari
                                 </td>
                                 <td></td>
-                                <td class="bordered" rowspan="3">
+
+                                <!-- Catatan Wali Kelas -->
+                                <td class="bordered catatan" rowspan="3">
                                     {{ $catatan_wali ?? 'Tidak ada catatan.' }}
                                 </td>
                             </tr>
                             <tr>
-                                <td class="bordered">Izin</td>
-                                <td class="bordered">
+                                <td class="bordered kehadiran">Izin</td>
+                                <td class="bordered kehadiran">
                                     {{ $ketidakhadiran['izin'] ?? 0 }} Hari
                                 </td>
                                 <td></td>
                             </tr>
                             <tr>
-                                <td class="bordered">Tanpa Keterangan</td>
-                                <td class="bordered">
+                                <td class="bordered kehadiran">Tanpa Keterangan</td>
+                                <td class="bordered kehadiran">
                                     {{ $ketidakhadiran['tanpa_keterangan'] ?? 0 }} Hari
                                 </td>
                                 <td></td>
@@ -275,7 +299,7 @@
 
                     <!-- 6. TANGGAPAN ORANG TUA -->
                     <div class="tanggapan">
-                        <table class="bordered" style="margin-top: 10px;">
+                        <table class="bordered">
                             <tbody>
                                 <tr>
                                     <th class="center"><strong>Tanggapan Orang Tua/Wali Murid</strong></th>
@@ -291,11 +315,10 @@
                     <div class="body-signature">
                         <table class="no-border signature-table" style="margin-top: 20px;">
                             <tbody>
-                                <tr>
-                                    <td style="width: 30%;"></td>
-                                    <td style="width: 35%;"></td>
-                                    <td style="width: 35%;">
-                                        Rejang Lebong,
+                                <tr class="signature">
+                                    <td style="width: 50%;"></td>
+                                    <td style="width: 50%;">
+                                        {{ $sekolah['kota_kabupaten'] ?? '-' }},
                                         @if(isset($tanggal_rapor))
                                         {{ \Carbon\Carbon::parse($tanggal_rapor)->translatedFormat('d F Y') }}
                                         @else
@@ -303,26 +326,36 @@
                                         @endif
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td>Orang Tua/Wali Murid</td>
-                                    <td>Kepala Sekolah</td>
-                                    <td>Wali Kelas</td>
+                                <tr class="signature">
+                                    <td>Orang Tua/Wali Murid,</td>
+                                    <td>Wali Kelas,</td>
                                 </tr>
-                                <tr class="signature-space">
-                                    <td></td>
+                                <tr class="signature signature-space">
                                     <td></td>
                                     <td></td>
                                 </tr>
-                                <tr>
-                                    <td>(__________________)
-                                    </td>
-                                    <td>{{ $kepala_sekolah['nama'] ?? '-' }}</td>
-                                    <td>{{ $wali_kelas['nama'] ?? '-' }}</td>
+                                <tr class="signature">
+                                    <td>(__________________)</td>
+                                    <td class="bold">{{ $wali_kelas['nama'] ?? '-' }}</td>
                                 </tr>
-                                <tr>
+                                <tr class="signature">
                                     <td></td>
-                                    <td>NIP {{ $kepala_sekolah['nip'] ?? '-' }}</td>
                                     <td>NIP {{ $wali_kelas['nip'] ?? '-' }}</td>
+                                </tr>
+                                <tr class="kepala-sekolah">
+                                    <td colspan="2" style="height: 1cm; vertical-align: bottom;">Mengetahui</td>
+                                </tr>
+                                <tr class="kepala-sekolah">
+                                    <td colspan="2">Kepala Sekolah,</td>
+                                </tr>
+                                <tr class="kepala-sekolah signature-space">
+                                    <td colspan="2"></td>
+                                </tr>
+                                <tr class="kepala-sekolah">
+                                    <td class="bold" colspan="2">{{ $kepala_sekolah['nama'] ?? '-' }}</td>
+                                </tr>
+                                <tr class="kepala-sekolah">
+                                    <td colspan="2">NIP {{ $kepala_sekolah['nip'] ?? '-' }}</td>
                                 </tr>
                             </tbody>
                         </table>

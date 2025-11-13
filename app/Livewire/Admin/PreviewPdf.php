@@ -3,15 +3,15 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Nilai;
-use App\Models\Pelajar;
 use App\Models\Rombel;
 use Livewire\Component;
 use App\Models\Kehadiran;
+use App\Models\Pengaturan;
+use App\Models\DataSekolah;
 use App\Models\Kokurikuler;
 use App\Models\TahunAjaran;
-use App\Models\Pengaturan;
-use App\Models\RombelPelajar;
 use App\Models\EkskulPelajar;
+use App\Models\RombelPelajar;
 use App\Models\CatatanWaliKelas;
 use App\Models\TahunAjaranSemester;
 
@@ -21,6 +21,7 @@ class PreviewPdf extends Component
     public $tahunAjaranId = null;
     public $semesterId = null;
     public $rombelId = null;
+    public $dataSekolah = null;
 
     // Data Collections
     public $tahunAjaranList = [];
@@ -49,11 +50,17 @@ class PreviewPdf extends Component
     public function mount()
     {
         $this->initializeFilters();
+        $this->loadDataSekolah();
     }
 
     // ========================================
     // INITIALIZATION METHODS
     // ========================================
+
+    private function loadDataSekolah(): void
+    {
+        $this->dataSekolah = DataSekolah::first();
+    }
 
     private function initializeFilters(): void
     {
@@ -294,33 +301,6 @@ class PreviewPdf extends Component
         ];
     }
 
-    /**
-     * Get kelompok from kurikulum_mata_pelajarans table
-     */
-    private function getKelompokFromKurikulum($mataPelajaranId): string
-    {
-        try {
-            // Ambil kurikulum_id dari rombel
-            $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
-
-            if (!$kurikulumId) {
-                return 'N/A';
-            }
-
-            // Query ke tabel kurikulum_mata_pelajarans
-            $kurikulumMapel = \DB::table('kurikulum_mata_pelajarans')
-                ->join('mata_pelajaran_kelompoks', 'kurikulum_mata_pelajarans.mata_pelajaran_kelompok_id', '=', 'mata_pelajaran_kelompoks.id')
-                ->where('kurikulum_mata_pelajarans.kurikulum_id', $kurikulumId)
-                ->where('kurikulum_mata_pelajarans.mata_pelajaran_id', $mataPelajaranId)
-                ->select('mata_pelajaran_kelompoks.nama as kelompok_nama')
-                ->first();
-
-            return $kurikulumMapel->kelompok_nama ?? 'N/A';
-        } catch (\Exception $e) {
-            return 'N/A';
-        }
-    }
-
     private function loadKokurikuler($pelajarId): string
     {
         $kokurikuler = Kokurikuler::where('pelajar_id', $pelajarId)
@@ -480,8 +460,8 @@ class PreviewPdf extends Component
         }
 
         // Get selected tahun ajaran and semester
-        $selectedTahunAjaran = $this->tahunAjaranList->firstWhere('id', $this->tahunAjaranId);
-        $selectedSemester = $this->semesterList->firstWhere('id', $this->semesterId);
+        $selectedTahunAjaran = TahunAjaran::find($this->tahunAjaranId);
+        $selectedSemester = TahunAjaranSemester::find($this->semesterId);
 
         // Get kepala sekolah dari pengaturans
         $pengaturan = Pengaturan::with('kepalaSekolah')
@@ -507,8 +487,24 @@ class PreviewPdf extends Component
             'diterima_di_kelas' => $this->currentStudent['diterima_di_kelas'],
             'pada_tanggal' => $this->currentStudent['pada_tanggal'],
             // Sekolah info
-            'sekolah' => 'SMK Negeri 1 Rejang Lebong', // Bisa diambil dari config/setting
-            'alamat_sekolah' => 'Jln. Ahmad Marzuki 105, Air Rambai, Curup',
+            'sekolah' => [
+                'nama_sekolah' => $this->dataSekolah->nama_sekolah ?? 'N/A',
+                'npsn' => $this->dataSekolah->npsn ?? 'N/A',
+                'nis' => $this->dataSekolah->nis ?? 'N/A',
+                'nss' => $this->dataSekolah->nss ?? 'N/A',
+                'nds' => $this->dataSekolah->nds ?? 'N/A',
+                'alamat' => $this->dataSekolah->alamat ?? 'N/A',
+                'kode_pos' => $this->dataSekolah->kode_pos ?? 'N/A',
+                'kelurahan' => $this->dataSekolah->kelurahan ?? 'N/A',
+                'kecamatan' => $this->dataSekolah->kecamatan ?? 'N/A',
+                'kota_kabupaten' => $this->dataSekolah->kota_kabupaten ?? 'N/A',
+                'provinsi' => $this->dataSekolah->provinsi ?? 'N/A',
+                'telepon' => $this->dataSekolah->telepon ?? 'N/A',
+                'website' => $this->dataSekolah->website ?? 'N/A',
+                'email' => $this->dataSekolah->email ?? 'N/A',
+                'logo_sekolah_path' => $this->dataSekolah->logo_sekolah_path ?? null,
+                'logo_pemda_path' => $this->dataSekolah->logo_pemda_path ?? null,
+            ],
             'semester_nama' => $selectedSemester->semester->nama ?? 'N/A',
             'semester_urutan' => $selectedSemester->semester->urutan ?? 'N/A',
             'tahun_ajaran' => $selectedTahunAjaran->nama ?? 'N/A',

@@ -298,57 +298,62 @@
                 <tr>
                     <td>Nama Sekolah</td>
                     <td>:</td>
-                    <td><strong>SMK NEGERI 1 REJANG LEBONG</strong></td>
+                    <td><strong>{{ strtoupper($sekolah['nama_sekolah'] ?? '-') }}</strong></td>
                 </tr>
                 <tr>
                     <td>NPSN</td>
                     <td>:</td>
-                    <td>30203488</td>
+                    <td>{{ $sekolah['npsn'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>NIS/NSS/NDS</td>
                     <td>:</td>
-                    <td>301146001858</td>
+                    <td>{{ $sekolah['nis'] ?? '-' }}/{{ $sekolah['nss'] ?? '-' }}/{{ $sekolah['nds'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Alamat Sekolah</td>
                     <td>:</td>
-                    <td>Jl. Sisingamangaraja III Nomor 3 Palangka Raya</td>
+                    <td>{{ $sekolah['alamat'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Kode Pos</td>
                     <td>:</td>
-                    <td>73112, Telp. 081352871010</td>
+                    <td>{{ $sekolah['kode_pos'] ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td>Telepon</td>
+                    <td>:</td>
+                    <td>{{ $sekolah['telepon'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Kelurahan / Desa</td>
                     <td>:</td>
-                    <td>Menteng</td>
+                    <td>{{ $sekolah['kelurahan'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Kecamatan</td>
                     <td>:</td>
-                    <td>Kec. Jekan Raya</td>
+                    <td>{{ $sekolah['kecamatan'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Kota/Kabupaten</td>
                     <td>:</td>
-                    <td>Palangka Raya</td>
+                    <td>{{ $sekolah['kota_kabupaten'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Provinsi</td>
                     <td>:</td>
-                    <td>Prov. Kalimantan Tengah</td>
+                    <td>{{ $sekolah['provinsi'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Website</td>
                     <td>:</td>
-                    <td>http://sman4palangkaraya.sch.id/</td>
+                    <td>{{ $sekolah['website'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>E-mail</td>
                     <td>:</td>
-                    <td>sman.4praya@gmail.com</td>
+                    <td>{{ $sekolah['email'] ?? '-' }}</td>
                 </tr>
             </table>
         </div>
@@ -529,7 +534,7 @@
                     </td>
                     <td style="width: 45%;">
                         <div class="signature">
-                            <div>{{ $alamat_sekolah ?? 'Curup' }}, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</div>
+                            <div>{{ $sekolah['kota_kabupaten'] ?? '-' }}, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</div>
                             <div>Kepala Sekolah,</div>
                             <br><br><br><br>
                             <div><strong>{{ $kepala_sekolah['nama'] ?? 'N/A' }}</strong></div>
