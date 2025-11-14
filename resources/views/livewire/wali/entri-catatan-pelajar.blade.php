@@ -184,29 +184,29 @@
                         <small class="text-danger">{{ $message }}</small>
                         @enderror
                     </td>
-                    <td>
-                        @if($pelajar->catatan_sekarang)
-                        <div class="mb-2">
-                            <small class="text-muted d-block mb-1">
-                                <i class="mdi mdi-calendar"></i>
-                                {{ $pelajar->tanggal_input ? \Carbon\Carbon::parse($pelajar->tanggal_input)->format('d/m/Y H:i') : '-' }}
-                            </small>
-                            <p class="mb-0 text-dark" style="font-size: 0.9rem;">
-                                {{ Str::limit($pelajar->catatan_sekarang, 150) }}
-                            </p>
-                            @if(strlen($pelajar->catatan_sekarang) > 150)
-                            <button type="button"
-                                class="btn btn-link btn-sm p-0 mt-1"
-                                onclick="showFullCatatan('{{ $pelajar->nama_lengkap }}', `{{ addslashes($pelajar->catatan_sekarang) }}`)"
-                                title="Lihat Selengkapnya">
-                                <small>Lihat Selengkapnya...</small>
-                            </button>
-                            @endif
-                        </div>
+                    <td style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 300px;">
+                        @if ($pelajar->catatan_sekarang)
+                        @php
+                        $catatan = $pelajar->catatan_sekarang;
+                        $teksPendek = Str::limit($catatan, 150);
+                        @endphp
+
+                        <p class="mb-0">
+                            <a href="javascript:void(0)"
+                                class="text-muted fs-7 text-decoration-none"
+                                onclick="showFullCatatan('{{ addslashes($pelajar->nama_lengkap) }}', `{{ addslashes($catatan) }}`)"
+                                title="Klik untuk melihat catatan lengkap">
+                                {{ $teksPendek }}
+                                @if (strlen($catatan) > 150)
+                                @endif
+                            </a>
+                        </p>
+
                         @else
-                        <span class="text-muted">Belum ada catatan</span>
+                        <span class="text-muted">-</span>
                         @endif
                     </td>
+
                     <td>
                         @if($pelajar->catatan_sekarang)
                         <button type="button"

@@ -25,6 +25,59 @@
 
     <link rel="stylesheet" href="{{ asset('assets/css/other-style.css') }}" />
 
+    <style>
+        .bg-light-primary {
+            background-color: rgba(66, 133, 244, 0.1) !important;
+        }
+
+        .bg-light-success {
+            background-color: rgba(52, 168, 83, 0.1) !important;
+        }
+
+        .bg-light-info {
+            background-color: rgba(66, 133, 244, 0.1) !important;
+        }
+
+        .bg-light-warning {
+            background-color: rgba(251, 188, 5, 0.1) !important;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 10px;
+            font-size: 0.85em;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            display: inline-block;
+        }
+
+        .progress-card-hover {
+            transition: all 0.2s ease;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+
+        .progress-card-hover:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-color: #adb5bd;
+            background-color: rgba(108, 117, 125, 0.02) !important;
+        }
+    </style>
+
 </head>
 
 <body>

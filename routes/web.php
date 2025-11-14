@@ -1,6 +1,7 @@
 <?php
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Livewire\Wali\KelasBinaan;
 use App\Livewire\Admin\GeneratePdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -121,11 +122,11 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
 
     // Data Entry
     Route::prefix('entry')->group(function () {
-        Route::get('/grades', fn() => view('contents.wali.entri-nilai', ['title' => 'Nilai Akhir']));
-        Route::get('/cocurricular', fn() => view('contents.wali.entri-kokurikuler', ['title' => 'Data Kokurikuler']));
-        Route::get('/attendance', fn() => view('contents.wali.entri-kehadiran', ['title' => 'Data Absensi']));
-        Route::get('/class-notes', fn() => view('contents.wali.entri-catatan', ['title' => 'Catatan Wali Kelas']));
-        Route::get('/extracurricular', fn() => view('contents.wali.entri-ekstrakurikuler', ['title' => 'Data Ekstrakurikuler']));
+        Route::get('/grades', fn() => view('contents.wali.entri-nilai', ['title' => 'Nilai Akhir']))->name('entri.nilai');
+        Route::get('/cocurricular', fn() => view('contents.wali.entri-kokurikuler', ['title' => 'Data Kokurikuler']))->name('entri.kokurikuler');
+        Route::get('/attendance', fn() => view('contents.wali.entri-kehadiran', ['title' => 'Data Absensi']))->name('entri.kehadiran');
+        Route::get('/class-notes', fn() => view('contents.wali.entri-catatan', ['title' => 'Catatan Wali Kelas']))->name('entri.catatan');
+        Route::get('/extracurricular', fn() => view('contents.wali.entri-ekstrakurikuler', ['title' => 'Data Ekstrakurikuler']))->name('entri.ekstrakurikuler');
     });
 
     Route::get('/teaching', function () {

@@ -1,29 +1,4 @@
 <div>
-    {{-- Flash Messages --}}
-    @if (session()->has('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="mdi mdi-check-circle me-2"></i>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-
-    @if (session()->has('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="mdi mdi-alert-circle me-2"></i>
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-
-    @if (session()->has('info'))
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <i class="mdi mdi-information me-2"></i>
-        {{ session('info') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-
     {{-- Page Header --}}
     <div class="page-header pb-3 mb-4 border-bottom">
         <div class="d-flex align-items-center justify-content-between">
@@ -224,18 +199,12 @@
 
                     {{-- Aksi --}}
                     <td>
-                        <button type="button"
-                            class="btn btn-sm btn-outline-info"
-                            wire:click="openDetailModal('{{ $item->pelajar->id }}')"
-                            title="Detail Data">
+                        <a href="#"
+                            class="btn btn-sm btn-outline-primary"
+                            title="Lihat Detail">
                             <i class="mdi mdi-eye"></i>
-                        </button>
-                        <button type="button"
-                            class="btn btn-sm btn-outline-warning"
-                            wire:click="openEditModal('{{ $item->pelajar->id }}')"
-                            title="Edit Data">
-                            <i class="mdi mdi-pencil"></i>
-                        </button>
+                        </a>
+                        <!-- route('homeroom.student.detail', $item->pelajar->id) -->
                     </td>
                 </tr>
                 @empty
@@ -263,94 +232,6 @@
         {{ $pelajars->links() }}
     </div>
 
-    {{-- ================================================= --}}
-    {{-- MODAL DETAIL SISWA (Menggunakan detail-siswa.blade.php) --}}
-    {{-- ================================================= --}}
-    <div wire:ignore.self class="modal fade" id="detailStudentModal" tabindex="-1" aria-labelledby="detailStudentModalLabel" aria-hidden="true">
-        {{-- Atur ukuran modal menjadi sangat besar (xl) dan dapat di-scroll --}}
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="detailStudentModalLabel">Detail Data Pelajar</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body">
-                    {{-- Cek apakah data pelajar sudah dimuat. Tampilkan konten detail-siswa jika sudah. --}}
-                    @if ($selectedStudent)
-                    @include('livewire.wali.pelajar-detail', [
-                    'pesertaDidik' => $selectedStudent,
-                    'agamaMapping' => config('enums.agama', []), // Default array kosong jika config tidak ada
-                    ])
-                    @else
-                    {{-- Tampilkan loading state jika $selectedStudent masih null (sebelum data dimuat) --}}
-                    <div class="text-center text-muted py-5">
-                        <div class="spinner-border text-info" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2">Memuat data pelajar...</p>
-                    </div>
-                    @endif
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    {{-- ================================================ --}}
-    {{-- MODAL EDIT SISWA (Menggunakan edit-siswa.blade.php) --}}
-    {{-- ================================================ --}}
-    <div wire:ignore.self class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editStudentModalLabel">Edit Data Pelajar</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                {{-- Form Livewire untuk submit data --}}
-                <form wire:submit.prevent="saveStudent">
-                    <div class="modal-body">
-                        @if ($selectedStudent)
-                        @include('livewire.wali.pelajar-edit', [
-                        'siswa' => $selectedStudent,
-                        // Variabel ini diperlukan untuk form edit sesuai dengan potongan kode edit-siswa.blade.php
-                        // Nilainya diambil dari properti Livewire yang sudah di-map di openEditModal()
-                        'jurusans' => $jurusansList,
-                        // Pastikan variabel data ortu ini tersedia untuk di-include di edit-siswa.blade.php
-                        'ayahData' => $ayahData,
-                        'ibuData' => $ibuData,
-                        'waliData' => $waliData,
-                        // Anda mungkin juga perlu passing variabel lain yang digunakan di dalam edit-siswa.blade.php
-                        ])
-                        @else
-                        {{-- Tampilkan loading state --}}
-                        <div class="text-center text-muted py-5">
-                            <div class="spinner-border text-warning" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2">Memuat formulir edit...</p>
-                        </div>
-                        @endif
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        {{-- Tombol Simpan (Disable saat Livewire sedang loading) --}}
-                        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="saveStudent">
-                            <span wire:loading.remove wire:target="saveStudent"><i class="mdi mdi-content-save"></i> Simpan Perubahan</span>
-                            <span wire:loading wire:target="saveStudent">Menyimpan...</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
 </div>
 
 @push('styles')
@@ -375,28 +256,4 @@
         padding: 1rem 0.75rem;
     }
 </style>
-<script>
-    document.addEventListener('livewire:navigated', () => {
-
-        Livewire.on('show-detail-modal', (params) => {
-            // Ambil ID modal dari params
-            const modalId = params[0].modalId;
-            new bootstrap.Modal(document.getElementById(modalId)).show();
-        });
-
-        Livewire.on('show-edit-modal', (params) => {
-            // Ambil ID modal dari params
-            const modalId = params[0].modalId;
-            new bootstrap.Modal(document.getElementById(modalId)).show();
-        });
-
-        // Event untuk menutup modal setelah simpan
-        Livewire.on('close-edit-modal', () => {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
-            if (modal) {
-                modal.hide();
-            }
-        });
-    });
-</script>
 @endpush
