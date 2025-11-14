@@ -74,13 +74,16 @@
 
                     <ul class="navbar-nav navbar-nav-right ml-lg-auto">
                         <!-- Setting -->
+                        @hasanyrole(['admin', 'superadmin'])
                         <li class="nav-item dropdown d-none d-xl-flex border-0">
                             <a class="nav-link dropdown-toggle" id="languageDropdown" href="{{ url('#') }}" data-toggle="dropdown">
-                                <i class="mdi mdi-settings"></i> Pengaturan </a>
+                                <i class="mdi mdi-settings"></i> Pengaturan
+                            </a>
                             <div class="dropdown-menu navbar-dropdown" aria-labelledby="languageDropdown">
                                 <a class="dropdown-item" href="{{url('master-data/school-data')}}">Data Sekolah</a>
                             </div>
                         </li>
+                        @endhasanyrole
                         <li class="nav-item nav-profile dropdown border-0">
                             <a class="nav-link dropdown-toggle" id="profileDropdown" href="#" data-toggle="dropdown">
                                 <img class="nav-profile-img mr-2" alt="" src="{{ asset('assets/images/icons/smile.png') }}" />

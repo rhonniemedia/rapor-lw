@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PdfController;
 use App\Livewire\Template\PreviewRapor;
+use App\Http\Controllers\PdfRaporWaliController;
 
 // Redirect root ke login
 Route::get('/', function () {
@@ -139,6 +140,13 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
         ]);
     })->name('class.detail');
 
+    // Finalization
+    Route::prefix('finalization')->group(function () {
+        Route::get('/preview', fn() => view('contents.wali.preview-rapor', ['title' => 'Preview Rapor']));
+        Route::get('/pdf/generate', [PdfRaporWaliController::class, 'generatePdf'])->name('pdf.generate');
+        Route::get('/ledger', fn() => view('contents.wali.preview-ledger', ['title' => 'Preview Leger']));
+    });
+
     // Route wali kelas lainnya...
 });
 
@@ -171,5 +179,4 @@ Route::get('/admin/rapor/preview', function () {
 })->name('rapor.preview');
 
 // Route untuk generate PDF
-Route::get('/pdf/generate', [PdfController::class, 'generatePdf'])
-    ->name('pdf.generate');
+Route::get('/pdf/generate', [PdfController::class, 'generatePdf'])->name('pdf.generate');

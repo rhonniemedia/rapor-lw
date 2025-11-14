@@ -111,21 +111,21 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('homeroom/kokurikuler') ? 'active' : '' }}" href="{{url('homeroom/kokurikuler')}}">
+            <a class="nav-link {{ request()->url() === url('homeroom/finalization/preview') ? 'active' : '' }}" href="{{url('homeroom/finalization/preview')}}">
                 <i class="mdi mdi-school-outline menu-icon"></i>
                 <span class="menu-title">Preview</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('homeroom/keharidan') ? 'active' : '' }}" href="{{url('homeroom/keharidan')}}">
-                <i class="mdi mdi-calendar-text-outline menu-icon"></i>
+            <a class="nav-link {{ request()->url() === url('homeroom/finalization/generate') ? 'active' : '' }}" href="{{url('homeroom/finalization/generate')}}">
+                <i class="mdi mdi-file-pdf menu-icon"></i>
                 <span class="menu-title">Generate PDF</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('homeroom/catatan-wali-kelas') ? 'active' : '' }}" href="{{url('homeroom/catatan-wali-kelas')}}">
+            <a class="nav-link {{ request()->url() === url('homeroom/finalization/ledger') ? 'active' : '' }}" href="{{url('homeroom/finalization/ledger')}}">
                 <i class="mdi mdi-note-text-outline menu-icon"></i>
-                <span class="menu-title">Arsip</span>
+                <span class="menu-title">Leger</span>
             </a>
         </li>
 
