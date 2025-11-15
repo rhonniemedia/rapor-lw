@@ -94,6 +94,13 @@ class Pelajar extends Model
             : null;
     }
 
+    public function getPadaTanggalFormattedAttribute()
+    {
+        return $this->pada_tanggal
+            ? Carbon::parse($this->pada_tanggal)->translatedFormat('d F Y')
+            : null;
+    }
+
     // GABUNGKAN KEDUA METHOD BOOTED() MENJADI SATU
     protected static function booted()
     {
@@ -149,5 +156,11 @@ class Pelajar extends Model
             'P' => 'Perempuan',
             default => 'Tidak diketahui',
         };
+    }
+
+    // Format untuk INPUT (Y-m-d)
+    public function getTanggalLahirInputAttribute()
+    {
+        return $this->tanggal_lahir?->format('Y-m-d');
     }
 }

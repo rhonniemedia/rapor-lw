@@ -159,9 +159,9 @@ class PreviewPdfRapor extends Component
                 'kelas' => $this->rombel->nama,
                 'fase' => $fase,
                 // Orang Tua / Wali
-                'ayah' => $orangTuaWalis->firstWhere('hubungan', 'Ayah'),
-                'ibu' => $orangTuaWalis->firstWhere('hubungan', 'Ibu'),
-                'wali' => $orangTuaWalis->firstWhere('hubungan', 'Wali'),
+                'ayah' => $orangTuaWalis->firstWhere('hubungan', 'ayah'),
+                'ibu' => $orangTuaWalis->firstWhere('hubungan', 'ibu'),
+                'wali' => $orangTuaWalis->firstWhere('hubungan', 'wali'),
                 // Data Nilai & Kegiatan
                 'nilai' => $nilaiData['nilai'],
                 'nilai_grouped' => $nilaiData['nilai_grouped'],

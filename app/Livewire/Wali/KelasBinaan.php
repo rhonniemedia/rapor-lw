@@ -11,7 +11,6 @@ use Livewire\WithPagination;
 use App\Models\RombelPelajar;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class KelasBinaan extends Component
 {
@@ -19,14 +18,10 @@ class KelasBinaan extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    // Properti untuk rombel
     public $rombel;
     public $rombelId;
-
-    // Properti pencarian & pagination
     public $search = '';
     public $perPage = 10;
-
     public $selectedStudent = null;
     public $jurusansList = [];
 
@@ -34,6 +29,11 @@ class KelasBinaan extends Component
     public $ayahData = [];
     public $ibuData = [];
     public $waliData = [];
+
+    // ✅ PROPERTY UNTUK ENUM OPTIONS
+    public $agamaOptions = [];
+    public $pekerjaanOptions = [];
+    public $hubunganOptions = [];
 
     public function mount()
     {
@@ -49,6 +49,11 @@ class KelasBinaan extends Component
 
         $this->rombelId = $this->rombel->id;
         $this->jurusansList = Jurusan::select('id', 'nama')->get();
+
+        // ✅ LOAD ENUM OPTIONS
+        $this->agamaOptions = enum_options('agama', true);
+        $this->pekerjaanOptions = enum_options('pekerjaan', true);
+        $this->hubunganOptions = enum('hubungan');
     }
 
     public function openDetailModal($pelajarId)
@@ -61,7 +66,42 @@ class KelasBinaan extends Component
             return;
         }
 
-        $this->reset(['studentData', 'ayahData', 'ibuData', 'waliData']);
+        // ✅ Gunakan huruf kapital atau key enum
+        // Jika database menggunakan key enum (lowercase): 'ayah', 'ibu', 'wali'
+        $ayah = $this->selectedStudent->orangTuaWalis->where('hubungan', 'ayah')->first();
+        $ibu = $this->selectedStudent->orangTuaWalis->where('hubungan', 'ibu')->first();
+        $wali = $this->selectedStudent->orangTuaWalis->where('hubungan', 'wali')->first();
+
+        $this->ayahData = $ayah ? [
+            'id' => $ayah->id,
+            'nama' => $ayah->nama,
+            'hubungan' => $ayah->hubungan,
+            'status' => $ayah->status ?? 'masih-hidup',
+            'pekerjaan' => $ayah->pekerjaan,
+            'telepon' => $ayah->telepon,
+            'alamat' => $ayah->alamat,
+        ] : [];
+
+        $this->ibuData = $ibu ? [
+            'id' => $ibu->id,
+            'nama' => $ibu->nama,
+            'hubungan' => $ibu->hubungan,
+            'status' => $ibu->status ?? 'masih-hidup',
+            'pekerjaan' => $ibu->pekerjaan,
+            'telepon' => $ibu->telepon,
+            'alamat' => $ibu->alamat,
+        ] : [];
+
+        $this->waliData = $wali ? [
+            'id' => $wali->id,
+            'nama' => $wali->nama,
+            'hubungan' => $wali->hubungan,
+            'status' => $wali->status ?? 'masih-hidup',
+            'pekerjaan' => $wali->pekerjaan,
+            'telepon' => $wali->telepon,
+            'alamat' => $wali->alamat,
+        ] : [];
+
         $this->dispatch('show-detail-modal');
     }
 
@@ -76,23 +116,93 @@ class KelasBinaan extends Component
         }
 
         $this->selectedStudent = $student;
-        $this->studentData = $student->toArray();
 
-        // Mapping data Orang Tua/Wali
-        $ayah = $student->orangTuaWalis->where('hubungan', 'Ayah')->first();
-        $ibu = $student->orangTuaWalis->where('hubungan', 'Ibu')->first();
-        $wali = $student->orangTuaWalis->where('hubungan', 'Wali')->first();
+        // ✅ PERBAIKAN: Manual mapping dengan format tanggal yang benar
+        $this->studentData = [
+            'id' => $student->id,
+            'nama_lengkap' => $student->nama_lengkap,
+            'nomor_induk' => $student->nomor_induk,
+            'nisn' => $student->nisn,
+            'tempat_lahir' => $student->tempat_lahir,
 
-        $this->ayahData = $ayah ? $ayah->toArray() : ['hubungan' => 'Ayah'];
-        $this->ibuData = $ibu ? $ibu->toArray() : ['hubungan' => 'Ibu'];
-        $this->waliData = $wali ? $wali->toArray() : ['hubungan' => 'Wali'];
+            // ✅ Format untuk input type="date" (Y-m-d)
+            'tanggal_lahir' => $student->tanggal_lahir_input,
+
+            'jenis_kelamin' => $student->jenis_kelamin,
+            'agama' => $student->agama,
+            'status_dalam_keluarga' => $student->status_dalam_keluarga,
+            'anak_ke' => $student->anak_ke,
+            'alamat' => $student->alamat,
+            'telepon' => $student->telepon,
+            'sekolah_asal' => $student->sekolah_asal,
+            'diterima_di_kelas' => $student->diterima_di_kelas,
+
+            // ✅ Format untuk input type="date" (Y-m-d)
+            'pada_tanggal' => $student->pada_tanggal,
+        ];
+
+        // ✅ Gunakan key enum (lowercase)
+        $ayah = $student->orangTuaWalis->where('hubungan', 'ayah')->first();
+        $ibu = $student->orangTuaWalis->where('hubungan', 'ibu')->first();
+        $wali = $student->orangTuaWalis->where('hubungan', 'wali')->first();
+
+        $this->ayahData = $ayah ? [
+            'id' => $ayah->id,
+            'nama' => $ayah->nama,
+            'hubungan' => $ayah->hubungan,
+            'status' => $ayah->status ?? 'masih-hidup',
+            'pekerjaan' => $ayah->pekerjaan,
+            'telepon' => $ayah->telepon,
+            'alamat' => $ayah->alamat,
+        ] : [
+            'hubungan' => 'ayah', // ✅ gunakan key enum
+            'status' => 'masih-hidup',
+            'nama' => '',
+            'pekerjaan' => '',
+            'telepon' => '',
+            'alamat' => '',
+        ];
+
+        $this->ibuData = $ibu ? [
+            'id' => $ibu->id,
+            'nama' => $ibu->nama,
+            'hubungan' => $ibu->hubungan,
+            'status' => $ibu->status ?? 'masih-hidup',
+            'pekerjaan' => $ibu->pekerjaan,
+            'telepon' => $ibu->telepon,
+            'alamat' => $ibu->alamat,
+        ] : [
+            'hubungan' => 'ibu', // ✅ gunakan key enum
+            'status' => 'masih-hidup',
+            'nama' => '',
+            'pekerjaan' => '',
+            'telepon' => '',
+            'alamat' => '',
+        ];
+
+        $this->waliData = $wali ? [
+            'id' => $wali->id,
+            'nama' => $wali->nama,
+            'hubungan' => $wali->hubungan,
+            'status' => $wali->status ?? 'masih-hidup',
+            'pekerjaan' => $wali->pekerjaan,
+            'telepon' => $wali->telepon,
+            'alamat' => $wali->alamat,
+        ] : [
+            'hubungan' => 'wali', // ✅ gunakan key enum
+            'status' => 'masih-hidup',
+            'nama' => '',
+            'pekerjaan' => '',
+            'telepon' => '',
+            'alamat' => '',
+        ];
 
         $this->dispatch('show-edit-modal');
     }
 
     public function saveStudent()
     {
-        // Validasi data pelajar
+        // ✅ VALIDASI DENGAN ENUM
         $validatedStudent = $this->validate([
             'studentData.nama_lengkap' => 'required|string|max:255',
             'studentData.nomor_induk' => 'nullable|string|max:50',
@@ -100,7 +210,7 @@ class KelasBinaan extends Component
             'studentData.tempat_lahir' => 'nullable|string|max:255',
             'studentData.tanggal_lahir' => 'nullable|date',
             'studentData.jenis_kelamin' => 'nullable|in:L,P',
-            'studentData.agama' => 'nullable|string',
+            'studentData.agama' => enum_validation_rule('agama', true), // ✅ Validasi enum
             'studentData.status_dalam_keluarga' => 'nullable|string|max:100',
             'studentData.anak_ke' => 'nullable|integer',
             'studentData.alamat' => 'nullable|string',
@@ -112,24 +222,25 @@ class KelasBinaan extends Component
             'studentData.nama_lengkap.required' => 'Nama lengkap wajib diisi.',
             'studentData.jenis_kelamin.in' => 'Jenis kelamin harus L atau P.',
             'studentData.tanggal_lahir.date' => 'Format tanggal lahir tidak valid.',
+            'studentData.agama.in' => 'Agama yang dipilih tidak valid.',
         ]);
 
-        // Validasi data orang tua (optional)
+        // ✅ VALIDASI DATA ORANG TUA DENGAN ENUM
         $this->validate([
             'ayahData.nama' => 'nullable|string|max:255',
-            'ayahData.pekerjaan' => 'nullable|string|max:255',
+            'ayahData.pekerjaan' => enum_validation_rule('pekerjaan', true), // ✅ Validasi enum
             'ayahData.telepon' => 'nullable|string|max:20',
             'ayahData.alamat' => 'nullable|string',
             'ayahData.status' => 'nullable|in:masih-hidup,sudah-meninggal',
 
             'ibuData.nama' => 'nullable|string|max:255',
-            'ibuData.pekerjaan' => 'nullable|string|max:255',
+            'ibuData.pekerjaan' => enum_validation_rule('pekerjaan', true), // ✅ Validasi enum
             'ibuData.telepon' => 'nullable|string|max:20',
             'ibuData.alamat' => 'nullable|string',
             'ibuData.status' => 'nullable|in:masih-hidup,sudah-meninggal',
 
             'waliData.nama' => 'nullable|string|max:255',
-            'waliData.pekerjaan' => 'nullable|string|max:255',
+            'waliData.pekerjaan' => enum_validation_rule('pekerjaan', true), // ✅ Validasi enum
             'waliData.telepon' => 'nullable|string|max:20',
             'waliData.alamat' => 'nullable|string',
             'waliData.status' => 'nullable|in:masih-hidup,sudah-meninggal',
@@ -138,14 +249,13 @@ class KelasBinaan extends Component
         DB::beginTransaction();
 
         try {
-            // Update data pelajar
             $pelajar = Pelajar::find($this->selectedStudent->id);
 
             if (!$pelajar) {
                 throw new \Exception('Data pelajar tidak ditemukan.');
             }
 
-            // Update field biasa
+            // Update field - biarkan cast yang handle encryption
             $pelajar->nama_lengkap = $this->studentData['nama_lengkap'];
             $pelajar->nomor_induk = $this->studentData['nomor_induk'] ?? null;
             $pelajar->tempat_lahir = $this->studentData['tempat_lahir'] ?? null;
@@ -155,98 +265,79 @@ class KelasBinaan extends Component
             $pelajar->sekolah_asal = $this->studentData['sekolah_asal'] ?? null;
             $pelajar->diterima_di_kelas = $this->studentData['diterima_di_kelas'] ?? null;
 
-            // Handle tanggal
             if (!empty($this->studentData['tanggal_lahir'])) {
-                $pelajar->tanggal_lahir = encrypt($this->studentData['tanggal_lahir']);
+                $pelajar->tanggal_lahir = $this->studentData['tanggal_lahir'];
             }
 
             if (!empty($this->studentData['pada_tanggal'])) {
                 $pelajar->pada_tanggal = $this->studentData['pada_tanggal'];
             }
 
-            // Handle field terenkripsi dengan hash
             if (!empty($this->studentData['nisn'])) {
-                $pelajar->nisn = encrypt($this->studentData['nisn']);
+                $pelajar->nisn = $this->studentData['nisn'];
                 $pelajar->nisn_hash = hash('sha256', $this->studentData['nisn']);
             }
 
+            // ✅ SIMPAN KEY ENUM (lowercase) ke database
             if (!empty($this->studentData['agama'])) {
-                $pelajar->agama = encrypt($this->studentData['agama']);
-                $pelajar->agama_hash = hash('sha256', $this->studentData['agama']);
+                $pelajar->agama = $this->studentData['agama']; // Simpan key: 'islam', 'kristen', dll
+                $pelajar->agama_hash = hash('sha256', strtolower($this->studentData['agama']));
             }
 
             if (!empty($this->studentData['alamat'])) {
-                $pelajar->alamat = encrypt($this->studentData['alamat']);
+                $pelajar->alamat = $this->studentData['alamat'];
             }
 
             if (!empty($this->studentData['telepon'])) {
-                $pelajar->telepon = encrypt($this->studentData['telepon']);
+                $pelajar->telepon = $this->studentData['telepon'];
             }
 
             $pelajar->save();
 
-            // Update/Create data Ayah
-            $this->saveOrUpdateOrangTua($pelajar->id, $this->ayahData, 'Ayah');
-
-            // Update/Create data Ibu
-            $this->saveOrUpdateOrangTua($pelajar->id, $this->ibuData, 'Ibu');
-
-            // Update/Create data Wali
-            $this->saveOrUpdateOrangTua($pelajar->id, $this->waliData, 'Wali');
+            // Update/Create data Orang Tua
+            $this->saveOrUpdateOrangTua($pelajar->id, $this->ayahData, 'ayah');
+            $this->saveOrUpdateOrangTua($pelajar->id, $this->ibuData, 'ibu');
+            $this->saveOrUpdateOrangTua($pelajar->id, $this->waliData, 'wali');
 
             DB::commit();
 
             session()->flash('success', 'Data pelajar berhasil diperbarui.');
-
-            // Close modal
             $this->dispatch('close-edit-modal');
-
-            // Reset selected student
             $this->reset(['selectedStudent', 'studentData', 'ayahData', 'ibuData', 'waliData']);
         } catch (\Exception $e) {
             DB::rollBack();
-
             session()->flash('error', 'Gagal menyimpan data: ' . $e->getMessage());
         }
     }
 
     protected function saveOrUpdateOrangTua($pelajarId, $data, $hubungan)
     {
-        // Skip jika nama kosong
         if (empty($data['nama'])) {
             return;
         }
 
-        // Cek apakah sudah ada data orang tua dengan hubungan ini
         $orangTua = OrangTuaWali::where('pelajar_id', $pelajarId)
-            ->where('hubungan', $hubungan)
+            ->where('hubungan', $hubungan) // ✅ Simpan key enum: 'ayah', 'ibu', 'wali'
             ->first();
 
         if ($orangTua) {
             // Update existing
-            $orangTua->nama = !empty($data['nama']) ? encrypt($data['nama']) : $orangTua->nama;
-            $orangTua->pekerjaan = $data['pekerjaan'] ?? null;
+            $orangTua->nama = $data['nama'];
+            $orangTua->pekerjaan = $data['pekerjaan'] ?? null; // ✅ Simpan key enum pekerjaan
             $orangTua->status = $data['status'] ?? 'masih-hidup';
-
-            if (!empty($data['telepon'])) {
-                $orangTua->telepon = encrypt($data['telepon']);
-            }
-
-            if (!empty($data['alamat'])) {
-                $orangTua->alamat = encrypt($data['alamat']);
-            }
-
+            $orangTua->telepon = $data['telepon'] ?? null;
+            $orangTua->alamat = $data['alamat'] ?? null;
             $orangTua->save();
         } else {
             // Create new
             OrangTuaWali::create([
                 'pelajar_id' => $pelajarId,
-                'nama' => encrypt($data['nama']),
-                'hubungan' => $hubungan,
+                'nama' => $data['nama'],
+                'hubungan' => $hubungan, // ✅ Simpan key enum: 'ayah', 'ibu', 'wali'
                 'status' => $data['status'] ?? 'masih-hidup',
-                'pekerjaan' => $data['pekerjaan'] ?? null,
-                'telepon' => !empty($data['telepon']) ? encrypt($data['telepon']) : null,
-                'alamat' => !empty($data['alamat']) ? encrypt($data['alamat']) : null,
+                'pekerjaan' => $data['pekerjaan'] ?? null, // ✅ Simpan key enum pekerjaan
+                'telepon' => $data['telepon'] ?? null,
+                'alamat' => $data['alamat'] ?? null,
             ]);
         }
     }
@@ -258,12 +349,8 @@ class KelasBinaan extends Component
 
     public function getStatsProperty()
     {
-        $totalSiswa = RombelPelajar::where('rombel_id', $this->rombelId)
-            ->count();
-
-        return [
-            'total_siswa' => $totalSiswa,
-        ];
+        $totalSiswa = RombelPelajar::where('rombel_id', $this->rombelId)->count();
+        return ['total_siswa' => $totalSiswa];
     }
 
     public function render()

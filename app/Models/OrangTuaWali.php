@@ -28,4 +28,9 @@ class OrangTuaWali extends Model
         'telepon' => 'encrypted',
         'alamat'  => 'encrypted',
     ];
+
+    public function pelajar()
+    {
+        return $this->belongsTo(Pelajar::class, 'pelajar_id', 'id');
+    }
 }

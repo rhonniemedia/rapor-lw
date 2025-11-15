@@ -25,6 +25,8 @@
 
     <link rel="stylesheet" href="{{ asset('assets/css/other-style.css') }}" />
 
+    @stack('styles')
+
     <style>
         .bg-light-primary {
             background-color: rgba(66, 133, 244, 0.1) !important;
