@@ -30,6 +30,12 @@ class KelasBinaan extends Component
     public $ibuData = [];
     public $waliData = [];
 
+    // ✅ DATA AWAL UNTUK DIRTY CHECKING
+    public $originalStudentData = [];
+    public $originalAyahData = [];
+    public $originalIbuData = [];
+    public $originalWaliData = [];
+
     // ✅ PROPERTY UNTUK ENUM OPTIONS
     public $agamaOptions = [];
     public $pekerjaanOptions = [];
@@ -62,7 +68,10 @@ class KelasBinaan extends Component
             ->find($pelajarId);
 
         if (!$this->selectedStudent) {
-            session()->flash('error', 'Data pelajar tidak ditemukan.');
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Data pelajar tidak ditemukan.'
+            ]);
             return;
         }
 
@@ -111,7 +120,10 @@ class KelasBinaan extends Component
             ->find($pelajarId);
 
         if (!$student) {
-            session()->flash('error', 'Data pelajar tidak ditemukan.');
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Data pelajar tidak ditemukan.'
+            ]);
             return;
         }
 
@@ -141,6 +153,9 @@ class KelasBinaan extends Component
             'pada_tanggal' => $student->pada_tanggal,
         ];
 
+        // ✅ SIMPAN DATA AWAL UNTUK DIRTY CHECKING
+        $this->originalStudentData = $this->studentData;
+
         // ✅ Gunakan key enum (lowercase)
         $ayah = $student->orangTuaWalis->where('hubungan', 'ayah')->first();
         $ibu = $student->orangTuaWalis->where('hubungan', 'ibu')->first();
@@ -155,7 +170,7 @@ class KelasBinaan extends Component
             'telepon' => $ayah->telepon,
             'alamat' => $ayah->alamat,
         ] : [
-            'hubungan' => 'ayah', // ✅ gunakan key enum
+            'hubungan' => 'ayah',
             'status' => 'masih-hidup',
             'nama' => '',
             'pekerjaan' => '',
@@ -172,7 +187,7 @@ class KelasBinaan extends Component
             'telepon' => $ibu->telepon,
             'alamat' => $ibu->alamat,
         ] : [
-            'hubungan' => 'ibu', // ✅ gunakan key enum
+            'hubungan' => 'ibu',
             'status' => 'masih-hidup',
             'nama' => '',
             'pekerjaan' => '',
@@ -189,7 +204,7 @@ class KelasBinaan extends Component
             'telepon' => $wali->telepon,
             'alamat' => $wali->alamat,
         ] : [
-            'hubungan' => 'wali', // ✅ gunakan key enum
+            'hubungan' => 'wali',
             'status' => 'masih-hidup',
             'nama' => '',
             'pekerjaan' => '',
@@ -197,53 +212,71 @@ class KelasBinaan extends Component
             'alamat' => '',
         ];
 
+        // ✅ SIMPAN DATA AWAL ORANG TUA UNTUK DIRTY CHECKING
+        $this->originalAyahData = $this->ayahData;
+        $this->originalIbuData = $this->ibuData;
+        $this->originalWaliData = $this->waliData;
+
         $this->dispatch('show-edit-modal');
     }
 
     public function saveStudent()
     {
-        // ✅ VALIDASI DENGAN ENUM
+        // ✅ VALIDASI DENGAN ENUM DAN FORMAT ANGKA
         $validatedStudent = $this->validate([
             'studentData.nama_lengkap' => 'required|string|max:255',
-            'studentData.nomor_induk' => 'nullable|string|max:50',
-            'studentData.nisn' => 'nullable|string|max:10',
+            'studentData.nomor_induk' => 'nullable|numeric|digits_between:1,20',
+            'studentData.nisn' => 'nullable|numeric|digits:10',
             'studentData.tempat_lahir' => 'nullable|string|max:255',
             'studentData.tanggal_lahir' => 'nullable|date',
             'studentData.jenis_kelamin' => 'nullable|in:L,P',
-            'studentData.agama' => enum_validation_rule('agama', true), // ✅ Validasi enum
+            'studentData.agama' => enum_validation_rule('agama', true),
             'studentData.status_dalam_keluarga' => 'nullable|string|max:100',
             'studentData.anak_ke' => 'nullable|integer',
             'studentData.alamat' => 'nullable|string',
-            'studentData.telepon' => 'nullable|string|max:20',
+            'studentData.telepon' => 'nullable|numeric|digits_between:10,15',
             'studentData.sekolah_asal' => 'nullable|string|max:255',
             'studentData.diterima_di_kelas' => 'nullable|string|max:100',
             'studentData.pada_tanggal' => 'nullable|date',
         ], [
             'studentData.nama_lengkap.required' => 'Nama lengkap wajib diisi.',
+            'studentData.nomor_induk.numeric' => 'Nomor induk harus berupa angka.',
+            'studentData.nomor_induk.digits_between' => 'Nomor induk maksimal 20 digit.',
+            'studentData.nisn.numeric' => 'NISN harus berupa angka.',
+            'studentData.nisn.digits' => 'NISN harus 10 digit.',
             'studentData.jenis_kelamin.in' => 'Jenis kelamin harus L atau P.',
             'studentData.tanggal_lahir.date' => 'Format tanggal lahir tidak valid.',
             'studentData.agama.in' => 'Agama yang dipilih tidak valid.',
+            'studentData.telepon.numeric' => 'Telepon harus berupa angka.',
+            'studentData.telepon.digits_between' => 'Telepon harus 10-15 digit.',
         ]);
 
         // ✅ VALIDASI DATA ORANG TUA DENGAN ENUM
         $this->validate([
             'ayahData.nama' => 'nullable|string|max:255',
-            'ayahData.pekerjaan' => enum_validation_rule('pekerjaan', true), // ✅ Validasi enum
-            'ayahData.telepon' => 'nullable|string|max:20',
+            'ayahData.pekerjaan' => enum_validation_rule('pekerjaan', true),
+            'ayahData.telepon' => 'nullable|numeric|digits_between:10,15',
             'ayahData.alamat' => 'nullable|string',
             'ayahData.status' => 'nullable|in:masih-hidup,sudah-meninggal',
 
             'ibuData.nama' => 'nullable|string|max:255',
-            'ibuData.pekerjaan' => enum_validation_rule('pekerjaan', true), // ✅ Validasi enum
-            'ibuData.telepon' => 'nullable|string|max:20',
+            'ibuData.pekerjaan' => enum_validation_rule('pekerjaan', true),
+            'ibuData.telepon' => 'nullable|numeric|digits_between:10,15',
             'ibuData.alamat' => 'nullable|string',
             'ibuData.status' => 'nullable|in:masih-hidup,sudah-meninggal',
 
             'waliData.nama' => 'nullable|string|max:255',
-            'waliData.pekerjaan' => enum_validation_rule('pekerjaan', true), // ✅ Validasi enum
-            'waliData.telepon' => 'nullable|string|max:20',
+            'waliData.pekerjaan' => enum_validation_rule('pekerjaan', true),
+            'waliData.telepon' => 'nullable|numeric|digits_between:10,15',
             'waliData.alamat' => 'nullable|string',
             'waliData.status' => 'nullable|in:masih-hidup,sudah-meninggal',
+        ], [
+            'ayahData.telepon.numeric' => 'Telepon ayah harus berupa angka.',
+            'ayahData.telepon.digits_between' => 'Telepon ayah harus 10-15 digit.',
+            'ibuData.telepon.numeric' => 'Telepon ibu harus berupa angka.',
+            'ibuData.telepon.digits_between' => 'Telepon ibu harus 10-15 digit.',
+            'waliData.telepon.numeric' => 'Telepon wali harus berupa angka.',
+            'waliData.telepon.digits_between' => 'Telepon wali harus 10-15 digit.',
         ]);
 
         DB::beginTransaction();
@@ -255,91 +288,243 @@ class KelasBinaan extends Component
                 throw new \Exception('Data pelajar tidak ditemukan.');
             }
 
-            // Update field - biarkan cast yang handle encryption
-            $pelajar->nama_lengkap = $this->studentData['nama_lengkap'];
-            $pelajar->nomor_induk = $this->studentData['nomor_induk'] ?? null;
-            $pelajar->tempat_lahir = $this->studentData['tempat_lahir'] ?? null;
-            $pelajar->jenis_kelamin = $this->studentData['jenis_kelamin'] ?? null;
-            $pelajar->status_dalam_keluarga = $this->studentData['status_dalam_keluarga'] ?? null;
-            $pelajar->anak_ke = $this->studentData['anak_ke'] ?? null;
-            $pelajar->sekolah_asal = $this->studentData['sekolah_asal'] ?? null;
-            $pelajar->diterima_di_kelas = $this->studentData['diterima_di_kelas'] ?? null;
+            // ✅ UPDATE HANYA FIELD YANG BERUBAH (DIRTY CHECKING)
+            $hasChanges = false;
 
-            if (!empty($this->studentData['tanggal_lahir'])) {
-                $pelajar->tanggal_lahir = $this->studentData['tanggal_lahir'];
+            // Cek perubahan nama_lengkap
+            if (
+                isset($this->studentData['nama_lengkap']) &&
+                $this->studentData['nama_lengkap'] !== $this->originalStudentData['nama_lengkap']
+            ) {
+                $pelajar->nama_lengkap = $this->studentData['nama_lengkap'];
+                $hasChanges = true;
             }
 
-            if (!empty($this->studentData['pada_tanggal'])) {
-                $pelajar->pada_tanggal = $this->studentData['pada_tanggal'];
+            // Cek perubahan nomor_induk
+            if (
+                isset($this->studentData['nomor_induk']) &&
+                $this->studentData['nomor_induk'] !== $this->originalStudentData['nomor_induk']
+            ) {
+                $pelajar->nomor_induk = !empty($this->studentData['nomor_induk']) ? $this->studentData['nomor_induk'] : null;
+                $hasChanges = true;
             }
 
-            if (!empty($this->studentData['nisn'])) {
-                $pelajar->nisn = $this->studentData['nisn'];
-                $pelajar->nisn_hash = hash('sha256', $this->studentData['nisn']);
+            // Cek perubahan NISN
+            if (
+                isset($this->studentData['nisn']) &&
+                $this->studentData['nisn'] !== $this->originalStudentData['nisn']
+            ) {
+                if (!empty($this->studentData['nisn'])) {
+                    $pelajar->nisn = $this->studentData['nisn'];
+                    $pelajar->nisn_hash = hash('sha256', $this->studentData['nisn']);
+                } else {
+                    $pelajar->nisn = null;
+                    $pelajar->nisn_hash = null;
+                }
+                $hasChanges = true;
             }
 
-            // ✅ SIMPAN KEY ENUM (lowercase) ke database
-            if (!empty($this->studentData['agama'])) {
-                $pelajar->agama = $this->studentData['agama']; // Simpan key: 'islam', 'kristen', dll
-                $pelajar->agama_hash = hash('sha256', strtolower($this->studentData['agama']));
+            // Cek perubahan tempat_lahir
+            if (
+                isset($this->studentData['tempat_lahir']) &&
+                $this->studentData['tempat_lahir'] !== $this->originalStudentData['tempat_lahir']
+            ) {
+                $pelajar->tempat_lahir = !empty($this->studentData['tempat_lahir']) ? $this->studentData['tempat_lahir'] : null;
+                $hasChanges = true;
             }
 
-            if (!empty($this->studentData['alamat'])) {
-                $pelajar->alamat = $this->studentData['alamat'];
+            // Cek perubahan tanggal_lahir
+            if (
+                isset($this->studentData['tanggal_lahir']) &&
+                $this->studentData['tanggal_lahir'] !== $this->originalStudentData['tanggal_lahir']
+            ) {
+                $pelajar->tanggal_lahir = !empty($this->studentData['tanggal_lahir']) ? $this->studentData['tanggal_lahir'] : null;
+                $hasChanges = true;
             }
 
-            if (!empty($this->studentData['telepon'])) {
-                $pelajar->telepon = $this->studentData['telepon'];
+            // Cek perubahan jenis_kelamin
+            if (
+                isset($this->studentData['jenis_kelamin']) &&
+                $this->studentData['jenis_kelamin'] !== $this->originalStudentData['jenis_kelamin']
+            ) {
+                $pelajar->jenis_kelamin = !empty($this->studentData['jenis_kelamin']) ? $this->studentData['jenis_kelamin'] : null;
+                $hasChanges = true;
             }
 
-            $pelajar->save();
+            // Cek perubahan agama
+            if (
+                isset($this->studentData['agama']) &&
+                $this->studentData['agama'] !== $this->originalStudentData['agama']
+            ) {
+                if (!empty($this->studentData['agama'])) {
+                    $pelajar->agama = $this->studentData['agama'];
+                    $pelajar->agama_hash = hash('sha256', strtolower($this->studentData['agama']));
+                } else {
+                    $pelajar->agama = null;
+                    $pelajar->agama_hash = null;
+                }
+                $hasChanges = true;
+            }
 
-            // Update/Create data Orang Tua
-            $this->saveOrUpdateOrangTua($pelajar->id, $this->ayahData, 'ayah');
-            $this->saveOrUpdateOrangTua($pelajar->id, $this->ibuData, 'ibu');
-            $this->saveOrUpdateOrangTua($pelajar->id, $this->waliData, 'wali');
+            // Cek perubahan status_dalam_keluarga
+            if (
+                isset($this->studentData['status_dalam_keluarga']) &&
+                $this->studentData['status_dalam_keluarga'] !== $this->originalStudentData['status_dalam_keluarga']
+            ) {
+                $pelajar->status_dalam_keluarga = !empty($this->studentData['status_dalam_keluarga']) ? $this->studentData['status_dalam_keluarga'] : null;
+                $hasChanges = true;
+            }
+
+            // Cek perubahan anak_ke
+            if (
+                isset($this->studentData['anak_ke']) &&
+                $this->studentData['anak_ke'] !== $this->originalStudentData['anak_ke']
+            ) {
+                $pelajar->anak_ke = !empty($this->studentData['anak_ke']) ? $this->studentData['anak_ke'] : null;
+                $hasChanges = true;
+            }
+
+            // Cek perubahan alamat
+            if (
+                isset($this->studentData['alamat']) &&
+                $this->studentData['alamat'] !== $this->originalStudentData['alamat']
+            ) {
+                $pelajar->alamat = !empty($this->studentData['alamat']) ? $this->studentData['alamat'] : null;
+                $hasChanges = true;
+            }
+
+            // Cek perubahan telepon
+            if (
+                isset($this->studentData['telepon']) &&
+                $this->studentData['telepon'] !== $this->originalStudentData['telepon']
+            ) {
+                $pelajar->telepon = !empty($this->studentData['telepon']) ? $this->studentData['telepon'] : null;
+                $hasChanges = true;
+            }
+
+            // Cek perubahan sekolah_asal
+            if (
+                isset($this->studentData['sekolah_asal']) &&
+                $this->studentData['sekolah_asal'] !== $this->originalStudentData['sekolah_asal']
+            ) {
+                $pelajar->sekolah_asal = !empty($this->studentData['sekolah_asal']) ? $this->studentData['sekolah_asal'] : null;
+                $hasChanges = true;
+            }
+
+            // Cek perubahan diterima_di_kelas
+            if (
+                isset($this->studentData['diterima_di_kelas']) &&
+                $this->studentData['diterima_di_kelas'] !== $this->originalStudentData['diterima_di_kelas']
+            ) {
+                $pelajar->diterima_di_kelas = !empty($this->studentData['diterima_di_kelas']) ? $this->studentData['diterima_di_kelas'] : null;
+                $hasChanges = true;
+            }
+
+            // Cek perubahan pada_tanggal
+            if (
+                isset($this->studentData['pada_tanggal']) &&
+                $this->studentData['pada_tanggal'] !== $this->originalStudentData['pada_tanggal']
+            ) {
+                $pelajar->pada_tanggal = !empty($this->studentData['pada_tanggal']) ? $this->studentData['pada_tanggal'] : null;
+                $hasChanges = true;
+            }
+
+            // Simpan jika ada perubahan
+            if ($hasChanges) {
+                $pelajar->save();
+            }
+
+            // Update/Create data Orang Tua dengan dirty checking
+            $ayahChanged = $this->saveOrUpdateOrangTua($pelajar->id, $this->ayahData, $this->originalAyahData, 'ayah');
+            $ibuChanged = $this->saveOrUpdateOrangTua($pelajar->id, $this->ibuData, $this->originalIbuData, 'ibu');
+            $waliChanged = $this->saveOrUpdateOrangTua($pelajar->id, $this->waliData, $this->originalWaliData, 'wali');
 
             DB::commit();
 
-            session()->flash('success', 'Data pelajar berhasil diperbarui.');
+            // ✅ SWEETALERT NOTIFICATION
+            if ($hasChanges || $ayahChanged || $ibuChanged || $waliChanged) {
+                $this->dispatch('show-alert', [
+                    'type' => 'success',
+                    'message' => 'Data pelajar berhasil diperbarui.'
+                ]);
+            } else {
+                $this->dispatch('show-alert', [
+                    'type' => 'info',
+                    'message' => 'Tidak ada perubahan data.'
+                ]);
+            }
+
             $this->dispatch('close-edit-modal');
-            $this->reset(['selectedStudent', 'studentData', 'ayahData', 'ibuData', 'waliData']);
+            $this->reset(['selectedStudent', 'studentData', 'ayahData', 'ibuData', 'waliData', 'originalStudentData', 'originalAyahData', 'originalIbuData', 'originalWaliData']);
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Gagal menyimpan data: ' . $e->getMessage());
+
+            // ✅ SWEETALERT ERROR
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Gagal menyimpan data: ' . $e->getMessage()
+            ]);
         }
     }
 
-    protected function saveOrUpdateOrangTua($pelajarId, $data, $hubungan)
+    protected function saveOrUpdateOrangTua($pelajarId, $data, $originalData, $hubungan)
     {
+        // Jika nama kosong, skip
         if (empty($data['nama'])) {
-            return;
+            return false;
         }
 
         $orangTua = OrangTuaWali::where('pelajar_id', $pelajarId)
-            ->where('hubungan', $hubungan) // ✅ Simpan key enum: 'ayah', 'ibu', 'wali'
+            ->where('hubungan', $hubungan)
             ->first();
 
+        $hasChanges = false;
+
         if ($orangTua) {
-            // Update existing
-            $orangTua->nama = $data['nama'];
-            $orangTua->pekerjaan = $data['pekerjaan'] ?? null; // ✅ Simpan key enum pekerjaan
-            $orangTua->status = $data['status'] ?? 'masih-hidup';
-            $orangTua->telepon = $data['telepon'] ?? null;
-            $orangTua->alamat = $data['alamat'] ?? null;
-            $orangTua->save();
+            // ✅ UPDATE HANYA FIELD YANG BERUBAH
+            if (isset($data['nama']) && $data['nama'] !== $originalData['nama']) {
+                $orangTua->nama = $data['nama'];
+                $hasChanges = true;
+            }
+
+            if (isset($data['pekerjaan']) && $data['pekerjaan'] !== $originalData['pekerjaan']) {
+                $orangTua->pekerjaan = !empty($data['pekerjaan']) ? $data['pekerjaan'] : null;
+                $hasChanges = true;
+            }
+
+            if (isset($data['status']) && $data['status'] !== $originalData['status']) {
+                $orangTua->status = $data['status'] ?? 'masih-hidup';
+                $hasChanges = true;
+            }
+
+            if (isset($data['telepon']) && $data['telepon'] !== $originalData['telepon']) {
+                $orangTua->telepon = !empty($data['telepon']) ? $data['telepon'] : null;
+                $hasChanges = true;
+            }
+
+            if (isset($data['alamat']) && $data['alamat'] !== $originalData['alamat']) {
+                $orangTua->alamat = !empty($data['alamat']) ? $data['alamat'] : null;
+                $hasChanges = true;
+            }
+
+            if ($hasChanges) {
+                $orangTua->save();
+            }
         } else {
             // Create new
             OrangTuaWali::create([
                 'pelajar_id' => $pelajarId,
                 'nama' => $data['nama'],
-                'hubungan' => $hubungan, // ✅ Simpan key enum: 'ayah', 'ibu', 'wali'
+                'hubungan' => $hubungan,
                 'status' => $data['status'] ?? 'masih-hidup',
-                'pekerjaan' => $data['pekerjaan'] ?? null, // ✅ Simpan key enum pekerjaan
-                'telepon' => $data['telepon'] ?? null,
-                'alamat' => $data['alamat'] ?? null,
+                'pekerjaan' => !empty($data['pekerjaan']) ? $data['pekerjaan'] : null,
+                'telepon' => !empty($data['telepon']) ? $data['telepon'] : null,
+                'alamat' => !empty($data['alamat']) ? $data['alamat'] : null,
             ]);
+            $hasChanges = true;
         }
+
+        return $hasChanges;
     }
 
     public function updatingSearch()

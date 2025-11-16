@@ -148,6 +148,10 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
         Route::get('/ledger', fn() => view('contents.wali.preview-ledger', ['title' => 'Preview Leger']));
     });
 
+    Route::get('/user', function () {
+        return view('contents.wali.profil-pengguna', ['title' => 'Profil Pengguna']);
+    })->name('user.profile');
+
     // Route wali kelas lainnya...
 });
 

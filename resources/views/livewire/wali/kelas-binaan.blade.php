@@ -1,29 +1,4 @@
 <div>
-    {{-- Flash Messages --}}
-    @if (session()->has('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="mdi mdi-check-circle me-2"></i>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-
-    @if (session()->has('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="mdi mdi-alert-circle me-2"></i>
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-
-    @if (session()->has('info'))
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <i class="mdi mdi-information me-2"></i>
-        {{ session('info') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-
     {{-- Page Header --}}
     <div class="page-header pb-3 mb-4 border-bottom">
         <div class="d-flex align-items-center justify-content-between">
@@ -927,12 +902,46 @@
 
                 {{-- MODAL FOOTER --}}
                 <div class="modal-footer">
-                    {{-- Dihapus: d-flex align-items-center dari tombol --}}
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="mdi mdi-close me-2"></i>Batal
+                    <!-- Tombol Batal: Tetap sederhana -->
+                    <button
+                        type="button"
+                        class="btn btn-labeled btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                        <span class="btn-label">
+                            <i class="mdi mdi-close"></i>
+                        </span>
+                        Batal
                     </button>
-                    <button type="submit" form="editStudentForm" class="btn btn-primary">
-                        <i class="mdi mdi-content-save me-2"></i>Simpan Perubahan
+
+                    <!-- Tombol Simpan Perubahan: Diubah agar memiliki indikator loading -->
+                    <button type="submit"
+                        form="editStudentForm"
+                        class="btn btn-labeled btn-primary"
+                        wire:loading.attr="disabled"
+                        wire:target="editStudentForm">
+
+                        <span class="btn-label">
+                            <!-- Ikon Loading (MDI Spin) - Muncul saat Livewire sedang memproses aksi -->
+                            <i class="mdi mdi-loading mdi-spin d-none"
+                                wire:loading.class.remove="d-none"
+                                wire:target="editStudentForm">
+                            </i>
+                            <!-- Ikon Default (Simpan) - Tersembunyi saat Livewire sedang memproses aksi -->
+                            <i class="mdi mdi-content-save"
+                                wire:loading.class="d-none"
+                                wire:target="editStudentForm">
+                            </i>
+                        </span>
+
+                        <!-- Teks Default - Tersembunyi saat Livewire sedang memproses aksi -->
+                        <span wire:loading.class="d-none" wire:target="editStudentForm">
+                            Simpan
+                        </span>
+
+                        <!-- Teks Loading ("Menyimpan...") - Muncul saat Livewire sedang memproses aksi -->
+                        <span class="d-none" wire:loading.class.remove="d-none" wire:target="editStudentForm">
+                            Menyimpan...
+                        </span>
                     </button>
                 </div>
             </div>
@@ -1062,6 +1071,9 @@
     @endpush
 
     @push('scripts')
+    {{-- ✅ SWEETALERT2 CDN --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         // Handle modal detail
         window.addEventListener('show-detail-modal', event => {
@@ -1083,9 +1095,35 @@
             }
         });
 
+        // ✅ SWEETALERT2 HANDLER (TANPA AUTO CLOSE)
+        window.addEventListener('show-alert', event => {
+            const data = event.detail[0];
+            const icons = {
+                success: 'success',
+                error: 'error',
+                warning: 'warning',
+                info: 'info'
+            };
+
+            const titles = {
+                success: 'Berhasil!',
+                error: 'Gagal!',
+                warning: 'Peringatan!',
+                info: 'Informasi'
+            };
+
+            Swal.fire({
+                icon: icons[data.type] || 'info',
+                title: titles[data.type] || 'Notifikasi',
+                text: data.message,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#0d6efd'
+            });
+        });
+
         // Reset tab ke tab pertama saat modal dibuka
         document.getElementById('detailModal').addEventListener('show.bs.modal', function() {
-            var firstTab = new bootstrap.Tab(document.getElementById('detail-pelajar-tab'));
+            var firstTab = new bootstrap.Tab(document.getElementById('pelajar-tab'));
             firstTab.show();
         });
 
