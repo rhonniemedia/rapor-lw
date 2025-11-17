@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Dashboard Guru - E-Rapor</title>
+    <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css" />
+    <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css" />
+    <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+        .progress-card-hover {
+            transition: all 0.3s ease;
+        }
+        .progress-card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .legend-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .subject-card {
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+        .subject-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-scroller">
+        <!-- Sidebar (sama seperti template admin) -->
+        <nav class="sidebar sidebar-offcanvas" id="sidebar">
+            <div class="text-center sidebar-brand-wrapper d-flex align-items-center">
+                <a class="sidebar-brand brand-logo" href="index.html">
+                    <img src="assets/images/logo.svg" alt="logo" />
+                </a>
+            </div>
+            <ul class="nav">
+                <li class="nav-item nav-profile">
+                    <a href="#" class="nav-link">
+                        <div class="nav-profile-image">
+                            <img src="assets/images/faces/face2.jpg" alt="profile" />
+                        </div>
+                        <div class="nav-profile-text d-flex flex-column pr-3">
+                            <span class="font-weight-medium mb-2">Guru Matematika</span>
+                            <span class="font-weight-normal">Tahun Ajaran 2024/2025</span>
+                        </div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="index.html">
+                        <i class="mdi mdi-home menu-icon"></i>
+                        <span class="menu-title">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="pages/nilai/input-nilai.html">
+                        <i class="mdi mdi-pencil-box-outline menu-icon"></i>
+                        <span class="menu-title">Input Nilai</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="pages/nilai/rekap-nilai.html">
+                        <i class="mdi mdi-chart-bar menu-icon"></i>
+                        <span class="menu-title">Rekap Nilai</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="pages/nilai/kehadiran.html">
+                        <i class="mdi mdi-calendar-check menu-icon"></i>
+                        <span class="menu-title">Kehadiran</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="container-fluid page-body-wrapper">
+            <nav class="navbar col-lg-12 col-12 p-lg-0 fixed-top d-flex flex-row">
+                <!-- Navbar content (sama seperti template admin) -->
+            </nav>
+
+            <div class="main-panel">
+                <div class="content-wrapper pb-0">
+                    <!-- Header Dashboard Guru -->
+                    <div class="page-header flex-wrap">
+                        <h3 class="mb-0">
+                            Selamat datang <strong>Budi Santoso!</strong>
+                            <span class="pl-0 h6 pl-sm-2 text-muted d-inline-block">
+                                Guru Matematika
+                            </span>
+                        </h3>
+                        <div class="d-flex">
+                            <div class="btn-btn">
+                                <button type="button" class="btn btn-sm btn-success">
+                                    Tahun Ajaran 2024/2025 ~ Semester Ganjil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistik Utama Guru -->
+                    <div class="row">
+                        <!-- Kelas yang Diampu -->
+                        <div class="col-xl-3 col-lg-12 stretch-card grid-margin">
+                            <div class="row h-100">
+                                <div class="col-xl-12 col-md-6 stretch-card grid-margin grid-margin-sm-0 mb-3">
+                                    <div class="card bg-primary h-100">
+                                        <div class="card-body px-3 py-4 d-flex flex-column justify-content-between">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="color-card">
+                                                    <p class="mb-0 color-card-head">Kelas yang Diampu</p>
+                                                    <h2 class="text-white">6</h2>
+                                                </div>
+                                                <i class="card-icon-indicator mdi mdi-google-classroom bg-inverse-icon-primary"></i>
+                                            </div>
+                                            <h6 class="text-white mb-0">X IPA 1-3, XI IPA 1-3</h6>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Siswa -->
+                                <div class="col-xl-12 col-md-6 stretch-card grid-margin grid-margin-sm-0 mb-3">
+                                    <div class="card bg-info h-100">
+                                        <div class="card-body px-3 py-4 d-flex flex-column justify-content-between">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="color-card">
+                                                    <p class="mb-0 color-card-head">Total Siswa</p>
+                                                    <h2 class="text-white">180</h2>
+                                                </div>
+                                                <i class="card-icon-indicator mdi mdi-account-multiple bg-inverse-icon-info"></i>
+                                            </div>
+                                            <h6 class="text-white mb-0">Semua kelas yang diampu</h6>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Progress Input Nilai -->
+                                <div class="col-xl-12 col-md-6 stretch-card grid-margin grid-margin-sm-0 mb-3">
+                                    <div class="card bg-success h-100">
+                                        <div class="card-body px-3 py-4 d-flex flex-column justify-content-between">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="color-card">
+                                                    <p class="mb-0 color-card-head">Progress Input</p>
+                                                    <h2 class="text-white">75%</h2>
+                                                </div>
+                                                <i class="card-icon-indicator mdi mdi-progress-check bg-inverse-icon-success"></i>
+                                            </div>
+                                            <h6 class="text-white mb-0">2 kelas belum lengkap</h6>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Deadline Terdekat -->
+                                <div class="col-xl-12 col-md-6 stretch-card">
+                                    <div class="card bg-warning h-100">
+                                        <div class="card-body px-3 py-4 d-flex flex-column justify-content-between">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="color-card">
+                                                    <p class="mb-0 color-card-head">Deadline</p>
+                                                    <h2 class="text-white">5 Hari</h2>
+                                                </div>
+                                                <i class="card-icon-indicator mdi mdi-clock-alert bg-inverse-icon-warning"></i>
+                                            </div>
+                                            <h6 class="text-white mb-0">Input nilai semester ganjil</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Input per Kelas -->
+                        <div class="col-xl-9 stretch-card grid-margin">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="row mb-4">
+                                        <div class="col-sm-12">
+                                            <h5>Progress Input Nilai Matematika</h5>
+                                            <p class="text-muted mb-2">
+                                                Status kelengkapan nilai untuk semester ganjil 2024/2025
+                                            </p>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress flex-grow-1 mr-3" style="height: 12px">
+                                                    <div class="progress-bar bg-success" role="progressbar"
+                                                        style="width: 75%"
+                                                        aria-valuenow="75"
+                                                        aria-valuemin="0"
+                                                        aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                <span class="font-weight-bold text-success">75%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row flex-grow-1">
+                                        <!-- Daftar Kelas -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex flex-column h-100 justify-content-between">
+                                                <!-- Kelas X IPA 1 -->
+                                                <div class="card bg-light-primary p-3 mb-2 progress-card-hover" style="min-height: 100px">
+                                                    <div class="d-flex align-items-center h-100">
+                                                        <i class="mdi mdi-google-classroom mdi-24px text-primary mr-3"></i>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1">X IPA 1</h5>
+                                                            <p class="mb-0 text-muted">30 siswa</p>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <h5 class="mb-1 text-success">100%</h5>
+                                                            <small class="text-success">Lengkap</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Kelas X IPA 2 -->
+                                                <div class="card bg-light-primary p-3 mb-2 progress-card-hover" style="min-height: 100px">
+                                                    <div class="d-flex align-items-center h-100">
+                                                        <i class="mdi mdi-google-classroom mdi-24px text-primary mr-3"></i>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1">X IPA 2</h5>
+                                                            <p class="mb-0 text-muted">30 siswa</p>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <h5 class="mb-1 text-success">100%</h5>
+                                                            <small class="text-success">Lengkap</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Kelas X IPA 3 -->
+                                                <div class="card bg-light-warning p-3 mb-2 progress-card-hover" style="min-height: 100px">
+                                                    <div class="d-flex align-items-center h-100">
+                                                        <i class="mdi mdi-google-classroom mdi-24px text-warning mr-3"></i>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1">X IPA 3</h5>
+                                                            <p class="mb-0 text-muted">30 siswa</p>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <h5 class="mb-1 text-warning">65%</h5>
+                                                            <small class="text-warning">10 siswa belum</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Kelas XI IPA 1 -->
+                                                <div class="card bg-light-success p-3 mb-2 progress-card-hover" style="min-height: 100px">
+                                                    <div class="d-flex align-items-center h-100">
+                                                        <i class="mdi mdi-google-classroom mdi-24px text-success mr-3"></i>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1">XI IPA 1</h5>
+                                                            <p class="mb-0 text-muted">30 siswa</p>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <h5 class="mb-1 text-success">100%</h5>
+                                                            <small class="text-success">Lengkap</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Kelas XI IPA 2 -->
+                                                <div class="card bg-light-success p-3 mb-2 progress-card-hover" style="min-height: 100px">
+                                                    <div class="d-flex align-items-center h-100">
+                                                        <i class="mdi mdi-google-classroom mdi-24px text-success mr-3"></i>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1">XI IPA 2</h5>
+                                                            <p class="mb-0 text-muted">30 siswa</p>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <h5 class="mb-1 text-success">100%</h5>
+                                                            <small class="text-success">Lengkap</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Kelas XI IPA 3 -->
+                                                <div class="card bg-light-danger p-3 progress-card-hover" style="min-height: 100px">
+                                                    <div class="d-flex align-items-center h-100">
+                                                        <i class="mdi mdi-google-classroom mdi-24px text-danger mr-3"></i>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1">XI IPA 3</h5>
+                                                            <p class="mb-0 text-muted">30 siswa</p>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <h5 class="mb-1 text-danger">45%</h5>
+                                                            <small class="text-danger">16 siswa belum</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Chart Distribusi Nilai -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex flex-column h-100">
+                                                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                                                    <div style="position: relative; height: 280px; width: 280px">
+                                                        <canvas id="chart_distribusi_nilai"></canvas>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3">
+                                                    <h6 class="text-black mb-3">Distribusi Nilai Matematika</h6>
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="legend-dot" style="background-color: #4CAF50"></span>
+                                                            <span class="text-muted ml-2">A (90-100)</span>
+                                                        </div>
+                                                        <span class="font-weight-bold">25%</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="legend-dot" style="background-color: #2196F3"></span>
+                                                            <span class="text-muted ml-2">B (80-89)</span>
+                                                        </div>
+                                                        <span class="font-weight-bold">40%</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="legend-dot" style="background-color: #FFC107"></span>
+                                                            <span class="text-muted ml-2">C (70-79)</span>
+                                                        </div>
+                                                        <span class="font-weight-bold">25%</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="legend-dot" style="background-color: #F44336"></span>
+                                                            <span class="text-muted ml-2">D (0-69)</span>
+                                                        </div>
+                                                        <span class="font-weight-bold">10%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions dan Tugas Mendesak -->
+                    <div class="row">
+                        <div class="col-xl-4 grid-margin stretch-card">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title text-black">Aksi Cepat</h4>
+                                    <p class="text-muted">Tugas yang perlu segera diselesaikan</p>
+                                    <div class="list-wrapper">
+                                        <div class="d-flex flex-column">
+                                            <!-- Input Nilai Kelas X IPA 3 -->
+                                            <a href="#" class="text-decoration-none mb-2">
+                                                <div class="card bg-light-warning p-3 progress-card-hover" style="min-height: 95px">
+                                                    <div class="d-flex align-items-center h-100">
+                                                        <i class="mdi mdi-pencil-box-outline mdi-24px text-warning mr-3"></i>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1 text-dark">Input Nilai X IPA 3</h5>
+                                                            <p class="mb-0 text-muted">10 siswa belum dinilai</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </a>
+
+                                            <!-- Input Nilai Kelas XI IPA 3 -->
+                                            <a href="#" class="text-decoration-none mb-2">
+                                                <div class="card bg-light-danger p-3 progress-card-hover" style="min-height: 95px">
+                                                    <div class="d-flex align-items-center h-100">
+                                                        <i class="mdi mdi-pencil-box-outline mdi-24px text-danger mr-3"></i>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1 text-dark">Input Nilai XI IPA 3</h5>
+                                                            <p class="mb-0 text-muted">16 siswa belum dinilai</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </a>
+
+                                            <!-- Rekap Nilai -->
+                                            <a href="#" class="text-decoration-none mb-2">
+                                                <div class="card bg-light-primary p-3 progress-card-hover" style="min-height: 95px">
+                                                    <div class="d-flex align-items-center h-100">
+                                                        <i class="mdi mdi-chart-bar mdi-24px text-primary mr-3"></i>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1 text-dark">Rekap Nilai</h5>
+                                                            <p class="mb-0 text-muted">Lihat statistik nilai semua kelas</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </a>
+
+                                            <!-- Export Nilai -->
+                                            <a href="#" class="text-decoration-none">
+                                                <div class="card bg-light-info p-3 progress-card-hover" style="min-height: 95px">
+                                                    <div class="d-flex align-items-center h-100">
+                                                        <i class="mdi mdi-file-export mdi-24px text-info mr-3"></i>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1 text-dark">Export Nilai</h5>
+                                                            <p class="mb-0 text-muted">Download data nilai Excel</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-8 grid-margin stretch-card">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title text-black">Siswa Perlu Perhatian Khusus</h4>
+                                    <p class="text-muted">Siswa dengan nilai di bawah KKM atau penurunan nilai</p>
+                                    <div class="table-responsive mb-3">
+                                        <table class="table">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>Siswa</th>
+                                                    <th>Kelas</th>
+                                                    <th>Nilai Terakhir</th>
+                                                    <th>Status</th>
+                                                    <th>Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <img src="assets/images/icons/male.png" alt="profile" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                                            <div>
+                                                                <p class="mb-0 font-weight-medium">Ahmad Rizki</p>
+                                                                <small class="text-muted">Nilai turun 15 poin</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>X IPA 3</td>
+                                                    <td>65</td>
+                                                    <td>
+                                                        <div class="badge badge-inverse-danger">Perlu Remedial</div>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary">Input Catatan</button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <img src="assets/images/icons/female.png" alt="profile" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                                            <div>
+                                                                <p class="mb-0 font-weight-medium">Siti Aminah</p>
+                                                                <small class="text-muted">3 tugas tidak dikumpulkan</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>XI IPA 3</td>
+                                                    <td>58</td>
+                                                    <td>
+                                                        <div class="badge badge-inverse-warning">Tugas Tertinggal</div>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary">Input Catatan</button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <img src="assets/images/icons/male.png" alt="profile" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                                            <div>
+                                                                <p class="mb-0 font-weight-medium">Budi Pratama</p>
+                                                                <small class="text-muted">Nilai konsisten rendah</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>X IPA 3</td>
+                                                    <td>62</td>
+                                                    <td>
+                                                        <div class="badge badge-inverse-danger">Perlu Bimbingan</div>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary">Input Catatan</button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aktivitas Terbaru dan Jadwal Mengajar -->
+                    <div class="row">
+                        <div class="col-xl-6 grid-margin stretch-card">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title text-black">Aktivitas Terbaru</h4>
+                                    <p class="text-muted">Input nilai dan aktivitas mengajar terakhir</p>
+                                    <div class="list-wrapper">
+                                        <ul class="d-flex flex-column-reverse todo-list todo-list-custom">
+                                            <li>
+                                                <div class="form-check">
+                                                    <label class="form-check-label">
+                                                        Menginput nilai ulangan harian XI IPA 2
+                                                    </label>
+                                                    <span class="list-time">2 jam lalu</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="form-check">
+                                                    <label class="form-check-label">
+                                                        Memperbarui nilai remedial X IPA 1
+                                                    </label>
+                                                    <span class="list-time">1 hari lalu</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="form-check">
+                                                    <label class="form-check-label">
+                                                        Menginput nilai tugas XI IPA 1
+                                                    </label>
+                                                    <span class="list-time">2 hari lalu</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="form-check">
+                                                    <label class="form-check-label">
+                                                        Menambahkan catatan untuk Ahmad Rizki
+                                                    </label>
+                                                    <span class="list-time">3 hari lalu</span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-6 grid-margin stretch-card">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title text-black">Jadwal Mengajar Besok</h4>
+                                    <p class="text-muted">Rabu, 15 Desember 2024</p>
+                                    <div class="list-wrapper">
+                                        <div class="d-flex flex-column">
+                                            <div class="card bg-light-primary p-3 mb-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-1">X IPA 1</h6>
+                                                        <p class="mb-0 text-muted">07:00 - 08:30</p>
+                                                    </div>
+                                                    <span class="badge badge-primary">Bab 5: Trigonometri</span>
+                                                </div>
+                                            </div>
+                                            <div class="card bg-light-success p-3 mb-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-1">XI IPA 2</h6>
+                                                        <p class="mb-0 text-muted">09:00 - 10:30</p>
+                                                    </div>
+                                                    <span class="badge badge-success">Bab 3: Integral</span>
+                                                </div>
+                                            </div>
+                                            <div class="card bg-light-info p-3">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-1">X IPA 3</h6>
+                                                        <p class="mb-0 text-muted">11:00 - 12:30</p>
+                                                    </div>
+                                                    <span class="badge badge-info">Remedial Trigonometri</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/vendors/js/vendor.bundle.base.js"></script>
+    <script src="assets/vendors/chart.js/Chart.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Chart Distribusi Nilai
+            const ctx = document.getElementById('chart_distribusi_nilai').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['A (90-100)', 'B (80-89)', 'C (70-79)', 'D (0-69)'],
+                    datasets: [{
+                        data: [25, 40, 25, 10],
+                        backgroundColor: ['#4CAF50', '#2196F3', '#FFC107', '#F44336'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
