@@ -1,12 +1,14 @@
 <?php
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Livewire\Wali\LegerKelas;
 use App\Livewire\Wali\KelasBinaan;
 use App\Livewire\Admin\GeneratePdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PdfController;
 use App\Livewire\Template\PreviewRapor;
+use App\Http\Controllers\LegerPdfController;
 use App\Http\Controllers\PdfRaporWaliController;
 
 // Redirect root ke login
@@ -148,6 +150,16 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
         Route::get('/ledger', fn() => view('contents.wali.preview-ledger', ['title' => 'Preview Leger']));
     });
 
+    // // Route untuk menampilkan leger kelas
+    // Route::get('/walikelas/leger', LegerKelas::class)
+    //     ->name('walikelas.leger');
+
+    Route::get('/leger', function () {
+        return view('contents.wali.leger', [
+            'title' => 'Leger Kelas',
+        ]);
+    })->name('leger');
+
     Route::get('/user', function () {
         return view('contents.wali.profil-pengguna', ['title' => 'Profil Pengguna']);
     })->name('user.profile');
@@ -185,3 +197,7 @@ Route::get('/admin/rapor/preview', function () {
 
 // Route untuk generate PDF
 Route::get('/pdf/generate', [PdfController::class, 'generatePdf'])->name('pdf.generate');
+
+// Route untuk generate PDF Leger (tanpa middleware auth karena menggunakan token di URL)
+Route::get('/pdf/leger', [LegerPdfController::class, 'generateLeger'])
+    ->name('pdf.generate.leger');
