@@ -6,14 +6,19 @@
     <title>Leger Kelas {{ $kelas ?? 'N/A' }}</title>
     <style>
         @page {
+            margin: 0.5cm;
+        }
+
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 10px;
-            margin: 10mm;
-            padding-top: 0;
+            font-size: 8pt;
+            line-height: 1.3;
         }
 
         .leger-table {
@@ -32,14 +37,14 @@
         }
 
         .leger-subtitle {
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: normal;
             margin-top: 3px;
         }
 
         .info-row td {
             padding: 3px 8px;
-            font-size: 9pt;
+            font-size: 8pt;
             border-left: 1px solid #000;
             border-right: 1px solid #000;
         }
@@ -59,18 +64,18 @@
             border: 1px solid #000;
             font-weight: bold;
             background-color: #e0e0e0;
-            font-size: 9pt;
+            font-size: 7pt;
         }
 
         .mapel-header {
-            transform: rotate(-90deg);
             writing-mode: vertical-rl;
             text-orientation: mixed;
             white-space: nowrap;
             min-width: 18px;
             max-width: 18px;
             padding: 3px 1px !important;
-            font-size: 9pt;
+            font-size: 6pt;
+            transform: rotate(180deg);
         }
 
         .data-row td {
@@ -78,7 +83,7 @@
             padding: 2px 3px;
             text-align: center;
             vertical-align: middle;
-            font-size: 9pt;
+            font-size: 7pt;
         }
 
         .data-row td.text-left {
@@ -104,44 +109,46 @@
         .signature-box {
             display: table-cell;
             width: 48%;
+            text-align: center;
             vertical-align: top;
-            padding-left: 25rem;
         }
 
         .signature-name {
             margin-top: 60px;
             font-weight: bold;
-            font-size: 15px;
+            border-bottom: 1px solid #000;
             display: inline-block;
+            padding: 0 30px;
         }
 
         .signature-nip {
             margin-top: 3px;
-            font-size: 9pt;
+            font-size: 7pt;
         }
 
         .signature-title {
             margin-bottom: 5px;
-            font-size: 9pt;
+            font-size: 7pt;
         }
 
         .signature-date {
-            font-size: 9pt;
+            margin-bottom: 50px;
+            font-size: 7pt;
         }
 
         /* Untuk tabel dengan banyak kolom */
         .compact .header-content th {
-            font-size: 9pt;
+            font-size: 6pt;
             padding: 2px 1px;
         }
 
         .compact .data-row td {
-            font-size: 9pt;
+            font-size: 6pt;
             padding: 1px 2px;
         }
 
         .compact .mapel-header {
-            font-size: 9pt;
+            font-size: 5pt;
             min-width: 15px;
             max-width: 15px;
         }
@@ -158,57 +165,56 @@
         <thead>
             {{-- JUDUL --}}
             <tr>
-                <th colspan="{{ 12 + $jumlahMapel }}" class="leger-title">
+                <th colspan="{{ 11 + $jumlahMapel }}" class="leger-title">
                     LEGER NILAI HASIL BELAJAR PESERTA DIDIK
-                    <div class="leger-subtitle">
-                        {{ strtoupper($sekolah['nama_sekolah'] ?? 'N/A') }}
-                    </div>
+                    <div class="leger-subtitle">{{ $sekolah['nama_sekolah'] ?? 'N/A' }}</div>
                 </th>
             </tr>
 
             {{-- INFO SEKOLAH & KELAS --}}
             <tr class="info-row">
-                <td colspan="3" style="width: 12%;">TAHUN AJARAN</td>
-                <td colspan="{{ 9 + $jumlahMapel }}">: {{ $tahun_ajaran ?? 'N/A' }}</td>
+                <td colspan="3" style="width: 12%;">Tahun Ajaran</td>
+                <td colspan="{{ 8 + $jumlahMapel }}">: {{ $tahun_ajaran ?? 'N/A' }}</td>
             </tr>
             <tr class="info-row">
-                <td colspan="3">SEMESTER</td>
-                <td colspan="{{ 9 + $jumlahMapel }}">: {{ strtoupper($semester_nama ?? 'N/A') }}</td>
+                <td colspan="3">Semester</td>
+                <td colspan="{{ 8 + $jumlahMapel }}">: {{ $semester_nama ?? 'N/A' }}</td>
             </tr>
             <tr class="info-row">
-                <td colspan="3">KELAS</td>
-                <td colspan="{{ 9 + $jumlahMapel }}">: {{ $kelas ?? 'N/A' }}</td>
+                <td colspan="3">Kelas</td>
+                <td colspan="{{ 7 + $jumlahMapel }}">: {{ $kelas ?? 'N/A' }}</td>
+                <td style="text-align: right;">KKM: {{ $kkm ?? 75 }}</td>
             </tr>
 
             {{-- HEADER KOLOM --}}
             <tr class="header-content">
                 <th rowspan="2" style="width: 2%;">NO</th>
-                <th rowspan="2" style="width: 5%;">NIS</th>
-                <th rowspan="2" style="width: 20%;">NAMA SISWA</th>
+                <th rowspan="2" style="width: 6%;">NIS</th>
+                <th rowspan="2" style="width: 12%;">NAMA SISWA</th>
                 <th rowspan="2" style="width: 7%;">NISN</th>
-                <th rowspan="2" style="width: 3%;">JK</th>
+                <th rowspan="2" style="width: 2%;">JK</th>
 
-                <th colspan="{{ $jumlahMapel }}" style="border-bottom: 1px solid #000; width: 41%;">
+                <th colspan="{{ $jumlahMapel }}" style="border-bottom: 1px solid #000;">
                     MATA PELAJARAN
                 </th>
 
-                <th rowspan="2" style="width: 3%;">KK</th>
+                <th rowspan="2" style="width: 2%;">KK</th>
                 <th rowspan="2" style="width: 3%;">JML</th>
                 <th rowspan="2" style="width: 3%;">RATA</th>
-                <th rowspan="2" style="width: 3%;">PRKT</th>
-                <th colspan="3" style="width: 9%;">KEHADIRAN</th>
+                <th rowspan="2" style="width: 2%;">PRKT</th>
+                <th colspan="3" style="width: 6%;">KEHADIRAN</th>
             </tr>
 
             <tr class="header-content">
                 @foreach($mata_pelajaran as $mapel)
-                <th class="mapel-header" title="{{ $mapel['nama'] }}">
-                    {{ $mapel['kode'] ?? substr($mapel['nama'], 0, 4) }}
+                <th class="mapel-header" title="{{ $mapel->nama }}">
+                    {{ $mapel->kode ?? substr($mapel->nama, 0, 4) }}
                 </th>
                 @endforeach
 
-                <th style="width: 3%;">S</th>
-                <th style="width: 3%;">I</th>
-                <th style="width: 3%;">A</th>
+                <th style="width: 2%;">S</th>
+                <th style="width: 2%;">I</th>
+                <th style="width: 2%;">A</th>
             </tr>
         </thead>
 
@@ -223,18 +229,18 @@
 
                 @foreach($mata_pelajaran as $mapel)
                 <td class="nilai-cell">
-                    @if(isset($student['nilai_per_mapel'][$mapel['id']]) && $student['nilai_per_mapel'][$mapel['id']] > 0)
-                    {{ $student['nilai_per_mapel'][$mapel['id']] }}
+                    @if(isset($student['nilai_per_mapel'][$mapel->id]) && $student['nilai_per_mapel'][$mapel->id] > 0)
+                    {{ $student['nilai_per_mapel'][$mapel->id] }}
                     @else
                     -
                     @endif
                 </td>
                 @endforeach
 
-                <td>{{ $student['kokurikuler'] }}</td>
+                <td>{{ $student['ketuntasan'] }}</td>
                 <td>{{ $student['jumlah_nilai'] }}</td>
-                <td>{{ number_format($student['rata_rata'], 1, ',', '.') }}</td>
-                <td><strong>{{ $student['peringkat'] }}</strong></td>
+                <td>{{ $student['rata_rata'] }}</td>
+                <td><strong>{{ $student['predikat'] }}</strong></td>
                 <td>{{ $student['sakit'] }}</td>
                 <td>{{ $student['izin'] }}</td>
                 <td>{{ $student['tanpa_keterangan'] }}</td>
@@ -247,15 +253,12 @@
     <div class="signature-section">
         <div class="signature-container">
             <div class="signature-box" style="text-align: left;">
-                <div class="signature-date">
-                    Mengetahui
-                </div>
-                <div class="signature-title">Kepala Sekolah,</div>
-                <div class="signature-name">{{ $kepala_sekolah['nama'] ?? 'N/A' }}</div>
-                <div class="signature-nip">NIP. {{ $kepala_sekolah['nip'] ?? '-' }}</div>
+                <div class="signature-title">Wali Kelas</div>
+                <div class="signature-name">{{ $wali_kelas['nama'] ?? 'N/A' }}</div>
+                <div class="signature-nip">NIP. {{ $wali_kelas['nip'] ?? '-' }}</div>
             </div>
 
-            <div class="signature-box">
+            <div class="signature-box" style="text-align: right;">
                 <?php
                 $tanggalRapor = $tanggal_rapor ?? date('Y-m-d');
                 $tanggalFormat = \Carbon\Carbon::parse($tanggalRapor)->locale('id')->isoFormat('D MMMM Y');
@@ -263,22 +266,22 @@
                 <div class="signature-date">
                     {{ $sekolah['kota_kabupaten'] ?? 'Kota' }}, {{ $tanggalFormat }}
                 </div>
-                <div class="signature-title">Wali Kelas,</div>
-                <div class="signature-name">{{ $wali_kelas['nama'] ?? 'N/A' }}</div>
-                <div class="signature-nip">NIP. {{ $wali_kelas['nip'] ?? '-' }}</div>
+                <div class="signature-title">Kepala Sekolah</div>
+                <div class="signature-name">{{ $kepala_sekolah['nama'] ?? 'N/A' }}</div>
+                <div class="signature-nip">NIP. {{ $kepala_sekolah['nip'] ?? '-' }}</div>
             </div>
         </div>
     </div>
 
     {{-- Keterangan di footer --}}
-    <div style="margin-top: 15px; padding: 0 20px; font-size: 8pt; border-top: 1px solid #ccc; padding-top: 5px;">
+    <div style="margin-top: 15px; padding: 0 20px; font-size: 6pt; border-top: 1px solid #ccc; padding-top: 5px;">
         <strong>Keterangan:</strong>
-        KK = Kokurikuler |
+        KK = Ketuntasan Kompetensi |
         JML = Jumlah Total Nilai |
         RATA = Rata-rata Nilai |
-        PRKT = Peringkat |
-        S = Sakit, I = Izin, A = Tanpa Keterangan
-    </div>
+        PRKT = Predikat (A: 90-100, B: 80-89, C: 70-79, D: 60-69, E: <60) |
+            S=Sakit, I=Izin, A=Tanpa Keterangan
+            </div>
 </body>
 
 </html>

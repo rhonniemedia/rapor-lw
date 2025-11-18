@@ -8,11 +8,9 @@ use Livewire\Component;
 use App\Models\Kehadiran;
 use App\Models\Pengaturan;
 use App\Models\DataSekolah;
-use App\Models\Kokurikuler;
-use App\Models\RombelPelajar;
 use App\Models\TahunAjaranSemester;
+use App\Models\RombelPelajar;
 use Illuminate\Support\Facades\Auth;
-use App\Models\KurikulumMataPelajaran;
 
 // ✅ TIDAK PERLU Layout attribute karena pakai pattern view → livewire
 class LegerKelas extends Component
@@ -104,6 +102,7 @@ class LegerKelas extends Component
             return;
         }
 
+        // Get kurikulum_id dari rombel
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
 
         if (!$kurikulumId) {
@@ -111,47 +110,23 @@ class LegerKelas extends Component
             return;
         }
 
-        // Ambil semua mata pelajaran
-        $allMapel = KurikulumMataPelajaran::with(['mataPelajaran', 'kelompok'])
-            ->where('kurikulum_id', $kurikulumId)
+        // Get list mata pelajaran dari kurikulum dengan urutan
+        $mataPelajarans = \DB::table('kurikulum_mata_pelajarans as kmp')
+            ->join('mata_pelajarans as mp', 'kmp.mata_pelajaran_id', '=', 'mp.id')
+            ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
+            ->where('kmp.kurikulum_id', $kurikulumId)
+            ->select(
+                'mp.id',
+                'mp.nama',
+                'mp.kode',
+                'mpk.nama as kelompok_nama',
+                'mpk.kode as kelompok_kode',
+                'kmp.urutan'
+            )
+            ->orderBy('kmp.urutan', 'asc')
             ->get();
 
-        // Pisahkan agama dan non-agama
-        $agamaMapels = $allMapel->filter(function ($item) {
-            return $item->mataPelajaran->is_mapel_agama == true || $item->mataPelajaran->is_mapel_agama == 1;
-        });
-
-        $nonAgamaMapels = $allMapel->filter(function ($item) {
-            return !$item->mataPelajaran->is_mapel_agama || $item->mataPelajaran->is_mapel_agama == 0;
-        });
-
-        // Ambil hanya 1 agama sebagai representasi
-        $combined = collect();
-        if ($agamaMapels->isNotEmpty()) {
-            $combined->push($agamaMapels->first());
-        }
-        $combined = $combined->merge($nonAgamaMapels);
-
-        // Sort dan mapping
-        $mataPelajarans = $combined
-            ->sortBy(function ($item) {
-                return [$item->kelompok->kode, $item->urutan];
-            })
-            ->map(function ($item) {
-                $isAgama = $item->mataPelajaran->is_mapel_agama == true || $item->mataPelajaran->is_mapel_agama == 1;
-
-                return (object) [
-                    'id'             => $isAgama ? 'agama' : $item->mataPelajaran->id,
-                    'nama'           => $isAgama ? 'Pendidikan Agama dan Budi Pekerti' : $item->mataPelajaran->nama,
-                    'kode'           => $isAgama ? 'PABP' : $item->mataPelajaran->kode,
-                    'kelompok_nama'  => $item->kelompok->nama,
-                    'kelompok_kode'  => $item->kelompok->kode,
-                    'urutan'         => $item->urutan,
-                    'is_agama'       => $isAgama,
-                ];
-            });
-
-        $this->mataPelajaranList = $mataPelajarans->values()->toArray();
+        $this->mataPelajaranList = $mataPelajarans->toArray();
     }
 
     // ========================================
@@ -179,30 +154,20 @@ class LegerKelas extends Component
             ->orderBy('id', 'asc')
             ->get();
 
-        $studentsData = $rombelPelajars->map(function ($rombelPelajar, $index) use ($kurikulumId) {
+        $this->studentsList = $rombelPelajars->map(function ($rombelPelajar, $index) use ($kurikulumId) {
             $pelajar = $rombelPelajar->pelajar;
 
             // Load nilai untuk semua mata pelajaran
             $nilaiPerMapel = [];
             $totalNilai = 0;
             $jumlahMapelDiisi = 0;
+            $ketuntasan = 0; // Jumlah mata pelajaran yang tuntas
 
             foreach ($this->mataPelajaranList as $mapel) {
-                if (isset($mapel->is_agama) && $mapel->is_agama === true) {
-                    // Ambil nilai agama sesuai agama siswa
-                    $nilai = Nilai::where('pelajar_id', $pelajar->id)
-                        ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
-                        ->whereHas('mataPelajaran', function ($q) {
-                            $q->where('is_mapel_agama', true); // ← UBAH INI
-                        })
-                        ->first();
-                } else {
-                    // Nilai mata pelajaran non-agama
-                    $nilai = Nilai::where('pelajar_id', $pelajar->id)
-                        ->where('mata_pelajaran_id', $mapel->id)
-                        ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
-                        ->first();
-                }
+                $nilai = Nilai::where('pelajar_id', $pelajar->id)
+                    ->where('mata_pelajaran_id', $mapel->id)
+                    ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+                    ->first();
 
                 $nilaiAngka = $nilai ? round($nilai->nilai_angka ?? 0) : 0;
                 $nilaiPerMapel[$mapel->id] = $nilaiAngka;
@@ -210,16 +175,20 @@ class LegerKelas extends Component
                 if ($nilaiAngka > 0) {
                     $totalNilai += $nilaiAngka;
                     $jumlahMapelDiisi++;
+
+                    // Hitung ketuntasan (asumsi KKM = 75)
+                    $kkm = $this->pengaturan->kkm ?? 75;
+                    if ($nilaiAngka >= $kkm) {
+                        $ketuntasan++;
+                    }
                 }
             }
 
             // Hitung rata-rata
             $rataRata = $jumlahMapelDiisi > 0 ? round($totalNilai / $jumlahMapelDiisi, 1) : 0;
 
-            // Load kokurikuler
-            $kokurikuler = Kokurikuler::where('pelajar_id', $pelajar->id)
-                ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
-                ->first();
+            // Tentukan predikat berdasarkan rata-rata
+            $predikat = $this->getPredikat($rataRata);
 
             // Load kehadiran
             $kehadiran = Kehadiran::where('pelajar_id', $pelajar->id)
@@ -235,50 +204,28 @@ class LegerKelas extends Component
                 'nama' => $pelajar->nama_lengkap ?? 'N/A',
                 'jenis_kelamin' => $pelajar->jenis_kelamin === 'laki-laki' ? 'L' : 'P',
                 'nilai_per_mapel' => $nilaiPerMapel,
-                'kokurikuler' => $kokurikuler->predikat ?? '-',
+                'ketuntasan' => $ketuntasan,
                 'jumlah_nilai' => $totalNilai,
                 'rata_rata' => $rataRata,
-                'peringkat' => 0, // Akan dihitung setelah semua data terkumpul
+                'predikat' => $predikat,
                 'sakit' => $kehadiran->jumlah_sakit ?? 0,
                 'izin' => $kehadiran->jumlah_izin ?? 0,
                 'tanpa_keterangan' => $kehadiran->jumlah_tanpa_keterangan ?? 0,
             ];
         })->toArray();
+    }
 
-        // Hitung peringkat berdasarkan jumlah nilai (descending)
-        // Sort berdasarkan jumlah nilai tertinggi
-        usort($studentsData, function ($a, $b) {
-            return $b['jumlah_nilai'] <=> $a['jumlah_nilai'];
-        });
+    // ========================================
+    // HELPER METHODS
+    // ========================================
 
-        // Assign peringkat
-        $currentRank = 1;
-        $previousNilai = null;
-        $sameRankCount = 0;
-
-        foreach ($studentsData as $key => &$student) {
-            if ($student['jumlah_nilai'] === 0) {
-                $student['peringkat'] = '-';
-            } else {
-                if ($previousNilai !== null && $student['jumlah_nilai'] === $previousNilai) {
-                    // Nilai sama dengan sebelumnya, pakai ranking yang sama
-                    $sameRankCount++;
-                } else {
-                    // Nilai berbeda, update ranking
-                    $currentRank += $sameRankCount;
-                    $sameRankCount = 1;
-                }
-                $student['peringkat'] = $currentRank;
-                $previousNilai = $student['jumlah_nilai'];
-            }
-        }
-
-        // Kembalikan urutan berdasarkan nomor urut awal (berdasarkan id)
-        usort($studentsData, function ($a, $b) {
-            return $a['no'] <=> $b['no'];
-        });
-
-        $this->studentsList = $studentsData;
+    private function getPredikat($nilai): string
+    {
+        if ($nilai >= 90) return 'A';
+        if ($nilai >= 80) return 'B';
+        if ($nilai >= 70) return 'C';
+        if ($nilai >= 60) return 'D';
+        return 'E';
     }
 
     // ========================================

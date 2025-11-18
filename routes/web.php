@@ -147,7 +147,7 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
     Route::prefix('finalization')->group(function () {
         Route::get('/preview', fn() => view('contents.wali.preview-rapor', ['title' => 'Preview Rapor']));
         Route::get('/pdf/generate', [PdfRaporWaliController::class, 'generatePdf'])->name('pdf.generate');
-        Route::get('/ledger', fn() => view('contents.wali.preview-ledger', ['title' => 'Preview Leger']));
+        Route::get('/ledger', fn() => view('contents.wali.leger', ['title' => 'Leger Kelas']));
     });
 
     // // Route untuk menampilkan leger kelas

@@ -13,7 +13,7 @@
         </h3>
     </div>
 
-    <!-- Ekstrakurikuler -->
+    <!-- Leger Nilai -->
     <div class="row">
         <div class="col-xl-12 col-md-12 grid-margin stretch-card">
             <!--datepicker-->
