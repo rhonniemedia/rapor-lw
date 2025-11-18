@@ -540,17 +540,29 @@ class KelasBinaan extends Component
 
     public function render()
     {
+        // 1. Inisialisasi query dengan JOIN ke tabel 'pelajars'
         $query = RombelPelajar::where('rombel_id', $this->rombelId)
-            ->with(['pelajar']);
+            // Gabungkan tabel rombel_pelajars dengan tabel pelajars
+            ->join('pelajars', 'rombel_pelajars.pelajar_id', '=', 'pelajars.id')
+            ->with(['pelajar']); // Tetap gunakan with untuk memuat relasi
 
         if (!empty($this->search)) {
+            // Ketika menggunakan join, whereHas (relasi) masih lebih baik untuk pencarian relasi
             $query->whereHas('pelajar', function ($q) {
                 $q->where('nama_lengkap', 'like', '%' . $this->search . '%')
                     ->orWhere('nomor_induk', 'like', '%' . $this->search . '%');
             });
         }
 
-        $pelajars = $query->orderBy('created_at', 'asc')->paginate($this->perPage);
+        // 2. Pilih ulang kolom dari tabel utama (rombel_pelajars)
+        // Ini PENTING untuk mencegah konflik ID dan memastikan Eloquent bekerja dengan benar
+        $query->select('rombel_pelajars.*');
+
+        // 3. Tambahkan orderBy berdasarkan kolom di tabel pelajars
+        $query->orderBy('pelajars.nama_lengkap', 'asc');
+
+        // 4. Lanjutkan dengan pagination
+        $pelajars = $query->paginate($this->perPage);
 
         return view('livewire.wali.kelas-binaan', [
             'pelajars' => $pelajars,

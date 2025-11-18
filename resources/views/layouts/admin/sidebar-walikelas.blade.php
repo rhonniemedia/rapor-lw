@@ -112,16 +112,16 @@
         </li>
         <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('homeroom/finalization/preview') ? 'active' : '' }}" href="{{url('homeroom/finalization/preview')}}">
-                <i class="mdi mdi-school-outline menu-icon"></i>
-                <span class="menu-title">Preview</span>
+                <i class="mdi mdi-file-account menu-icon"></i>
+                <span class="menu-title">Rapor</span>
             </a>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('homeroom/finalization/generate') ? 'active' : '' }}" href="{{url('homeroom/finalization/generate')}}">
                 <i class="mdi mdi-file-pdf menu-icon"></i>
                 <span class="menu-title">Generate PDF</span>
             </a>
-        </li>
+        </li> -->
         <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('homeroom/finalization/ledger') ? 'active' : '' }}" href="{{url('homeroom/finalization/ledger')}}">
                 <i class="mdi mdi-note-text-outline menu-icon"></i>

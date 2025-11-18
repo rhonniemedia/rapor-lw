@@ -19,7 +19,7 @@
             <div class="card">
                 <div class="card-body">
                     {{-- Livewire Component --}}
-                    <livewire:wali.profil-pengguna />
+                    <livewire:guru.profil-pengguna />
                 </div>
             </div>
         </div>

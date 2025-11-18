@@ -185,6 +185,10 @@ Route::middleware(['auth', 'role:guru'])->prefix('teacher')->name('guru.')->grou
         ]);
     })->name('class.detail');
 
+    Route::get('/user', function () {
+        return view('contents.guru.profil-pengguna', ['title' => 'Profil Pengguna']);
+    })->name('user.profile');
+
     // Route guru lainnya...
 });
 

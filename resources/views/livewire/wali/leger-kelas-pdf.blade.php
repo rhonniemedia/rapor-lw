@@ -4,6 +4,19 @@
 <head>
     <meta charset="utf-8">
     <title>Leger Kelas {{ $kelas ?? 'N/A' }}</title>
+    <?php
+    // Hitung jumlah pelajar
+    $jumlahPelajar = count($students ?? []);
+
+    // Tentukan line-height berdasarkan jumlah pelajar
+    if ($jumlahPelajar > 36) {
+        $lineHeight = '0.85';
+    } else {
+        $lineHeight = '0.9';
+    }
+
+    // ... kode PHP Anda yang sudah ada ...
+    ?>
     <style>
         @page {
             margin: 0;
@@ -20,36 +33,43 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 5px;
+
+            line-height: <?php echo $lineHeight; ?>rem;
         }
 
         .leger-title {
             text-align: center;
             font-weight: bold;
-            padding: 8px 0;
+            padding: 0px 0;
             font-size: 12pt;
-            border: 1px solid #000;
-            background-color: #f0f0f0;
+            /* border: 1px solid #000; */
+            /* background-color: #f0f0f0; */
         }
 
         .leger-subtitle {
             font-size: 11pt;
             font-weight: normal;
-            margin-top: 3px;
+            margin-top: 5px;
+        }
+
+        table.info-row {
+            width: 100%;
+            line-height: 0.7rem;
         }
 
         .info-row td {
-            padding: 3px 8px;
+            padding: 3px 0px;
             font-size: 9pt;
-            border-left: 1px solid #000;
-            border-right: 1px solid #000;
+            /* border-left: 1px solid #000; */
+            /* border-right: 1px solid #000; */
         }
 
         .info-row:first-of-type td {
-            border-top: 1px solid #000;
+            border-top: none;
         }
 
         .info-row:last-of-type td {
-            border-bottom: 1px solid #000;
+            border-bottom: none;
         }
 
         .header-content th {
@@ -63,14 +83,27 @@
         }
 
         .mapel-header {
-            transform: rotate(-90deg);
-            writing-mode: vertical-rl;
             text-orientation: mixed;
             white-space: nowrap;
-            min-width: 18px;
-            max-width: 18px;
             padding: 3px 1px !important;
             font-size: 9pt;
+        }
+
+        .mapel-header-wrapper {
+            /* width: 18px; */
+            /* Lebar cell tetap sempit */
+            height: 40px;
+            /* Berikan tinggi yang cukup */
+            position: relative;
+            padding: 0;
+            overflow: hidden;
+            /* Sembunyikan jika ada yang meluber */
+        }
+
+        /* CSS untuk teks yang akan dirotasi */
+        .mapel-text-rotated {
+            /* Rotasi */
+            transform: rotate(-90deg);
         }
 
         .data-row td {
@@ -92,7 +125,7 @@
         }
 
         .signature-section {
-            margin-top: 30px;
+            margin-top: 10px;
             padding: 0 20px;
         }
 
@@ -110,8 +143,8 @@
 
         .signature-name {
             margin-top: 60px;
-            font-weight: bold;
-            font-size: 15px;
+            font-weight: 700;
+            font-size: 13px;
             display: inline-block;
         }
 
@@ -167,18 +200,21 @@
             </tr>
 
             {{-- INFO SEKOLAH & KELAS --}}
-            <tr class="info-row">
-                <td colspan="3" style="width: 12%;">TAHUN AJARAN</td>
-                <td colspan="{{ 9 + $jumlahMapel }}">: {{ $tahun_ajaran ?? 'N/A' }}</td>
+            <tr>
+                <td colspan="{{ 12 + $jumlahMapel }}">
+                    <table class="info-row">
+                        <tr class="info-row">
+                            <td style="width: 20%;">TAHUN AJARAN / SEMESTER</td>
+                            <td style="width: 80%;">: {{ $tahun_ajaran ?? 'N/A' }} ~ {{ strtoupper($semester_nama ?? 'N/A') }}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td>KELAS</td>
+                            <td>: {{ $kelas ?? 'N/A' }}</td>
+                        </tr>
+                    </table>
+                </td>
             </tr>
-            <tr class="info-row">
-                <td colspan="3">SEMESTER</td>
-                <td colspan="{{ 9 + $jumlahMapel }}">: {{ strtoupper($semester_nama ?? 'N/A') }}</td>
-            </tr>
-            <tr class="info-row">
-                <td colspan="3">KELAS</td>
-                <td colspan="{{ 9 + $jumlahMapel }}">: {{ $kelas ?? 'N/A' }}</td>
-            </tr>
+
 
             {{-- HEADER KOLOM --}}
             <tr class="header-content">
@@ -201,8 +237,10 @@
 
             <tr class="header-content">
                 @foreach($mata_pelajaran as $mapel)
-                <th class="mapel-header" title="{{ $mapel['nama'] }}">
-                    {{ $mapel['kode'] ?? substr($mapel['nama'], 0, 4) }}
+                <th class="mapel-header-wrapper" title="{{ $mapel['nama'] }}">
+                    <div class="mapel-text-rotated">
+                        {{ $mapel['kode'] ?? substr($mapel['nama'], 0, 4) }}
+                    </div>
                 </th>
                 @endforeach
 
@@ -252,7 +290,7 @@
                 </div>
                 <div class="signature-title">Kepala Sekolah,</div>
                 <div class="signature-name">{{ $kepala_sekolah['nama'] ?? 'N/A' }}</div>
-                <div class="signature-nip">NIP. {{ $kepala_sekolah['nip'] ?? '-' }}</div>
+                <div class="signature-nip">NIP {{ $kepala_sekolah['nip'] ?? '-' }}</div>
             </div>
 
             <div class="signature-box">
@@ -265,7 +303,7 @@
                 </div>
                 <div class="signature-title">Wali Kelas,</div>
                 <div class="signature-name">{{ $wali_kelas['nama'] ?? 'N/A' }}</div>
-                <div class="signature-nip">NIP. {{ $wali_kelas['nip'] ?? '-' }}</div>
+                <div class="signature-nip">NIP {{ $wali_kelas['nip'] ?? '-' }}</div>
             </div>
         </div>
     </div>

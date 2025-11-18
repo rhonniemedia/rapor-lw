@@ -233,7 +233,7 @@ class LegerKelas extends Component
                 'nis' => $pelajar->nomor_induk ?? '-',
                 'nisn' => $pelajar->nisn ?? '-',
                 'nama' => $pelajar->nama_lengkap ?? 'N/A',
-                'jenis_kelamin' => $pelajar->jenis_kelamin === 'laki-laki' ? 'L' : 'P',
+                'jenis_kelamin' => $pelajar->jenis_kelamin ?? '-',
                 'nilai_per_mapel' => $nilaiPerMapel,
                 'kokurikuler' => $kokurikuler->predikat ?? '-',
                 'jumlah_nilai' => $totalNilai,
@@ -307,7 +307,7 @@ class LegerKelas extends Component
             'kkm' => $this->pengaturan->kkm ?? 75,
             'wali_kelas' => [
                 'nama' => $this->rombel->waliKelas->name ?? 'N/A',
-                'nip' => $this->rombel->waliKelas->nip ?? 'N/A'
+                'nip' => $this->rombel->waliKelas->nip ?? '~'
             ],
             'kepala_sekolah' => [
                 'nama' => $this->pengaturan->kepalaSekolah->name ?? 'N/A',

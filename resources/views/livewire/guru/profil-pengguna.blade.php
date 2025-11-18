@@ -192,6 +192,7 @@
                             </span>
                         </button>
                     </div>
+
                 </form>
             </div>
         </div>
@@ -326,15 +327,13 @@
                                 Menyimpan...
                             </span>
                     </div>
+
                 </form>
             </div>
         </div>
     </div>
 
     @push('scripts')
-    {{-- SweetAlert2 CDN --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
         // Show edit data modal
         window.addEventListener('show-edit-data-modal', event => {

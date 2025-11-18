@@ -26,31 +26,31 @@
 
                     <!-- Kanan: Tombol -->
                     <div class="d-flex align-items-center gap-2 ms-auto">
-
                         @if($pdfUrl)
+
                         <button
                             type="button"
-                            class="btn btn-labeled btn-success"
-                            onclick="window.open('{{ $pdfUrl }}', '_blank')">
-
-                            <span class="btn-label">
+                            class="btn btn-labeled btn-success text-decoration-none d-inline-flex align-items-center"
+                            onclick="downloadPDF('{{ $pdfUrl }}', 'leger-kelas-{{ $rombel->nama ?? 'unknown' }}.pdf')">
+                            <span class="btn-label me-2">
                                 <i class="mdi mdi-file-pdf-box"></i>
                             </span>
-
                             Download PDF
                         </button>
-                        @endif
 
                         <button
                             type="button"
                             class="btn btn-labeled btn-primary"
-                            onclick="window.print()">
+                            onclick="window.open('{{ $pdfUrl }}', '_blank').print()">
                             <span class="btn-label">
                                 <i class="mdi mdi-printer"></i>
                             </span>
                             Cetak
                         </button>
+                        @endif
                     </div>
+
+
                 </div>
             </div>
         </div>
@@ -334,4 +334,15 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function downloadPDF(url, filename) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
 </div>
