@@ -22,3 +22,13 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Aset Livewire yang dihasilkan (sebaiknya diabaikan)
+/public/vendor/livewire
+
+# File root yang mungkin konflik dengan aset (jika Anda tidak ingin melacaknya)
+/index.php
+/favicon.ico
+/robots.txt
+# Jika .htaccess berisi konfigurasi server lokal yang unik, abaikan juga
+.htaccess
