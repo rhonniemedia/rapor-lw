@@ -14,7 +14,6 @@ use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\Auth;
 use App\Models\KurikulumMataPelajaran;
 
-// ✅ TIDAK PERLU Layout attribute karena pakai pattern view → livewire
 class LegerKelas extends Component
 {
     // ========================================
@@ -313,7 +312,7 @@ class LegerKelas extends Component
                 'nama' => $this->pengaturan->kepalaSekolah->name ?? 'N/A',
                 'nip' => $this->pengaturan->kepalaSekolah->nip ?? 'N/A'
             ],
-            'tanggal_rapor' => $this->pengaturan->tanggal_rapor ?? now()->format('Y-m-d'),
+            'tanggal_rapor' => $this->pengaturan?->tanggal_rapor?->format('Y-m-d') ?? now()->format('Y-m-d'),
             'mata_pelajaran' => $this->mataPelajaranList,
             'students' => $this->studentsList,
         ];

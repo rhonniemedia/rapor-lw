@@ -298,7 +298,12 @@
                                     <div style="text-align: left; width: 45%; padding-left: 10rem;">
                                         <div style="margin-bottom: 1px;">
                                             {{ $dataSekolah->kota_kabupaten ?? 'Kota' }},
-                                            {{ \Carbon\Carbon::parse($pengaturan->tanggal_rapor ?? now())->isoFormat('D MMMM Y') }}
+                                            @if ($pengaturan && $pengaturan->tanggal_rapor)
+                                            {{ $pengaturan->tanggal_rapor->locale('id')->isoFormat('D MMMM Y') }}
+                                            @else
+                                            {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
+                                            {{-- Atau tampilkan pesan 'Tanggal Belum Diatur' --}}
+                                            @endif
                                         </div>
                                         <div style="margin-bottom: 80px;">Wali Kelas,</div>
                                         <div style="display: inline-block; padding: 0 0px;">

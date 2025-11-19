@@ -3,15 +3,15 @@
     <!-- Header Dashboard Guru -->
     <div class="page-header flex-wrap">
         <h3 class="mb-0">
-            Selamat datang <strong>{{ $namaGuru }}!</strong>
+            Halo <strong>{{ $namaGuru }}!</strong>
             <span class="pl-0 h6 pl-sm-2 text-muted d-inline-block">
-                Guru {{ $mataPelajaranUtama }}
+                Guru Mata Pelajaran
             </span>
         </h3>
         <div class="d-flex">
             <div class="btn-btn">
                 <button type="button" class="btn btn-sm btn-success">
-                    Tahun Ajaran {{ $tahunAjaran }} ~ Semester {{ $semesterNama }}
+                    {{ $tahunAjaran }} ~ {{ $semesterNama }}
                 </button>
             </div>
         </div>
@@ -90,7 +90,7 @@
                 <div class="card-body d-flex flex-column">
                     <div class="row mb-4">
                         <div class="col-sm-12">
-                            <h5>Progress Input Nilai {{ $mataPelajaranUtama }}</h5>
+                            <h5>Progress Input Nilai Mata Pelajaran</h5>
                             <p class="text-muted mb-2">
                                 Status kelengkapan nilai untuk semester {{ strtolower($semesterNama) }} {{ $tahunAjaran }}
                             </p>
@@ -125,7 +125,7 @@
                                 <div class="mt-3 text-center">
 
                                     <!-- Judul -->
-                                    <h6 class="text-black mb-3">Distribusi Nilai {{ $mataPelajaranUtama }}</h6>
+                                    <h6 class="text-black mb-3">Distribusi Nilai Mata Pelajaran yang Diampu</h6>
 
                                     <!-- Wrapper 1 baris -->
                                     <div class="d-flex justify-content-center">
@@ -187,8 +187,8 @@
                     <div class="mt-4">
                         @forelse($progressPerKelas as $kelas)
                         <!-- Kelas Card -->
-                        <a href="#" class="text-decoration-none mb-3">
-                            <div class="card {{ $kelas['badge'] == 'danger' ? 'urgent-card' : ($kelas['badge'] == 'warning' ? 'warning-card' : 'success-card') }} p-3 progress-card-hover">
+                        <a href="#" class="text-decoration-none">
+                            <div class="card {{ $kelas['badge'] == 'danger' ? 'urgent-card' : ($kelas['badge'] == 'warning' ? 'warning-card' : 'success-card') }} p-3 progress-card-hover mb-3">
                                 <div class="d-flex align-items-center h-100">
                                     <i class="mdi mdi-google-classroom mdi-24px text-{{ $kelas['badge'] }} mr-3"></i>
                                     <div class="flex-grow-1">

@@ -21,7 +21,8 @@
                     type="text"
                     class="input-field"
                     id="username"
-                    placeholder="Email atau Nomor Induk Pegawai">
+                    placeholder="Email atau Nomor Induk Pegawai"
+                    autocomplete="current-password">
             </div>
             @error('username')
             <div class="validation-message">{{ $message }}</div>
@@ -39,8 +40,8 @@
                     :type="show ? 'text' : 'password'"
                     class="input-field"
                     id="password"
-                    placeholder="Masukkan kata sandi">
-
+                    placeholder="Masukkan kata sandi"
+                    autocomplete="current-password">
                 <div class="password-toggle" @click="show = !show" style="cursor:pointer;">
                     <i :class="show ? 'mdi mdi-eye-outline' : 'mdi mdi-eye-off-outline'"></i>
                 </div>
