@@ -136,9 +136,8 @@
 
         .signature-box {
             display: table-cell;
-            width: 48%;
+            width: 50%;
             vertical-align: top;
-            padding-left: 25rem;
         }
 
         .signature-name {
@@ -284,7 +283,7 @@
     {{-- TANDA TANGAN --}}
     <div class="signature-section">
         <div class="signature-container">
-            <div class="signature-box" style="text-align: left;">
+            <div class="signature-box" style="text-align: left; padding-left: 10rem;">
                 <div class="signature-date">
                     Mengetahui
                 </div>
@@ -293,7 +292,7 @@
                 <div class="signature-nip">NIP {{ $kepala_sekolah['nip'] ?? '-' }}</div>
             </div>
 
-            <div class="signature-box">
+            <div class="signature-box" style="text-align: left; padding-left: 25rem;">
                 <?php
                 $tanggalRapor = $tanggal_rapor ?? date('Y-m-d');
                 $tanggalFormat = \Carbon\Carbon::parse($tanggalRapor)->locale('id')->isoFormat('D MMMM Y');

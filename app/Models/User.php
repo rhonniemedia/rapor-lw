@@ -221,4 +221,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Kokurikuler::class, 'guru_id');
     }
+
+    public function rombelPengajars()
+    {
+        return $this->hasMany(RombelPengajar::class, 'guru_id');
+    }
 }

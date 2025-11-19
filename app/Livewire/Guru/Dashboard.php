@@ -18,17 +18,23 @@ class Dashboard extends Component
     public $guru;
     public $tahunAjaranSemester;
 
-    // Statistik Utama
+    // Data Header
+    public $namaGuru = '';
+    public $mataPelajaranUtama = '';
+    public $tahunAjaran = '';
+    public $semesterNama = '';
+
+    // Statistik Card
     public $jumlahKelas = 0;
-    public $totalSiswa = 0;
-    public $totalMapel = 0;
     public $progressInputNilai = 0;
-    public $rataRataKelas = 0;
+    public $kelasBelumLengkap = 0;
+    public $totalPelajar = 0;
+    public $nilaiBelumDiinput = 0;
 
-    // Kelas yang Diampu
-    public $kelasYangDiampu = [];
+    // Daftar kelas untuk subtitle
+    public $daftarKelasText = '';
 
-    // Distribusi Nilai
+    // Distribusi Nilai untuk Chart
     public $distribusiNilai = [
         'A' => ['persentase' => 0, 'jumlah' => 0],
         'B' => ['persentase' => 0, 'jumlah' => 0],
@@ -39,14 +45,8 @@ class Dashboard extends Component
     // Progress per Kelas
     public $progressPerKelas = [];
 
-    // Siswa Perlu Perhatian
-    public $siswaPerluPerhatian = [];
-
-    // Aktivitas Terbaru
-    public $aktivitasTerbaru = [];
-
-    // Jadwal Besok
-    public $jadwalBesok = [];
+    // Pelajar Belum Dinilai
+    public $pelajarBelumDinilai = [];
 
     public function mount()
     {
@@ -54,13 +54,11 @@ class Dashboard extends Component
         $this->loadTahunAjaranSemester();
 
         if ($this->guru && $this->tahunAjaranSemester) {
-            $this->loadStatistikUtama();
-            $this->loadKelasYangDiampu();
+            $this->loadDataHeader();
+            $this->loadStatistikCard();
             $this->loadDistribusiNilai();
             $this->loadProgressPerKelas();
-            $this->loadSiswaPerluPerhatian();
-            $this->loadAktivitasTerbaru();
-            $this->loadJadwalBesok();
+            $this->loadPelajarBelumDinilai();
         }
     }
 
@@ -75,109 +73,118 @@ class Dashboard extends Component
     }
 
     /**
-     * Load statistik utama (4 card)
+     * Load data untuk header
      */
-    protected function loadStatistikUtama()
+    protected function loadDataHeader()
+    {
+        $this->namaGuru = $this->guru->name ?? 'Guru';
+
+        // Ambil mata pelajaran pertama/utama yang diajar
+        $rombelPengajar = RombelPengajar::where('guru_id', $this->guru->id)
+            ->with('mataPelajaran')
+            ->first();
+
+        $this->mataPelajaranUtama = $rombelPengajar->mataPelajaran->nama ?? 'Mata Pelajaran';
+
+        // Tahun ajaran dan semester
+        if ($this->tahunAjaranSemester) {
+            $this->tahunAjaran = $this->tahunAjaranSemester->tahunAjaran->nama ?? '2024/2025';
+            $this->semesterNama = $this->tahunAjaranSemester->semester->nama ?? 'Ganjil';
+        }
+    }
+
+    /**
+     * Load statistik untuk 4 card
+     */
+    protected function loadStatistikCard()
     {
         $guruId = $this->guru->id;
         $semesterId = $this->tahunAjaranSemester->id;
 
         // 1. Jumlah Kelas yang Diampu
-        $this->jumlahKelas = RombelPengajar::where('guru_id', $guruId)->distinct('rombel_id')->count('rombel_id');
+        $rombelIds = RombelPengajar::where('guru_id', $guruId)
+            ->distinct('rombel_id')
+            ->pluck('rombel_id');
 
-        // 2. Total Siswa dari semua kelas yang diampu
-        $rombelIds = RombelPengajar::where('guru_id', $guruId)->pluck('rombel_id');
+        $this->jumlahKelas = $rombelIds->count();
 
-        $this->totalSiswa = RombelPelajar::whereIn('rombel_id', $rombelIds)
+        // Buat text daftar kelas (contoh: "X IPA 1, X IPA 2, XI IPA 1")
+        $rombels = Rombel::whereIn('id', $rombelIds)->take(6)->pluck('nama');
+        $this->daftarKelasText = $rombels->implode(', ');
+
+        // 2. Total Pelajar dari semua kelas yang diampu
+        $this->totalPelajar = RombelPelajar::whereIn('rombel_id', $rombelIds)
             ->distinct('pelajar_id')
             ->count('pelajar_id');
 
-        // 3. Total Mata Pelajaran yang diajar
-        $this->totalMapel = RombelPengajar::where('guru_id', $guruId)
-            ->distinct('mata_pelajaran_id')
-            ->count('mata_pelajaran_id');
+        // 3. Progress Input Nilai & Kelas Belum Lengkap
+        $this->calculateProgressInput($guruId, $semesterId, $rombelIds);
 
-        // 4. Progress Input Nilai
-        $this->calculateProgressInputNilai();
+        // 4. Nilai Belum Diinput
+        $totalYangHarusDiinput = 0;
+        $totalSudahDiinput = 0;
 
-        // 5. Rata-rata Kelas
-        $nilaiStats = Nilai::whereHas('rombelPengajar', function ($query) use ($guruId) {
-            $query->where('guru_id', $guruId);
-        })
-            ->where('tahun_ajaran_semester_id', $semesterId)
-            ->whereNotNull('nilai_angka')
-            ->avg('nilai_angka');
-
-        $this->rataRataKelas = round($nilaiStats ?? 0, 1);
-    }
-
-    /**
-     * Hitung progress input nilai
-     */
-    protected function calculateProgressInputNilai()
-    {
-        $guruId = $this->guru->slug;
-        $semesterId = $this->tahunAjaranSemester->id;
-
-        // Total yang harus diinput = jumlah siswa * jumlah rombel pengajar
         $rombelPengajarIds = RombelPengajar::where('guru_id', $guruId)->pluck('id');
 
-        $totalYangHarusDiinput = 0;
-        foreach ($rombelPengajarIds as $rombelPengajarId) {
-            $rombelPengajar = RombelPengajar::find($rombelPengajarId);
+        foreach ($rombelPengajarIds as $rpId) {
+            $rombelPengajar = RombelPengajar::find($rpId);
             if ($rombelPengajar) {
-                $jumlahSiswa = RombelPelajar::where('rombel_id', $rombelPengajar->rombel_id)->count();
-                $totalYangHarusDiinput += $jumlahSiswa;
+                $jumlahPelajar = RombelPelajar::where('rombel_id', $rombelPengajar->rombel_id)->count();
+                $totalYangHarusDiinput += $jumlahPelajar;
+
+                $nilaiSelesai = Nilai::where('rombel_pengajar_id', $rpId)
+                    ->where('tahun_ajaran_semester_id', $semesterId)
+                    ->whereNotNull('nilai_angka')
+                    ->count();
+
+                $totalSudahDiinput += $nilaiSelesai;
             }
         }
 
-        if ($totalYangHarusDiinput == 0) {
-            $this->progressInputNilai = 0;
-            return;
-        }
-
-        // Total yang sudah diinput
-        $totalSudahDiinput = Nilai::whereIn('rombel_pengajar_id', $rombelPengajarIds)
-            ->where('tahun_ajaran_semester_id', $semesterId)
-            ->whereNotNull('nilai_angka')
-            ->count();
-
-        $this->progressInputNilai = round(($totalSudahDiinput / $totalYangHarusDiinput) * 100, 0);
+        $this->nilaiBelumDiinput = $totalYangHarusDiinput - $totalSudahDiinput;
     }
 
     /**
-     * Load kelas yang diampu
+     * Hitung progress input nilai dan kelas belum lengkap
      */
-    protected function loadKelasYangDiampu()
+    protected function calculateProgressInput($guruId, $semesterId, $rombelIds)
     {
-        $guruId = $this->guru->slug;
+        $rombelPengajars = RombelPengajar::where('guru_id', $guruId)->get();
 
-        $rombelPengajars = RombelPengajar::where('guru_id', $guruId)
-            ->with(['rombel.jurusan', 'mataPelajaran'])
-            ->get();
+        $totalYangHarusDiinput = 0;
+        $totalSudahDiinput = 0;
+        $kelasBelumLengkap = 0;
 
-        $kelasData = [];
-        foreach ($rombelPengajars as $rombelPengajar) {
-            $rombel = $rombelPengajar->rombel;
-            $mapel = $rombelPengajar->mataPelajaran;
+        foreach ($rombelPengajars as $rp) {
+            $jumlahPelajar = RombelPelajar::where('rombel_id', $rp->rombel_id)->count();
+            $totalYangHarusDiinput += $jumlahPelajar;
 
-            $kelasData[] = [
-                'id' => $rombel->id,
-                'nama' => $rombel->nama,
-                'mata_pelajaran' => $mapel->nama ?? '-',
-                'jumlah_siswa' => RombelPelajar::where('rombel_id', $rombel->id)->count()
-            ];
+            $nilaiSelesai = Nilai::where('rombel_pengajar_id', $rp->id)
+                ->where('tahun_ajaran_semester_id', $semesterId)
+                ->whereNotNull('nilai_angka')
+                ->count();
+
+            $totalSudahDiinput += $nilaiSelesai;
+
+            // Jika belum semua dinilai, kelas belum lengkap
+            if ($nilaiSelesai < $jumlahPelajar) {
+                $kelasBelumLengkap++;
+            }
         }
 
-        $this->kelasYangDiampu = $kelasData;
+        $this->progressInputNilai = $totalYangHarusDiinput > 0
+            ? round(($totalSudahDiinput / $totalYangHarusDiinput) * 100, 0)
+            : 0;
+
+        $this->kelasBelumLengkap = $kelasBelumLengkap;
     }
 
     /**
-     * Load distribusi nilai
+     * Load distribusi nilai untuk chart
      */
     protected function loadDistribusiNilai()
     {
-        $guruId = $this->guru->slug;
+        $guruId = $this->guru->id;
         $semesterId = $this->tahunAjaranSemester->id;
 
         $nilaiData = Nilai::whereHas('rombelPengajar', function ($query) use ($guruId) {
@@ -207,11 +214,11 @@ class Dashboard extends Component
      */
     protected function loadProgressPerKelas()
     {
-        $guruId = $this->guru->slug;
+        $guruId = $this->guru->id;
         $semesterId = $this->tahunAjaranSemester->id;
 
         $rombelPengajars = RombelPengajar::where('guru_id', $guruId)
-            ->with('rombel')
+            ->with(['rombel', 'mataPelajaran'])
             ->get();
 
         $progressData = [];
@@ -219,11 +226,14 @@ class Dashboard extends Component
         foreach ($rombelPengajars as $rombelPengajar) {
             $rombelId = $rombelPengajar->rombel_id;
             $rombel = $rombelPengajar->rombel;
+            $mapel = $rombelPengajar->mataPelajaran;
 
-            // Jumlah siswa di kelas
-            $totalSiswa = RombelPelajar::where('rombel_id', $rombelId)->count();
+            if (!$rombel) continue;
 
-            if ($totalSiswa == 0) continue;
+            // Jumlah pelajar di kelas
+            $totalPelajar = RombelPelajar::where('rombel_id', $rombelId)->count();
+
+            if ($totalPelajar == 0) continue;
 
             // Jumlah nilai yang sudah diinput
             $nilaiSelesai = Nilai::where('rombel_pengajar_id', $rombelPengajar->id)
@@ -231,154 +241,91 @@ class Dashboard extends Component
                 ->whereNotNull('nilai_angka')
                 ->count();
 
-            $progressPersen = round(($nilaiSelesai / $totalSiswa) * 100, 0);
+            $pelajarBelumDinilai = $totalPelajar - $nilaiSelesai;
+            $progressPersen = round(($nilaiSelesai / $totalPelajar) * 100, 0);
 
-            // Rata-rata nilai kelas
-            $rataRata = Nilai::where('rombel_pengajar_id', $rombelPengajar->id)
-                ->where('tahun_ajaran_semester_id', $semesterId)
-                ->whereNotNull('nilai_angka')
-                ->avg('nilai_angka') ?? 0;
+            // Tentukan badge dan status
+            $badge = 'success';
+            $status = 'LENGKAP';
+
+            if ($progressPersen < 100) {
+                if ($pelajarBelumDinilai > 10) {
+                    $badge = 'danger';
+                    $status = 'URGENT';
+                } else {
+                    $badge = 'warning';
+                    $status = 'PRIORITAS';
+                }
+            }
 
             $progressData[] = [
-                'nama' => $rombel->nama . ' - ' . ($rombelPengajar->mataPelajaran->nama ?? 'Mapel'),
+                'nama' => $rombel->nama,
+                'mata_pelajaran' => $mapel->nama ?? '-',
                 'progress_persen' => $progressPersen,
                 'nilai_selesai' => $nilaiSelesai,
-                'total_siswa' => $totalSiswa,
-                'rata_rata' => round($rataRata, 1),
-                'warna' => $progressPersen >= 80 ? 'success' : ($progressPersen >= 50 ? 'warning' : 'danger')
+                'total_pelajar' => $totalPelajar,
+                'pelajar_belum_dinilai' => $pelajarBelumDinilai,
+                'badge' => $badge,
+                'status' => $status
             ];
         }
+
+        // Urutkan berdasarkan priority (urgent dulu)
+        usort($progressData, function ($a, $b) {
+            $priority = ['danger' => 0, 'warning' => 1, 'success' => 2];
+            return $priority[$a['badge']] <=> $priority[$b['badge']];
+        });
 
         $this->progressPerKelas = $progressData;
     }
 
     /**
-     * Load siswa yang perlu perhatian
+     * Load pelajar yang belum dinilai (limit 5 untuk tabel)
      */
-    protected function loadSiswaPerluPerhatian()
+    protected function loadPelajarBelumDinilai()
     {
-        $guruId = $this->guru->slug;
+        $guruId = $this->guru->id;
         $semesterId = $this->tahunAjaranSemester->id;
 
-        // Ambil siswa dengan nilai rendah
-        $nilaiRendah = Nilai::whereHas('rombelPengajar', function ($query) use ($guruId) {
-            $query->where('guru_id', $guruId);
-        })
-            ->where('tahun_ajaran_semester_id', $semesterId)
-            ->where('nilai_angka', '<', 70)
-            ->with(['pelajar', 'rombelPengajar.rombel', 'rombelPengajar.mataPelajaran'])
-            ->orderBy('nilai_angka', 'asc')
-            ->limit(5)
-            ->get();
+        // Ambil semua rombel yang diajar
+        $rombelPengajars = RombelPengajar::where('guru_id', $guruId)->get();
 
-        $siswaData = [];
+        $pelajarData = [];
 
-        foreach ($nilaiRendah as $nilai) {
-            $pelajar = $nilai->pelajar;
-            $rombel = $nilai->rombelPengajar->rombel ?? null;
-            $mapel = $nilai->rombelPengajar->mataPelajaran ?? null;
+        foreach ($rombelPengajars as $rp) {
+            // Ambil semua pelajar di rombel
+            $pelajarIds = RombelPelajar::where('rombel_id', $rp->rombel_id)
+                ->pluck('pelajar_id');
 
-            if (!$pelajar || !$rombel) continue;
+            // Ambil pelajar yang sudah dinilai
+            $pelajarSudahDinilai = Nilai::where('rombel_pengajar_id', $rp->id)
+                ->where('tahun_ajaran_semester_id', $semesterId)
+                ->whereNotNull('nilai_angka')
+                ->pluck('pelajar_id');
 
-            $siswaData[] = [
-                'siswa_id' => $pelajar->id,
-                'siswa_nama' => $pelajar->nama_lengkap,
-                'siswa_nis' => $pelajar->nis ?? '-',
-                'siswa_foto' => $pelajar->foto ?? null,
-                'kelas_nama' => $rombel->nama,
-                'mata_pelajaran' => $mapel->nama ?? '-',
-                'nilai_akhir' => round($nilai->nilai_angka, 1),
-                'kategori' => $nilai->nilai_angka < 60 ? 'Perlu Bimbingan' : 'Perlu Perbaikan'
-            ];
-        }
+            // Pelajar yang belum dinilai
+            $pelajarBelumDinilaiIds = $pelajarIds->diff($pelajarSudahDinilai);
 
-        $this->siswaPerluPerhatian = $siswaData;
-    }
+            if ($pelajarBelumDinilaiIds->count() > 0) {
+                $pelajars = Pelajar::whereIn('id', $pelajarBelumDinilaiIds)
+                    ->limit(5 - count($pelajarData)) // Batasi total 5
+                    ->get();
 
-    /**
-     * Load aktivitas terbaru
-     */
-    protected function loadAktivitasTerbaru()
-    {
-        $guruId = $this->guru->slug;
-        $semesterId = $this->tahunAjaranSemester->id;
+                foreach ($pelajars as $pelajar) {
+                    $pelajarData[] = [
+                        'nama' => $pelajar->nama_lengkap ?? $pelajar->nama,
+                        'nis' => $pelajar->nomor_induk ?? '-',
+                        'jenis_kelamin' => $pelajar->jenis_kelamin ?? 'L',
+                        'foto' => $pelajar->foto,
+                        'kelas' => $rp->rombel->nama ?? '-',
+                    ];
 
-        $nilaiTerbaru = Nilai::whereHas('rombelPengajar', function ($query) use ($guruId) {
-            $query->where('guru_id', $guruId);
-        })
-            ->where('tahun_ajaran_semester_id', $semesterId)
-            ->with(['rombelPengajar.rombel', 'rombelPengajar.mataPelajaran'])
-            ->latest('updated_at')
-            ->take(5)
-            ->get();
-
-        $aktivitas = [];
-
-        foreach ($nilaiTerbaru as $nilai) {
-            $rombel = $nilai->rombelPengajar->rombel ?? null;
-            $mapel = $nilai->rombelPengajar->mataPelajaran ?? null;
-
-            if ($rombel && $mapel) {
-                $aktivitas[] = [
-                    'deskripsi' => "Menginput nilai " . $mapel->nama . " kelas " . $rombel->nama,
-                    'waktu' => $this->formatTimeAgo($nilai->updated_at)
-                ];
+                    if (count($pelajarData) >= 5) break 2;
+                }
             }
         }
 
-        $this->aktivitasTerbaru = $aktivitas;
-    }
-
-    /**
-     * Format waktu ke format "X jam lalu", "X hari lalu"
-     */
-    protected function formatTimeAgo($datetime)
-    {
-        $diff = now()->diffInMinutes($datetime);
-
-        if ($diff < 60) {
-            return $diff . ' menit lalu';
-        } elseif ($diff < 1440) { // 24 jam
-            $hours = floor($diff / 60);
-            return $hours . ' jam lalu';
-        } else {
-            $days = floor($diff / 1440);
-            return $days . ' hari lalu';
-        }
-    }
-
-    /**
-     * Load jadwal mengajar besok
-     */
-    protected function loadJadwalBesok()
-    {
-        // Implementasi sesuai dengan model Jadwal Anda
-        // Untuk sementara return array kosong
-        $this->jadwalBesok = [];
-
-        /* Contoh implementasi jika ada model Jadwal:
-        $guruId = $this->guru->slug;
-        $besok = now()->addDay()->toDateString();
-        
-        $jadwal = Jadwal::where('guru_id', $guruId)
-            ->whereDate('tanggal', $besok)
-            ->with(['rombel', 'mataPelajaran'])
-            ->orderBy('jam_mulai')
-            ->get();
-        
-        $jadwalData = [];
-        foreach ($jadwal as $j) {
-            $jadwalData[] = [
-                'kelas_nama' => $j->rombel->nama ?? '-',
-                'jam_mulai' => $j->jam_mulai,
-                'jam_selesai' => $j->jam_selesai,
-                'materi' => $j->materi ?? $j->mataPelajaran->nama ?? '-',
-                'warna' => ['primary', 'success', 'info', 'warning'][rand(0, 3)]
-            ];
-        }
-        
-        $this->jadwalBesok = $jadwalData;
-        */
+        $this->pelajarBelumDinilai = $pelajarData;
     }
 
     /**
@@ -386,21 +333,13 @@ class Dashboard extends Component
      */
     public function refreshData()
     {
-        $this->loadStatistikUtama();
+        $this->loadDataHeader();
+        $this->loadStatistikCard();
         $this->loadDistribusiNilai();
         $this->loadProgressPerKelas();
-        $this->loadSiswaPerluPerhatian();
-        $this->loadAktivitasTerbaru();
+        $this->loadPelajarBelumDinilai();
 
         $this->dispatch('data-refreshed');
-    }
-
-    /**
-     * Open modal catatan
-     */
-    public function openCatatanModal($siswaId)
-    {
-        $this->dispatch('open-catatan-modal', siswaId: $siswaId);
     }
 
     public function render()

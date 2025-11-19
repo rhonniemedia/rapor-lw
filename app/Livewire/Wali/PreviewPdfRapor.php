@@ -435,7 +435,7 @@ class PreviewPdfRapor extends Component
             // Wali Kelas & Kepala Sekolah
             'wali_kelas' => [
                 'nama' => $this->rombel->waliKelas->name ?? 'N/A',
-                'nip' => $this->rombel->waliKelas->nip ?? 'N/A'
+                'nip' => $this->rombel->waliKelas->nip ?? '~'
             ],
             'kepala_sekolah' => [
                 'nama' => $pengaturan->kepalaSekolah->name ?? 'N/A',

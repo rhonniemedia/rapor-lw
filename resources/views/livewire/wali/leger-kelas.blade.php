@@ -283,25 +283,25 @@
                         <tr>
                             <td colspan="{{ 12 + count($mataPelajaranList) }}" style="padding: 20px 30px; border: none;">
                                 <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-                                    <div style="text-align: center; width: 45%;">
+                                    <div style="text-align: left; width: 45%; padding-left: 10rem;">
                                         <div style="margin-bottom: 1px;">
                                             Mengetahui
                                         </div>
                                         <div style="margin-bottom: 80px;">Kepala Sekolah,</div>
-                                        <div style="display: inline-block; padding: 0 50px;">
+                                        <div style="display: inline-block; padding: 0 0px;">
                                             <strong>{{ $pengaturan->kepalaSekolah->name ?? 'N/A' }}</strong>
                                         </div>
                                         <div style="margin-top: 5px;">
                                             NIP {{ $pengaturan->kepalaSekolah->nip ?? '-' }}
                                         </div>
                                     </div>
-                                    <div style="text-align: center; width: 45%;">
+                                    <div style="text-align: left; width: 45%; padding-left: 10rem;">
                                         <div style="margin-bottom: 1px;">
                                             {{ $dataSekolah->kota_kabupaten ?? 'Kota' }},
                                             {{ \Carbon\Carbon::parse($pengaturan->tanggal_rapor ?? now())->isoFormat('D MMMM Y') }}
                                         </div>
                                         <div style="margin-bottom: 80px;">Wali Kelas,</div>
-                                        <div style="display: inline-block; padding: 0 50px;">
+                                        <div style="display: inline-block; padding: 0 0px;">
                                             <strong>{{ $rombel->waliKelas->name ?? 'N/A' }}</strong>
                                         </div>
                                         <div style="margin-top: 5px;">
