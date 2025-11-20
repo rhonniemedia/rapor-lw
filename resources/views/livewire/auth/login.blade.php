@@ -41,7 +41,7 @@
                     class="input-field"
                     id="password"
                     placeholder="Masukkan kata sandi"
-                    autocomplete="current-password">
+                    autocomplete="off">
                 <div class="password-toggle" @click="show = !show" style="cursor:pointer;">
                     <i :class="show ? 'mdi mdi-eye-outline' : 'mdi mdi-eye-off-outline'"></i>
                 </div>

@@ -15,7 +15,7 @@
 
         <div class="login-footer">
             <p class="mb-0 text-center text-muted">
-                &copy; {{ date('Y') }} Rapor Digital | SMK Negeri 1 Rejang Lebong
+                &copy; {{ date('Y') }} E-Rapor | SMK Negeri 1 Rejang Lebong
             </p>
         </div>
     </div>
