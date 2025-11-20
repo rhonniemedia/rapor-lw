@@ -393,7 +393,15 @@ class DataRombelPelajar extends Component
                 });
             }
 
-            $data = $query->orderBy('created_at', 'asc')->paginate($this->perPage);
+            $data = $query
+                ->with(['pelajar'])
+                ->whereHas('pelajar')
+                ->orderBy(
+                    Pelajar::select('nama_lengkap')
+                        ->whereColumn('pelajars.id', 'rombel_pelajars.pelajar_id'),
+                    'asc'
+                )
+                ->paginate($this->perPage);
         }
 
         return view('livewire.admin.data-rombel-pelajar', [

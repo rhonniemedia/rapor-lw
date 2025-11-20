@@ -33,17 +33,5 @@ class UserSeeder extends Seeder
 
         // Assign role superadmin (syncRoles akan menghapus role lama jika ada)
         $user->syncRoles(['superadmin']);
-
-        // Contoh user lain (optional)
-        $admin = User::updateOrCreate(
-            ['email' => 'admin@gmail.com'],
-            [
-                'name' => 'Admin',
-                'slug' => 'admin',
-                'password' => Hash::make('Password123!'),
-                'status' => 'aktif',
-            ]
-        );
-        $admin->syncRoles(['admin']);
     }
 }

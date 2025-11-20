@@ -30,6 +30,7 @@ return new class extends Migration
 
             // Telephone: TEXT untuk enkripsi (tidak perlu hash)
             $table->text('telephone')->nullable();
+            $table->char('telephone_hash', 64)->nullable()->unique();
 
             $table->boolean('is_teacher')->default(false);
 

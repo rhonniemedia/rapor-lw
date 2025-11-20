@@ -28,6 +28,7 @@ class User extends Authenticatable
         'nip',
         'nip_hash',
         'telephone',
+        'telephone_hash',
         'is_teacher',
         'is_guru_agama',
         'spesialisasi_agama',
@@ -126,9 +127,18 @@ class User extends Authenticatable
             },
             set: function (?string $value) {
                 if (empty($value)) {
-                    return null;
+                    return [
+                        'telephone' => null,
+                        'telephone_hash' => null, // <== KEMBALIKAN HASH NULL
+                    ];
                 }
-                return encrypt($value);
+                // Bersihkan nilai telepon dari karakter non-angka
+                $telephoneCleaned = preg_replace('/[^0-9]/', '', $value);
+
+                return [
+                    'telephone' => encrypt($telephoneCleaned),
+                    'telephone_hash' => hash('sha256', $telephoneCleaned), // <== GENERATE HASH
+                ];
             }
         );
     }

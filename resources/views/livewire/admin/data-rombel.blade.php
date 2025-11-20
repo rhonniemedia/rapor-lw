@@ -44,11 +44,10 @@
                 <td>
                     <a class="hyper-link text-decoration-none" href="{{ route('admin.class.detail', $rombel->id) }}">
                         <div class="d-flex align-items-center">
-                            <img src="{{ asset('assets/images/icons/school.png') }}"
-                                alt="image" />
+                            <img src="{{ asset('assets/images/icons/school.png') }}" alt="image" />
                             <div class="table-user-name ml-3">
                                 <p class="mb-0 font-weight-medium"> {{ $rombel->nama }} </p>
-                                <small>{{ $rombel->jurusan->nama }} (KM)</small>
+                                <small>{{ $rombel->jurusan->nama }} ({{ optional(optional($rombel->tahunAjaranKurikulum)->kurikulum)->kode ?? '-' }})</small>
                             </div>
                         </div>
                     </a>

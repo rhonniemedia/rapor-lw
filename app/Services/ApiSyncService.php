@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Log;
 class ApiSyncService
 {
     private array $endpoints = [
-        'tahun_ajaran'  => 'http://localhost/pintar/api/tahun-ajaran',
-        'jurusan'       => 'http://localhost/pintar/api/jurusan',
-        'rombel'        => 'http://localhost/pintar/api/rombel',
-        'rombel_detail' => 'http://localhost/pintar/api/rombel-data',
-        'peserta_didik' => 'http://localhost/pintar/api/data-peserta-didik',
-        'guru'          => 'http://localhost/simka/api/data-guru',
+        'tahun_ajaran'  => 'http://128.16.0.8/pintar/api/tahun-ajaran',
+        'jurusan'       => 'http://128.16.0.8/pintar/api/jurusan',
+        'rombel'        => 'http://128.16.0.8/pintar/api/rombel',
+        'rombel_detail' => 'http://128.16.0.8/pintar/api/rombel-data',
+        'peserta_didik' => 'http://128.16.0.8/pintar/api/data-peserta-didik',
+        'guru'          => 'http://128.16.0.8/simka/api/data-guru',
     ];
 
     public function fetchTahunAjaran(): array

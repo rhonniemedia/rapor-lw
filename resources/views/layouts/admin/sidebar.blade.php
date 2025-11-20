@@ -63,7 +63,7 @@
             <div class="collapse {{ request()->is('sekolah*') ? 'show' : '' }}" id="ui-school">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('admin/master/profile') ? 'active' : '' }}" href="{{ url('admin/master/profile') }}">Profil Sekolah</a>
+                        <a class="nav-link {{ request()->is('admin/master/school-profile') ? 'active' : '' }}" href="{{ url('admin/master/school-profile') }}">Profil Sekolah</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('admin/master/curriculum') ? 'active' : '' }}" href="{{ url('admin/master/curriculum') }}">Kurikulum</a>
@@ -121,8 +121,7 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('admin/class/list*') ? 'active' : '' }}"
-                href="{{ url('admin/class/list') }}">
+            <a class="nav-link" href="{{url('admin/class/list') }}">
                 <i class="mdi mdi-ungroup menu-icon"></i>
                 <span class="menu-title">Daftar Rombel</span>
             </a>
@@ -193,35 +192,22 @@
         </li>
         <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('admin/finalization/preview') ? 'active' : '' }}" href="{{url('admin/finalization/preview')}}">
-                <i class="mdi mdi-school-outline menu-icon"></i>
-                <span class="menu-title">Preview</span>
+                <i class="mdi mdi-file-account menu-icon"></i>
+                <span class="menu-title">Rapor</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('admin/finalization/generate') ? 'active' : '' }}" href="{{url('admin/finalization/generate')}}">
-                <i class="mdi mdi-calendar-text-outline menu-icon"></i>
-                <span class="menu-title">Generate PDF</span>
+            <a class="nav-link {{ request()->url() === url('admin/finalization/ledger') ? 'active' : '' }}" href="{{url('admin/finalization/ledger')}}">
+                <i class="mdi mdi-note-text-outline menu-icon"></i>
+                <span class="menu-title">Leger</span>
             </a>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('admin/finalization/archive') ? 'active' : '' }}" href="{{url('admin/finalization/archive')}}">
                 <i class="mdi mdi-note-text-outline menu-icon"></i>
                 <span class="menu-title">Arsip</span>
             </a>
-        </li>
-
-        <!-- Akademik -->
-        <li class="nav-item">
-            <a class="nav-link {{ request()->is('akademik*') ? 'active' : '' }}" data-toggle="collapse" href="#ui-akademik" aria-expanded="false" aria-controls="ui-akademik">
-                <i class="mdi mdi-animation menu-icon"></i>
-                <span class="menu-title">Akademik</span>
-                <i class="menu-arrow"></i>
-            </a>
-            <div class="collapse {{ request()->is('akademik*') ? 'show' : '' }}" id="ui-akademik">
-                <ul class="nav flex-column sub-menu">
-                </ul>
-            </div>
-        </li>
+        </li> -->
 
         <!-- Pengguna -->
         <li class="nav-item">
@@ -230,9 +216,15 @@
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{url('home/user')}}">
+            <a class="nav-link" href="{{url('admin/users/user-list')}}">
+                <i class="mdi mdi-account-group menu-icon"></i>
+                <span class="menu-title">Manajemen</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{url('admin/users/user-profile')}}">
                 <i class="mdi mdi-account menu-icon"></i>
-                <span class="menu-title">Daftar Pengguna</span>
+                <span class="menu-title">Profil</span>
             </a>
         </li>
     </ul>

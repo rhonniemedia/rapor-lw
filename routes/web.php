@@ -62,7 +62,7 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
     Route::prefix('master')->group(function () {
         Route::get('/sync', fn() => view('contents.admin.master-data', ['title' => 'Sinkronisasi']));
         Route::get('/school', fn() => view('contents.admin.sekolah', ['title' => 'Data Sekolah']));
-        Route::get('/profile', fn() => view('contents.admin.profil', ['title' => 'Profil Sekolah']));
+        Route::get('/school-profile', fn() => view('contents.admin.profil', ['title' => 'Profil Sekolah']));
         Route::get('/curriculum', fn() => view('contents.admin.kurikulum', ['title' => 'Kurikulum']));
     });
 
@@ -108,7 +108,8 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
 
     // Users
     Route::prefix('users')->group(function () {
-        Route::get('/list', fn() => view('contents.admin.pengguna', ['title' => 'Daftar Pengguna']));
+        Route::get('/user-list', fn() => view('contents.admin.pengguna', ['title' => 'Daftar Pengguna']));
+        Route::get('/user-profile', fn() => view('contents.admin.profil-pengguna', ['title' => 'Profil Pengguna']));
     });
 });
 
