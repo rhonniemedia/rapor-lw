@@ -62,7 +62,7 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
     Route::prefix('master')->group(function () {
         Route::get('/sync', fn() => view('contents.admin.master-data', ['title' => 'Sinkronisasi']));
         Route::get('/school', fn() => view('contents.admin.sekolah', ['title' => 'Data Sekolah']));
-        Route::get('/school-profile', fn() => view('contents.admin.profil', ['title' => 'Profil Sekolah']));
+        Route::get('/school-profile', fn() => view('contents.admin.profil-sekolah', ['title' => 'Profil Sekolah']));
         Route::get('/curriculum', fn() => view('contents.admin.kurikulum', ['title' => 'Kurikulum']));
     });
 
@@ -100,7 +100,7 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
 
     // Report Finalization
     Route::prefix('finalization')->group(function () {
-        Route::get('/settings', fn() => view('contents.admin.pengaturan', ['title' => 'Pengaturan Rapor']));
+        Route::get('/settings', fn() => view('contents.admin.pengaturan', ['title' => 'Pengaturan']));
         Route::get('/preview', fn() => view('contents.admin.preview', ['title' => 'Preview Rapor']));
         Route::get('/generate', fn() => view('contents.admin.generate', ['title' => 'Generate PDF']));
         Route::get('/archive', fn() => view('contents.admin.arsip', ['title' => 'Arsip Rapor']));
