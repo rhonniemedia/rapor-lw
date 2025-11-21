@@ -735,10 +735,13 @@
     });
 
     // SweetAlert Confirm Delete Handler
+    const componentId = "{{ $this->getId() }}";
+
     document.addEventListener('swal:confirm-delete', (event) => {
         Swal.fire({
-            title: event.detail.title, // HAPUS [0]
-            text: event.detail.text, // HAPUS [0]
+            // ... (kode konfigurasi swal sama seperti sebelumnya) ...
+            title: event.detail.title,
+            text: event.detail.text,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
@@ -756,11 +759,14 @@
                     }
                 });
 
-                // HAPUS [0] di sini agar logika if berjalan benar
+                // 2. Cari komponen Livewire berdasarkan ID
+                const component = Livewire.find(componentId);
+
+                // 3. Panggil method menggunakan .call()
                 if (event.detail.type === 'sekolah') {
-                    @this.call('deleteLogoSekolah');
+                    component.call('deleteLogoSekolah');
                 } else {
-                    @this.call('deleteLogoPemda');
+                    component.call('deleteLogoPemda');
                 }
             }
         });
