@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('data_sekolahs', function (Blueprint $table) {
-            // Menggunakan UUID sebagai Primary Key
+            // Primary Key UUID
             $table->uuid('id')->primary();
 
             // Data Utama Sekolah
@@ -21,6 +21,16 @@ return new class extends Migration
             $table->string('nis', 20)->nullable();
             $table->string('nss', 20)->nullable();
             $table->string('nds', 20)->nullable();
+
+            // Identitas & Legalitas Sekolah (Gabungan Tambahan)
+            $table->string('status_sekolah', 20)->nullable();          // negeri / swasta
+            $table->string('jenjang_pendidikan', 20)->nullable();      // SD, SMP, SMA, SMK, SLB, dll
+            $table->string('status_akreditasi', 5)->nullable();        // A/B/C/Belum
+            $table->year('tahun_akreditasi')->nullable();              // tahun akreditasi terakhir
+            $table->string('sk_pendirian_sekolah', 100)->nullable();   // nomor SK pendirian
+            $table->date('tanggal_sk_pendirian')->nullable();          // tanggal SK pendirian
+            $table->string('sk_izin_operasional', 100)->nullable();    // nomor SK operasional
+            $table->date('tanggal_sk_izin_operasional')->nullable();   // tanggal SK operasional
 
             // Data Lokasi
             $table->string('alamat', 255)->nullable();
@@ -35,11 +45,11 @@ return new class extends Migration
             $table->string('website', 100)->nullable();
             $table->string('email', 100)->nullable();
 
-            // Kolom untuk Logo (Tambahan Terbaru)
+            // Logo
             $table->string('logo_sekolah_path')->nullable();
             $table->string('logo_pemda_path')->nullable();
 
-            // Kolom waktu standar
+            // Timestamp
             $table->timestamps();
         });
     }

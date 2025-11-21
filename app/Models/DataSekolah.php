@@ -21,22 +21,5 @@ class DataSekolah extends Model
     protected $keyType = 'string';
 
     // Kolom yang dapat diisi secara massal (mass assignable).
-    protected $fillable = [
-        'nama_sekolah',
-        'npsn',
-        'nis',
-        'nss',
-        'nds',
-        'alamat',
-        'kode_pos',
-        'kelurahan',
-        'kecamatan',
-        'kota_kabupaten',
-        'provinsi',
-        'telepon',
-        'website',
-        'email',
-        'logo_sekolah_path',
-        'logo_pemda_path',
-    ];
+    protected $guarded = ['id'];
 }
