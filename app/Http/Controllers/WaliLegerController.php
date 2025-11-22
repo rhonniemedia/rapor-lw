@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class LegerPdfController extends Controller
+class WaliLegerController extends Controller
 {
     /**
      * Generate PDF Leger Kelas

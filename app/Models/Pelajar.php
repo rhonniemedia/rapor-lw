@@ -163,4 +163,21 @@ class Pelajar extends Model
     {
         return $this->tanggal_lahir?->format('Y-m-d');
     }
+
+    /**
+     * Relasi ke model Nilai (Asumsi Pelajar memiliki banyak Nilai)
+     */
+    public function nilai()
+    {
+        // Ganti 'pelajar_id' jika nama foreign key Anda berbeda
+        return $this->hasMany(Nilai::class, 'pelajar_id');
+    }
+
+    /**
+     * Relasi ke model Kehadiran (Untuk Eager Loading)
+     */
+    public function kehadiran()
+    {
+        return $this->hasMany(Kehadiran::class, 'pelajar_id');
+    }
 }

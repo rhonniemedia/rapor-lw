@@ -34,4 +34,10 @@ class TahunAjaranSemester extends Model
     {
         return $this->hasMany(Kokurikuler::class);
     }
+
+    // Accessor untuk memudahkan tampilan di dropdown
+    public function getNamaLengkapAttribute()
+    {
+        return $this->tahunAjaran->nama . ' - ' . $this->semester->nama;
+    }
 }

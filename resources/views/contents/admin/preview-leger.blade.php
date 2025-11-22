@@ -17,7 +17,7 @@
     <!-- Ekstrakurikuler -->
 
     <!-- LiveWire -->
-    <livewire:admin.preview-pdf />
+    <livewire:admin.preview-leger />
 
 </div>
 

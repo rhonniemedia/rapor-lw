@@ -187,19 +187,19 @@
         <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('admin/finalization/settings') ? 'active' : '' }}" href="{{url('admin/finalization/settings')}}">
                 <i class="mdi mdi-settings menu-icon"></i>
-                <span class="menu-title">Pengaturan</span>
+                <span class="menu-title">Konfigurasi</span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('admin/finalization/preview') ? 'active' : '' }}" href="{{url('admin/finalization/preview')}}">
                 <i class="mdi mdi-file-account menu-icon"></i>
-                <span class="menu-title">Rapor</span>
+                <span class="menu-title">Cetak Rapor</span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('admin/finalization/ledger') ? 'active' : '' }}" href="{{url('admin/finalization/ledger')}}">
                 <i class="mdi mdi-note-text-outline menu-icon"></i>
-                <span class="menu-title">Leger</span>
+                <span class="menu-title">Daftar Nilai</span>
             </a>
         </li>
         <!-- <li class="nav-item">
@@ -218,13 +218,13 @@
         <li class="nav-item">
             <a class="nav-link" href="{{url('admin/users/user-list')}}">
                 <i class="mdi mdi-account-group menu-icon"></i>
-                <span class="menu-title">Manajemen</span>
+                <span class="menu-title">Daftar Pengguna</span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link" href="{{url('admin/users/user-profile')}}">
                 <i class="mdi mdi-account menu-icon"></i>
-                <span class="menu-title">Profil</span>
+                <span class="menu-title">Akun Pengguna</span>
             </a>
         </li>
     </ul>

@@ -15,7 +15,7 @@ use App\Models\RombelPelajar;
 use App\Models\CatatanWaliKelas;
 use App\Models\TahunAjaranSemester;
 
-class PreviewPdf extends Component
+class PreviewRapor extends Component
 {
     // Filter Properties
     public $tahunAjaranId = null;
@@ -584,7 +584,7 @@ class PreviewPdf extends Component
 
     public function render()
     {
-        return view('livewire.admin.preview-pdf', [
+        return view('livewire.admin.preview-rapor', [
             'totalStudents' => count($this->studentsList),
         ]);
     }

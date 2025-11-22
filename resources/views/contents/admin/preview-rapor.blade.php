@@ -8,14 +8,16 @@
     <div class="page-header flex-wrap">
         <h3 class="mb-0"> {{ $title }}
             <span class="pl-0 h6 pl-sm-2 text-muted d-inline-block">
-                Kelola Pengaturan
+                Pratinjau Laporan Hasil Belajar
             </span>
         </h3>
 
     </div>
 
+    <!-- Ekstrakurikuler -->
+
     <!-- LiveWire -->
-    <livewire:admin.pengaturan-rapor />
+    <livewire:admin.preview-rapor />
 
 </div>
 

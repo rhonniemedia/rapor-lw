@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PdfController;
 use App\Livewire\Template\PreviewRapor;
-use App\Http\Controllers\LegerPdfController;
+use App\Http\Controllers\WaliLegerController;
 use App\Http\Controllers\PdfRaporWaliController;
 
 // Redirect root ke login
@@ -101,17 +101,20 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
     // Report Finalization
     Route::prefix('finalization')->group(function () {
         Route::get('/settings', fn() => view('contents.admin.pengaturan', ['title' => 'Pengaturan']));
-        Route::get('/preview', fn() => view('contents.admin.preview', ['title' => 'Preview Rapor']));
-        Route::get('/generate', fn() => view('contents.admin.generate', ['title' => 'Generate PDF']));
+        Route::get('/preview', fn() => view('contents.admin.preview-rapor', ['title' => 'Preview Rapor']));
+        Route::get('/ledger', fn() => view('contents.admin.preview-leger', ['title' => 'Preview Leger']));
         Route::get('/archive', fn() => view('contents.admin.arsip', ['title' => 'Arsip Rapor']));
     });
 
     // Users
     Route::prefix('users')->group(function () {
         Route::get('/user-list', fn() => view('contents.admin.pengguna', ['title' => 'Daftar Pengguna']));
-        Route::get('/user-profile', fn() => view('contents.admin.profil-pengguna', ['title' => 'Profil Pengguna']));
+        Route::get('/user-profile', fn() => view('contents.admin.profil-pengguna', ['title' => 'Akun Pengguna']));
     });
 });
+
+
+
 
 // Wali Kelas Routes
 Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikelas.')->group(function () {
@@ -168,6 +171,9 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
     // Route wali kelas lainnya...
 });
 
+
+
+
 // Guru Routes
 Route::middleware(['auth', 'role:guru'])->prefix('teacher')->name('guru.')->group(function () {
     Route::get('/dashboard', function () {
@@ -204,5 +210,10 @@ Route::get('/admin/rapor/preview', function () {
 Route::get('/pdf/generate', [PdfController::class, 'generatePdf'])->name('pdf.generate');
 
 // Route untuk generate PDF Leger (tanpa middleware auth karena menggunakan token di URL)
-Route::get('/pdf/leger', [LegerPdfController::class, 'generateLeger'])
+Route::get('/pdf/leger', [WaliLegerController::class, 'generateLeger'])
     ->name('pdf.generate.leger');
+
+
+// routes/web.php
+// Asumsi Anda memiliki controller untuk menangani generasi PDF
+Route::get('/pdf/leger/admin', [PdfController::class, 'generateLegerAdmin'])->name('pdf.generate.leger.admin');

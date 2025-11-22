@@ -25,22 +25,29 @@
                     </div>
 
                     <!-- Kanan: Tombol -->
+                    @php
+                    // Definisikan nama file di sini agar HTML di bawah bersih
+                    $namaRombel = $rombel->nama ?? 'unknown';
+                    $fileName = "leger-kelas-{$namaRombel}.pdf";
+                    @endphp
+
                     <div class="d-flex align-items-center gap-2 ms-auto">
                         @if($pdfUrl)
-
+                        {{-- TOMBOL DOWNLOAD --}}
                         <button
                             type="button"
-                            class="btn btn-labeled btn-success text-decoration-none d-inline-flex align-items-center"
-                            onclick="downloadPDF('{{ $pdfUrl }}', 'leger-kelas-{{ $rombel->nama ?? 'unknown' }}.pdf')">
+                            class="btn btn-labeled btn-danger text-decoration-none d-inline-flex align-items-center"
+                            onclick="forceDownload('{{ $pdfUrl }}', '{{ $fileName }}')">
                             <span class="btn-label me-2">
                                 <i class="mdi mdi-file-pdf-box"></i>
                             </span>
                             Download PDF
                         </button>
 
+                        {{-- TOMBOL CETAK --}}
                         <button
                             type="button"
-                            class="btn btn-labeled btn-primary"
+                            class="btn btn-labeled btn-success"
                             onclick="window.open('{{ $pdfUrl }}', '_blank').print()">
                             <span class="btn-label">
                                 <i class="mdi mdi-printer"></i>
@@ -49,8 +56,6 @@
                         </button>
                         @endif
                     </div>
-
-
                 </div>
             </div>
         </div>
@@ -340,11 +345,12 @@
         </div>
     </div>
 
+    {{-- Pastikan script ini ada di bagian bawah file Anda --}}
     <script>
-        function downloadPDF(url, filename) {
+        function forceDownload(url, filename) {
             const link = document.createElement('a');
             link.href = url;
-            link.download = filename;
+            link.setAttribute('download', filename);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
