@@ -433,7 +433,7 @@
                 </tr>
                 <tr>
                     <td rowspan="3">11.</td>
-                    <td colspan="2">Diterima di SMA ini</td>
+                    <td colspan="2">Diterima di Sekolah ini</td>
                     <td>:</td>
                     <td></td>
                 </tr>
@@ -534,7 +534,7 @@
                     </td>
                     <td style="width: 45%;">
                         <div class="signature">
-                            <div>{{ $sekolah['kota_kabupaten'] ?? '-' }}, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</div>
+                            <div>{{ $sekolah['kota_kabupaten'] ?? '-' }}, {{ $pada_tanggal ? \Carbon\Carbon::parse($pada_tanggal)->translatedFormat('d F Y') : 'N/A' }}</div>
                             <div>Kepala Sekolah,</div>
                             <br><br><br><br>
                             <div><strong>{{ $kepala_sekolah['nama'] ?? 'N/A' }}</strong></div>

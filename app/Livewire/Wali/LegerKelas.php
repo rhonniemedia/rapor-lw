@@ -312,7 +312,9 @@ class LegerKelas extends Component
                 'nama' => $this->pengaturan->kepalaSekolah->name ?? 'N/A',
                 'nip' => $this->pengaturan->kepalaSekolah->nip ?? 'N/A'
             ],
-            'tanggal_rapor' => $this->pengaturan?->tanggal_rapor?->format('Y-m-d') ?? now()->format('Y-m-d'),
+            'tanggal_rapor' => $this->pengaturan?->tanggal_rapor
+                ? \Carbon\Carbon::parse($this->pengaturan->tanggal_rapor)->format('Y-m-d')
+                : now()->format('Y-m-d'),
             'mata_pelajaran' => $this->mataPelajaranList,
             'students' => $this->studentsList,
         ];

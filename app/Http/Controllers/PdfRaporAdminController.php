@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class PdfController extends Controller
+class PdfRaporAdminController extends Controller
 {
     public function generatePdf(Request $request)
     {

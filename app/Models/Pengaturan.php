@@ -17,7 +17,7 @@ class Pengaturan extends Model
     ];
 
     protected $casts = [
-        'tanggal_rapor' => 'date',
+        // 'tanggal_rapor' => 'date',
         'konfigurasi_tampilan' => 'array',
     ];
 

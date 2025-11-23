@@ -304,10 +304,9 @@
                                         <div style="margin-bottom: 1px;">
                                             {{ $dataSekolah->kota_kabupaten ?? 'Kota' }},
                                             @if ($pengaturan && $pengaturan->tanggal_rapor)
-                                            {{ $pengaturan->tanggal_rapor->locale('id')->isoFormat('D MMMM Y') }}
+                                            {{ \Carbon\Carbon::parse($pengaturan->tanggal_rapor)->format('d F Y') }}
                                             @else
-                                            {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
-                                            {{-- Atau tampilkan pesan 'Tanggal Belum Diatur' --}}
+                                            {{ now()->format('d F Y') }}
                                             @endif
                                         </div>
                                         <div style="margin-bottom: 80px;">Wali Kelas,</div>

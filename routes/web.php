@@ -1,15 +1,10 @@
 <?php
 
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Livewire\Wali\LegerKelas;
-use App\Livewire\Wali\KelasBinaan;
-use App\Livewire\Admin\GeneratePdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PdfController;
-use App\Livewire\Template\PreviewRapor;
 use App\Http\Controllers\WaliLegerController;
 use App\Http\Controllers\PdfRaporWaliController;
+use App\Http\Controllers\PdfRaporAdminController;
 
 // Redirect root ke login
 Route::get('/', function () {
@@ -48,7 +43,10 @@ Route::post('/auth/logout', function () {
 })->middleware('auth')->name('logout');
 
 
-// Admin Route
+// ====================
+// ADMIN ROUTE
+// ====================
+
 Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // Dashboard
@@ -115,8 +113,10 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
 
 
 
+// ====================
+// WALI KELAS ROUTE
+// ====================
 
-// Wali Kelas Routes
 Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikelas.')->group(function () {
     Route::get('/dashboard', function () {
         return view('contents.wali.dashboard', ['title' => 'Dashboard Wali Kelas']);
@@ -172,9 +172,10 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
 });
 
 
+// ====================
+// GURU ROUTE
+// ====================
 
-
-// Guru Routes
 Route::middleware(['auth', 'role:guru'])->prefix('teacher')->name('guru.')->group(function () {
     Route::get('/dashboard', function () {
         return view('contents.guru.dashboard', ['title' => 'Dashboard Guru']);
@@ -207,7 +208,7 @@ Route::get('/admin/rapor/preview', function () {
 })->name('rapor.preview');
 
 // Route untuk generate PDF
-Route::get('/pdf/generate', [PdfController::class, 'generatePdf'])->name('pdf.generate');
+Route::get('/pdf/generate', [PdfRaporAdminController::class, 'generatePdf'])->name('pdf.generate');
 
 // Route untuk generate PDF Leger (tanpa middleware auth karena menggunakan token di URL)
 Route::get('/pdf/leger', [WaliLegerController::class, 'generateLeger'])
@@ -216,4 +217,4 @@ Route::get('/pdf/leger', [WaliLegerController::class, 'generateLeger'])
 
 // routes/web.php
 // Asumsi Anda memiliki controller untuk menangani generasi PDF
-Route::get('/pdf/leger/admin', [PdfController::class, 'generateLegerAdmin'])->name('pdf.generate.leger.admin');
+// Route::get('/pdf/leger/admin', [PdfController::class, 'generateLegerAdmin'])->name('pdf.generate.leger.admin');
