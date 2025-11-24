@@ -69,7 +69,7 @@
                                     </div>
                                     <div class="ms-3">
                                         <small class="text-muted">Tahun Ajaran</small>
-                                        <p class="fw-bold mb-0 text-dark">{{ $rombel->tahunAjaranKurikulum->tahunAjaran->nama ?? '-' }}</p>
+                                        <p class="fw-bold mb-0 text-dark">{{ $rombel->tahunAjaranKurikulum->tahunAjaran->nama ?? '-' }} - {{ $semesterAktif->semester->nama ?? 'N/A' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -145,9 +145,9 @@
                                             <i class="mdi mdi-file-document-box mdi-24px text-white"></i>
                                         </span>
                                         <div>
-                                            <h4 class="mb-1 text-dark fw-bold">Leger Kelas</h4>
+                                            <h4 class="mb-1 text-dark fw-bold">Leger Kelas {{ $rombel->nama }}</h4>
                                             <small class="text-muted">
-                                                {{ $rombel->tahunAjaranKurikulum->tahunAjaran->nama ?? '' }}
+                                                {{ $rombel->tahunAjaranKurikulum->tahunAjaran->nama ?? '' }} - {{ $semesterAktif->semester->nama ?? 'N/A' }}
                                             </small>
                                         </div>
                                     </div>
@@ -165,7 +165,7 @@
                                             type="button"
                                             onclick="forceDownload('{{ $pdfUrl }}', '{{ $fileName }}')"
                                             class="btn btn-labeled btn-danger text-decoration-none d-inline-flex align-items-center">
-                                            <span class="btn-label me-2">
+                                            <span class="btn-label">
                                                 <i class="mdi mdi-file-pdf-box"></i>
                                             </span>
                                             Download PDF
@@ -176,7 +176,7 @@
                                             type="button"
                                             class="btn btn-labeled btn-primary"
                                             onclick="window.open('{{ $pdfUrl }}', '_blank').print()">
-                                            <span class="btn-label me-2">
+                                            <span class="btn-label">
                                                 <i class="mdi mdi-printer"></i>
                                             </span>
                                             Cetak
@@ -195,22 +195,12 @@
                         <div class="bg-white overflow-hidden">
                             <div class="overflow-x-auto table-responsive">
                                 <style>
+                                    /* Style regular (non-print) tetap sama */
                                     .leger-table {
                                         width: 100%;
                                         border-collapse: collapse;
                                         font-family: Arial, sans-serif;
                                         font-size: 9pt;
-                                        min-width: 1200px;
-                                    }
-
-                                    .header-content th {
-                                        text-align: center;
-                                        padding: 6px 4px;
-                                        border: 1px solid #000;
-                                        font-weight: bold;
-                                        background-color: #e5e7eb;
-                                        font-size: 8pt;
-                                        vertical-align: middle;
                                     }
 
                                     .leger-title {
@@ -222,8 +212,18 @@
                                     }
 
                                     .info-row td {
-                                        padding: 3px 8px;
+                                        padding: 3px 0px;
                                         /* background-color: #f9fafb; */
+                                        font-size: 8pt;
+                                    }
+
+                                    .header-content th {
+                                        text-align: center;
+                                        vertical-align: middle;
+                                        padding: 6px 4px;
+                                        border: 1px solid #000;
+                                        font-weight: bold;
+                                        background-color: #e5e7eb;
                                         font-size: 8pt;
                                     }
 
@@ -231,25 +231,29 @@
                                         border: 1px solid #d1d5db;
                                         padding: 3px 3px;
                                         text-align: center;
+                                        vertical-align: middle;
                                         font-size: 8pt;
                                     }
 
                                     .data-row td.text-left {
                                         text-align: left;
-                                        padding-left: 5px;
                                     }
 
-                                    .mapel-header-vertical {
-                                        writing-mode: vertical-lr;
+                                    .nilai-cell {
+                                        min-width: 25px;
+                                    }
+
+                                    .mapel-header {
                                         transform: rotate(180deg);
-                                        padding: 10px 2px;
-                                        height: 120px;
+                                        writing-mode: vertical-lr;
+                                        text-orientation: mixed;
                                         white-space: nowrap;
+                                        padding: 4px 2px !important;
                                         font-size: 7pt;
                                     }
 
-                                    .nilai-col {
-                                        min-width: 35px;
+                                    tfoot strong {
+                                        font-weight: 700 !important;
                                     }
                                 </style>
 
@@ -267,21 +271,17 @@
 
                                         {{-- BARIS 2-4: INFO SEKOLAH & KELAS --}}
                                         <tr class="info-row info-small">
-                                            <td colspan="3" style="width: 15%; font-size: 12px;">TAHUN AJARAN</td>
-                                            <td colspan="{{ 9 + count($mataPelajaranList) }}" style="width: 85%; font-size: 12px;">
-                                                : {{ $semesterAktif->tahunAjaran->nama ?? 'N/A' }}
-                                            </td>
-                                        </tr>
-                                        <tr class="info-row info-small">
-                                            <td colspan="3" style="font-size: 12px;">SEMESTER</td>
-                                            <td colspan="{{ 9 + count($mataPelajaranList) }}" style="font-size: 12px;">
-                                                : {{ strtoupper($semesterAktif->semester->nama ?? 'N/A') }}
-                                            </td>
-                                        </tr>
-                                        <tr class="info-row info-small">
-                                            <td colspan="3" style="font-size: 12px;">KELAS</td>
-                                            <td colspan="{{ 9 + count($mataPelajaranList) }}" style="font-size: 12px;">
-                                                : {{ $rombel->nama ?? 'N/A' }}
+                                            <td colspan="{{ 12 + count($mataPelajaranList) }}" style="font-size: 12px;">
+                                                <table class="info-row" style="width: 100%;">
+                                                    <tr class="info-row">
+                                                        <td style="width: 20%;">TAHUN AJARAN / SEMESTER</td>
+                                                        <td style="width: 80%;">: {{ $rombel->tahunAjaranKurikulum->tahunAjaran->nama ?? '-' }} ~ {{ $semesterAktif->semester->nama ?? 'N/A' }} ({{ $semesterAktif->semester->urutan ?? 'N/A' }})</td>
+                                                    </tr>
+                                                    <tr class="info-row">
+                                                        <td>KELAS</td>
+                                                        <td>: {{ $rombel->nama ?? 'N/A' }}</td>
+                                                    </tr>
+                                                </table>
                                             </td>
                                         </tr>
                                         <tr class="header-content">
@@ -303,7 +303,7 @@
 
                                         <tr class="header-content">
                                             @foreach ($mataPelajaranList as $m)
-                                            <th class="nilai-col">
+                                            <th class="mapel-header">
                                                 <div class="mapel-header-vertical">{{ $m['kode'] }}</div>
                                             </th>
                                             @endforeach
@@ -344,6 +344,46 @@
                                         </tr>
                                         @endforeach
                                     </tbody>
+                                    {{-- Footer dengan tanda tangan --}}
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="{{ 12 + count($mataPelajaranList) }}" style="padding: 20px 30px; border: none;">
+                                                <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                                                    <div style="text-align: left; width: 45%; padding-left: 10rem;">
+                                                        <div style="margin-bottom: 1px;">
+                                                            Mengetahui
+                                                        </div>
+                                                        <div style="margin-bottom: 80px;">Kepala Sekolah,</div>
+                                                        <div style="display: inline-block; padding: 0 0px;">
+                                                            <strong>{{ $pengaturan->kepalaSekolah->name ?? 'N/A' }}</strong>
+                                                        </div>
+                                                        <div style="margin-top: 5px;">
+                                                            NIP {{ $pengaturan->kepalaSekolah->nip ?? '-' }}
+                                                        </div>
+                                                    </div>
+                                                    <div style="text-align: left; width: 45%; padding-left: 10rem;">
+                                                        <div style="margin-bottom: 1px;">
+                                                            {{ $dataSekolah->kota_kabupaten ?? 'Kota' }},
+                                                            @if ($pengaturan && $pengaturan->tanggal_rapor)
+                                                            {{ \Carbon\Carbon::parse($pengaturan->tanggal_rapor)->format('d F Y') }}
+                                                            @else
+                                                            {{ now()->format('d F Y') }}
+                                                            @endif
+                                                        </div>
+                                                        <div style="margin-bottom: 80px;">Wali Kelas,</div>
+                                                        <div style="display: inline-block; padding: 0 0px;">
+                                                            <strong>{{ $rombel->waliKelas->name ?? 'N/A' }}</strong>
+                                                        </div>
+                                                        <div style="margin-top: 5px;">
+                                                            NIP {{ $rombel->waliKelas->nip ?? '-' }}
+                                                        </div>
+                                                    </div>
+
+
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>

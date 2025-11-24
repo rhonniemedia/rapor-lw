@@ -62,13 +62,15 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
         Route::get('/school', fn() => view('contents.admin.sekolah', ['title' => 'Data Sekolah']));
         Route::get('/school-profile', fn() => view('contents.admin.profil-sekolah', ['title' => 'Profil Sekolah']));
         Route::get('/curriculum', fn() => view('contents.admin.kurikulum', ['title' => 'Kurikulum']));
+        Route::get('/department', fn() => view('contents.admin.jurusan', ['title' => 'Jurusan']));
+        Route::get('/year', fn() => view('contents.admin.akademik', ['title' => 'Tahun Ajaran']));
+        // Route::get('/year', fn() => view('contents.admin.tahun-ajaran', ['title' => 'Tahun Ajaran']));
+        Route::get('/semester', fn() => view('contents.admin.semester', ['title' => 'Semester']));
     });
 
     // Academic Data
     Route::prefix('academic')->group(function () {
-        Route::get('/year', fn() => view('contents.admin.akademik', ['title' => 'Tahun Ajaran']));
-        Route::get('/semester', fn() => view('contents.admin.semester', ['title' => 'Semester']));
-        Route::get('/department', fn() => view('contents.admin.jurusan', ['title' => 'Jurusan']));
+        Route::get('/relation', fn() => view('contents.admin.relasi', ['title' => 'Relasi Akademik']));
         Route::get('/subject', fn() => view('contents.admin.mata-pelajaran', ['title' => 'Mata Pelajaran']));
         Route::get('/manage-extracurricular', fn() => view('contents.admin.ekstrakurikuler', ['title' => 'Ekstrakurikuler']))
             ->name('academic.extracurricular');
@@ -213,8 +215,3 @@ Route::get('/pdf/generate', [PdfRaporAdminController::class, 'generatePdf'])->na
 // Route untuk generate PDF Leger (tanpa middleware auth karena menggunakan token di URL)
 Route::get('/pdf/leger', [WaliLegerController::class, 'generateLeger'])
     ->name('pdf.generate.leger');
-
-
-// routes/web.php
-// Asumsi Anda memiliki controller untuk menangani generasi PDF
-// Route::get('/pdf/leger/admin', [PdfController::class, 'generateLegerAdmin'])->name('pdf.generate.leger.admin');

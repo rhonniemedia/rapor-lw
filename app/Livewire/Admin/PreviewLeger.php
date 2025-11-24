@@ -166,36 +166,66 @@ class PreviewLeger extends Component
 
     private function loadMataPelajaranList(): void
     {
+        // 1. Validasi
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
 
-        if (!$kurikulumId) {
+        if (!$this->rombelId || !$kurikulumId) {
             $this->mataPelajaranList = [];
             return;
         }
 
-        $allMapel = KurikulumMataPelajaran::with(['mataPelajaran', 'kelompok'])
-            ->where('kurikulum_id', $kurikulumId)
+        // 2. QUERY UTAMA: Ambil Mapel dari RombelPengajar (Bukan master kurikulum)
+        // Ini memastikan mapel yang muncul sama persis dengan yang ada di halaman input nilai / preview rapor
+        $allMapel = \App\Models\RombelPengajar::query()
+            ->where('rombel_pengajars.rombel_id', $this->rombelId)
+            // Join ke Mata Pelajaran
+            ->join('mata_pelajarans as mp', 'rombel_pengajars.mata_pelajaran_id', '=', 'mp.id')
+            // Join ke Kurikulum Mapel (untuk urutan)
+            ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId) {
+                $join->on('mp.id', '=', 'kmp.mata_pelajaran_id')
+                    ->where('kmp.kurikulum_id', '=', $kurikulumId);
+            })
+            // Join ke Kelompok (untuk kode kelompok A/B/C)
+            ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
+            ->select(
+                'mp.id',
+                'mp.nama',
+                'mp.kode',
+                'mp.is_mapel_agama',
+                'mpk.kode as kelompok_kode',
+                'mpk.nama as kelompok_nama',
+                'kmp.urutan'
+            )
+            ->orderBy('kmp.urutan', 'asc')
             ->get();
 
-        // Logic: Gabungkan semua mapel Agama menjadi satu kolom "PABP"
-        $agamaMapels = $allMapel->filter(fn($item) => $item->mataPelajaran->is_mapel_agama == true || $item->mataPelajaran->is_mapel_agama == 1);
-        $nonAgamaMapels = $allMapel->filter(fn($item) => !$item->mataPelajaran->is_mapel_agama || $item->mataPelajaran->is_mapel_agama == 0);
+        // 3. LOGIKA AGAMA: Gabungkan semua mapel Agama menjadi satu kolom "PABP"
+        // Menggunakan filter collection Laravel
+        $agamaMapels = $allMapel->filter(fn($item) => $item->is_mapel_agama == true || $item->is_mapel_agama == 1);
+        $nonAgamaMapels = $allMapel->filter(fn($item) => !$item->is_mapel_agama || $item->is_mapel_agama == 0);
 
         $combined = collect();
+
+        // Jika ada mapel agama (Islam, Kristen, dll), ambil satu saja sebagai perwakilan kolom
         if ($agamaMapels->isNotEmpty()) {
+            // Kita ambil elemen pertama sebagai representasi kolom "Agama"
             $combined->push($agamaMapels->first());
         }
+
+        // Gabungkan dengan mapel umum
         $combined = $combined->merge($nonAgamaMapels);
 
+        // 4. MAPPING FINAL
         $mataPelajarans = $combined
-            ->sortBy(fn($item) => [$item->kelompok->kode, $item->urutan])
+            ->sortBy(fn($item) => [$item->kelompok_kode, $item->urutan])
             ->map(function ($item) {
-                $isAgama = $item->mataPelajaran->is_mapel_agama == true || $item->mataPelajaran->is_mapel_agama == 1;
+                $isAgama = $item->is_mapel_agama == true || $item->is_mapel_agama == 1;
                 return [
-                    'id'             => $isAgama ? 'agama' : $item->mataPelajaran->id,
-                    'nama'           => $isAgama ? 'Pendidikan Agama dan Budi Pekerti' : $item->mataPelajaran->nama,
-                    'kode'           => $isAgama ? 'PABP' : $item->mataPelajaran->kode,
-                    'kelompok_kode'  => $item->kelompok->kode,
+                    // Jika agama, ID diset string 'agama' untuk trigger logika pencarian nilai spesifik di loop siswa
+                    'id'             => $isAgama ? 'agama' : $item->id,
+                    'nama'           => $isAgama ? 'Pendidikan Agama dan Budi Pekerti' : $item->nama,
+                    'kode'           => $isAgama ? 'PABP' : $item->kode,
+                    'kelompok_kode'  => $item->kelompok_kode,
                     'is_agama'       => $isAgama,
                 ];
             });
@@ -381,8 +411,16 @@ class PreviewLeger extends Component
 
     public function render()
     {
+        $semesterAktif = null;
+
+        if ($this->semesterId) {
+            $semesterAktif = TahunAjaranSemester::with('semester', 'tahunAjaran')
+                ->find($this->semesterId);
+        }
+
         return view('livewire.admin.preview-leger', [
-            'hasData' => !empty($this->studentsList)
+            'hasData' => !empty($this->studentsList),
+            'semesterAktif' => $semesterAktif
         ]);
     }
 }

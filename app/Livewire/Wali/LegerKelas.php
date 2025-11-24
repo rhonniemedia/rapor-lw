@@ -98,53 +98,69 @@ class LegerKelas extends Component
 
     private function loadMataPelajaranList(): void
     {
-        if (!$this->rombel || !$this->semesterAktif) {
-            $this->mataPelajaranList = [];
-            return;
-        }
-
+        // 1. Validasi
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
 
-        if (!$kurikulumId) {
+        // Gunakan $this->rombel karena di Wali Kelas propertinya berupa Objek Model
+        if (!$this->rombel || !$kurikulumId) {
             $this->mataPelajaranList = [];
             return;
         }
 
-        // Ambil semua mata pelajaran
-        $allMapel = KurikulumMataPelajaran::with(['mataPelajaran', 'kelompok'])
-            ->where('kurikulum_id', $kurikulumId)
+        // 2. QUERY UTAMA: Ambil Mapel dari RombelPengajar
+        $allMapel = \App\Models\RombelPengajar::query()
+            // Perhatikan: Menggunakan $this->rombel->id
+            ->where('rombel_pengajars.rombel_id', $this->rombel->id)
+            // Join ke Mata Pelajaran
+            ->join('mata_pelajarans as mp', 'rombel_pengajars.mata_pelajaran_id', '=', 'mp.id')
+            // Join ke Kurikulum Mapel (untuk urutan)
+            ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId) {
+                $join->on('mp.id', '=', 'kmp.mata_pelajaran_id')
+                    ->where('kmp.kurikulum_id', '=', $kurikulumId);
+            })
+            // Join ke Kelompok
+            ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
+            ->select(
+                'mp.id',
+                'mp.nama',
+                'mp.kode',
+                'mp.is_mapel_agama',
+                'mpk.kode as kelompok_kode',
+                'mpk.nama as kelompok_nama',
+                'kmp.urutan'
+            )
+            ->orderBy('kmp.urutan', 'asc')
             ->get();
 
-        // Pisahkan agama dan non-agama
+        // 3. LOGIKA AGAMA
         $agamaMapels = $allMapel->filter(function ($item) {
-            return $item->mataPelajaran->is_mapel_agama == true || $item->mataPelajaran->is_mapel_agama == 1;
+            return $item->is_mapel_agama == true || $item->is_mapel_agama == 1;
         });
 
         $nonAgamaMapels = $allMapel->filter(function ($item) {
-            return !$item->mataPelajaran->is_mapel_agama || $item->mataPelajaran->is_mapel_agama == 0;
+            return !$item->is_mapel_agama || $item->is_mapel_agama == 0;
         });
 
-        // Ambil hanya 1 agama sebagai representasi
         $combined = collect();
         if ($agamaMapels->isNotEmpty()) {
             $combined->push($agamaMapels->first());
         }
         $combined = $combined->merge($nonAgamaMapels);
 
-        // Sort dan mapping
+        // 4. MAPPING FINAL
         $mataPelajarans = $combined
             ->sortBy(function ($item) {
-                return [$item->kelompok->kode, $item->urutan];
+                return [$item->kelompok_kode, $item->urutan];
             })
             ->map(function ($item) {
-                $isAgama = $item->mataPelajaran->is_mapel_agama == true || $item->mataPelajaran->is_mapel_agama == 1;
+                $isAgama = $item->is_mapel_agama == true || $item->is_mapel_agama == 1;
 
                 return (object) [
-                    'id'             => $isAgama ? 'agama' : $item->mataPelajaran->id,
-                    'nama'           => $isAgama ? 'Pendidikan Agama dan Budi Pekerti' : $item->mataPelajaran->nama,
-                    'kode'           => $isAgama ? 'PABP' : $item->mataPelajaran->kode,
-                    'kelompok_nama'  => $item->kelompok->nama,
-                    'kelompok_kode'  => $item->kelompok->kode,
+                    'id'             => $isAgama ? 'agama' : $item->id,
+                    'nama'           => $isAgama ? 'Pendidikan Agama dan Budi Pekerti' : $item->nama,
+                    'kode'           => $isAgama ? 'PABP' : $item->kode,
+                    'kelompok_nama'  => $item->kelompok_nama, // Wali kelas biasanya butuh nama kelompok lengkap
+                    'kelompok_kode'  => $item->kelompok_kode,
                     'urutan'         => $item->urutan,
                     'is_agama'       => $isAgama,
                 ];

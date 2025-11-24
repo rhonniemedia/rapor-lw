@@ -66,7 +66,16 @@
                         <a class="nav-link {{ request()->is('admin/master/school-profile') ? 'active' : '' }}" href="{{ url('admin/master/school-profile') }}">Profil Sekolah</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {{ request()->is('admin/master/department') ? 'active' : '' }}" href="{{ url('admin/master/department') }}">Jurusan</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {{ request()->is('admin/master/curriculum') ? 'active' : '' }}" href="{{ url('admin/master/curriculum') }}">Kurikulum</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('admin/master/year') ? 'active' : '' }}" href="{{ url('admin/master/year') }}">Tahun Ajaran</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('admin/master/semester') ? 'active' : '' }}" href="{{ url('admin/master/semester') }}">Semester</a>
                     </li>
                 </ul>
             </div>
@@ -86,17 +95,21 @@
             <div class="collapse {{ request()->is('admin/academic*') ? 'show' : '' }}" id="ui-academic">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
+                        <a class="nav-link {{ request()->is('admin/academic/relation') ? 'active' : '' }}"
+                            href="{{url('admin/academic/relation')}}">Relasi Akademik</a>
+                    </li>
+                    <!-- <li class="nav-item">
                         <a class="nav-link {{ request()->is('admin/academic/year') ? 'active' : '' }}"
                             href="{{url('admin/academic/year')}}">Tahun Ajaran</a>
-                    </li>
-                    <li class="nav-item">
+                    </li> -->
+                    <!-- <li class="nav-item">
                         <a class="nav-link {{ request()->is('admin/academic/semester') ? 'active' : '' }}"
                             href="{{url('admin/academic/semester')}}">Semester</a>
-                    </li>
-                    <li class="nav-item">
+                    </li> -->
+                    <!-- <li class="nav-item">
                         <a class="nav-link {{ request()->is('admin/academic/department') ? 'active' : '' }}"
                             href="{{url('admin/academic/department')}}">Jurusan</a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('admin/academic/subject') ? 'active' : '' }}"
                             href="{{url('admin/academic/subject')}}">Mata Pelajaran</a>

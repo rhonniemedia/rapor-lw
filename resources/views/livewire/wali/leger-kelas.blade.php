@@ -38,7 +38,7 @@
                             type="button"
                             class="btn btn-labeled btn-danger text-decoration-none d-inline-flex align-items-center"
                             onclick="forceDownload('{{ $pdfUrl }}', '{{ $fileName }}')">
-                            <span class="btn-label me-2">
+                            <span class="btn-label">
                                 <i class="mdi mdi-file-pdf-box"></i>
                             </span>
                             Download PDF
@@ -132,7 +132,7 @@
                     }
 
                     .info-row td {
-                        padding: 3px 8px;
+                        padding: 3px 0px;
                         /* background-color: #f9fafb; */
                         font-size: 8pt;
                     }
@@ -191,21 +191,17 @@
 
                         {{-- BARIS 2-4: INFO SEKOLAH & KELAS --}}
                         <tr class="info-row info-small">
-                            <td colspan="3" style="width: 15%; font-size: 12px;">TAHUN AJARAN</td>
-                            <td colspan="{{ 9 + count($mataPelajaranList) }}" style="width: 85%; font-size: 12px;">
-                                : {{ $semesterAktif->tahunAjaran->nama ?? 'N/A' }}
-                            </td>
-                        </tr>
-                        <tr class="info-row info-small">
-                            <td colspan="3" style="font-size: 12px;">SEMESTER</td>
-                            <td colspan="{{ 9 + count($mataPelajaranList) }}" style="font-size: 12px;">
-                                : {{ strtoupper($semesterAktif->semester->nama ?? 'N/A') }}
-                            </td>
-                        </tr>
-                        <tr class="info-row info-small">
-                            <td colspan="3" style="font-size: 12px;">KELAS</td>
-                            <td colspan="{{ 9 + count($mataPelajaranList) }}" style="font-size: 12px;">
-                                : {{ $rombel->nama ?? 'N/A' }}
+                            <td colspan="{{ 12 + count($mataPelajaranList) }}" style="font-size: 12px;">
+                                <table class="info-row" style="width: 100%;">
+                                    <tr class="info-row">
+                                        <td style="width: 20%;">TAHUN AJARAN / SEMESTER</td>
+                                        <td style="width: 80%;">: {{ $semesterAktif->tahunAjaran->nama ?? 'N/A' }} ~ {{ $semesterAktif->semester->nama ?? 'N/A' }} ({{ $semesterAktif->semester->urutan ?? 'N/A' }})</td>
+                                    </tr>
+                                    <tr class="info-row">
+                                        <td>KELAS</td>
+                                        <td>: {{ $rombel->nama ?? 'N/A' }}</td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
 

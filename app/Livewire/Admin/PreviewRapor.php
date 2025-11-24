@@ -239,61 +239,86 @@ class PreviewRapor extends Component
 
     private function loadNilaiPelajar($pelajarId): array
     {
-        // Get kurikulum_id dari rombel
-        $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
-
-        if (!$kurikulumId) {
-            return [
-                'nilai' => [],
-                'nilai_grouped' => []
-            ];
+        // 1. Pastikan Rombel ID dan Kurikulum ID tersedia
+        if (!$this->rombelId || !$this->rombel->tahunAjaranKurikulum) {
+            return ['nilai' => [], 'nilai_grouped' => []];
         }
 
-        // Query dengan JOIN langsung untuk dapat kelompok, urutan, NAMA, dan KODE
-        $nilais = Nilai::with(['mataPelajaran'])
+        $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id;
+
+        // 2. QUERY UTAMA (Diubah)
+        // Sumber utama sekarang adalah RombelPengajar (Mapel yang diajarkan di kelas ini)
+        $dataMapel = \App\Models\RombelPengajar::query()
+            // A. Ambil Info Mapel
+            ->join('mata_pelajarans as mp', 'rombel_pengajars.mata_pelajaran_id', '=', 'mp.id')
+
+            // B. Ambil Info Struktur Kurikulum (Kelompok & Urutan)
+            // Kita perlu ini untuk grouping (Muatan Nasional, Kewilayahan, dll) dan sorting
             ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId) {
-                $join->on('nilais.mata_pelajaran_id', '=', 'kmp.mata_pelajaran_id')
+                $join->on('mp.id', '=', 'kmp.mata_pelajaran_id')
                     ->where('kmp.kurikulum_id', '=', $kurikulumId);
             })
-            // Pastikan Anda memilih KODE di klausa select
             ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
-            ->where('nilais.pelajar_id', $pelajarId)
-            ->where('nilais.tahun_ajaran_semester_id', $this->semesterId)
-            ->select('nilais.*', 'mpk.nama as kelompok_nama', 'mpk.kode as kelompok_kode', 'kmp.urutan') // <-- TAMBAHKAN mpk.kode
+
+            // C. LEFT JOIN ke Tabel Nilai (KUNCI UTAMA DISINI)
+            // Left join artinya: Ambil semua mapel kiri, walau data kanan (nilai) kosong
+            ->leftJoin('nilais', function ($join) use ($pelajarId) {
+                $join->on('mp.id', '=', 'nilais.mata_pelajaran_id')
+                    ->where('nilais.pelajar_id', '=', $pelajarId)
+                    ->where('nilais.tahun_ajaran_semester_id', '=', $this->semesterId);
+            })
+
+            // D. Filter hanya untuk rombel ini
+            ->where('rombel_pengajars.rombel_id', $this->rombelId)
+
+            // E. Pilih Kolom
+            ->select(
+                'mp.nama as mapel_nama',
+                'mpk.nama as kelompok_nama',
+                'mpk.kode as kelompok_kode',
+                'kmp.urutan',
+                // Data Nilai (Bisa NULL jika belum diinput)
+                'nilais.nilai_angka',
+                'nilais.predikat',
+                'nilais.capaian_kompetensi'
+            )
             ->orderBy('kmp.urutan', 'asc')
             ->get();
 
+        // 3. Formatting Data
         $nilaiArray = [];
         $nilaiGrouped = [];
         $counter = 1;
 
-        foreach ($nilais as $nilai) {
-            $kelompokNama = $nilai->kelompok_nama ?? 'Lainnya';
-            $kelompokKode = $nilai->kelompok_kode ?? 'Z'; // <-- AMBIL KODE DARI HASIL QUERY
+        foreach ($dataMapel as $row) {
+            // Cek apakah nilai ada. Jika null, set ke 0 atau '-'
+            $nilaiAngka = $row->nilai_angka ? round($row->nilai_angka) : 0;
+            $predikat = $row->predikat ?? '-';
+            // Jika nilai kosong, capaian mungkin perlu pesan default atau kosongkan
+            $capaian = $row->capaian_kompetensi ?? '';
 
             $item = [
                 'no' => $counter++,
-                'mapel' => $nilai->mataPelajaran->nama ?? 'N/A',
-                'kelompok' => $kelompokNama,
-                'kelompok_kode' => $kelompokKode, // <-- TAMBAHKAN KODE KE ITEM
-                'nilai' => round($nilai->nilai_angka ?? 0),
-                'predikat' => $nilai->predikat ?? '-',
-                'capaian' => $nilai->capaian_kompetensi ?? '',
+                'mapel' => $row->mapel_nama,
+                'kelompok' => $row->kelompok_nama,
+                'kelompok_kode' => $row->kelompok_kode,
+                'nilai' => $nilaiAngka,
+                'predikat' => $predikat,
+                'capaian' => $capaian,
             ];
 
             $nilaiArray[] = $item;
 
-            // Grouping
+            // Grouping Logic
+            $kelompokNama = $row->kelompok_nama;
             if (!isset($nilaiGrouped[$kelompokNama])) {
                 $nilaiGrouped[$kelompokNama] = [
-                    'kode' => $kelompokKode, // <-- TAMBAHKAN KODE DI SINI UNTUK GROUPING
+                    'kode' => $row->kelompok_kode,
                     'items' => []
                 ];
             }
-            $nilaiGrouped[$kelompokNama]['items'][] = $item; // <-- Simpan item di bawah sub-array 'items'
+            $nilaiGrouped[$kelompokNama]['items'][] = $item;
         }
-
-        // Perhatikan struktur baru nilai_grouped: [KelompokNama => ['kode' => 'A', 'items' => [...] ]]
 
         return [
             'nilai' => $nilaiArray,

@@ -186,50 +186,83 @@ class PreviewPdfRapor extends Component
 
     private function loadNilaiPelajar($pelajarId): array
     {
-        // Get kurikulum_id dari rombel
+        // 1. Validasi awal: Pastikan Rombel & Kurikulum tersedia
+        // Mengambil kurikulum_id dari relasi rombel
+        // PERBAIKAN: Gunakan null safe operator pada $this->rombel
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
 
-        if (!$kurikulumId) {
+        // PERBAIKAN: Ganti $this->rombelId menjadi $this->rombel
+        if (!$this->rombel || !$kurikulumId) {
             return [
                 'nilai' => [],
                 'nilai_grouped' => []
             ];
         }
 
-        // Query dengan JOIN langsung untuk dapat kelompok, urutan, NAMA, dan KODE
-        $nilais = Nilai::with(['mataPelajaran'])
+        // 2. QUERY BUILDER
+        $dataMapel = \App\Models\RombelPengajar::query()
+            // A. Ambil Detail Mata Pelajaran
+            ->join('mata_pelajarans as mp', 'rombel_pengajars.mata_pelajaran_id', '=', 'mp.id')
+
+            // B. Join ke Kurikulum Mapel
             ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId) {
-                $join->on('nilais.mata_pelajaran_id', '=', 'kmp.mata_pelajaran_id')
+                $join->on('mp.id', '=', 'kmp.mata_pelajaran_id')
                     ->where('kmp.kurikulum_id', '=', $kurikulumId);
             })
+
+            // C. Join ke Kelompok Mapel
             ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
-            ->where('nilais.pelajar_id', $pelajarId)
-            ->where('nilais.tahun_ajaran_semester_id', $this->semesterAktif->id)
-            ->select('nilais.*', 'mpk.nama as kelompok_nama', 'mpk.kode as kelompok_kode', 'kmp.urutan')
+
+            // D. LEFT JOIN ke Tabel Nilai
+            ->leftJoin('nilais', function ($join) use ($pelajarId) {
+                $join->on('mp.id', '=', 'nilais.mata_pelajaran_id')
+                    ->where('nilais.pelajar_id', '=', $pelajarId)
+                    // Pastikan menggunakan ID dari semesterAktif
+                    ->where('nilais.tahun_ajaran_semester_id', '=', $this->semesterAktif->id);
+            })
+
+            // E. Filter Rombel Pengajar
+            // PERBAIKAN: Ganti $this->rombelId menjadi $this->rombel->id
+            ->where('rombel_pengajars.rombel_id', $this->rombel->id)
+
+            // F. Select kolom
+            ->select(
+                'mp.nama as mapel_nama',
+                'mpk.nama as kelompok_nama',
+                'mpk.kode as kelompok_kode',
+                'kmp.urutan',
+                'nilais.nilai_angka',
+                'nilais.predikat',
+                'nilais.capaian_kompetensi'
+            )
             ->orderBy('kmp.urutan', 'asc')
             ->get();
 
+        // 3. FORMATTING DATA
         $nilaiArray = [];
         $nilaiGrouped = [];
         $counter = 1;
 
-        foreach ($nilais as $nilai) {
-            $kelompokNama = $nilai->kelompok_nama ?? 'Lainnya';
-            $kelompokKode = $nilai->kelompok_kode ?? 'Z';
+        foreach ($dataMapel as $row) {
+            $nilaiAngka = $row->nilai_angka ? round($row->nilai_angka) : 0;
+            $predikat = $row->predikat ?? '-';
+            $capaian = $row->capaian_kompetensi ?? '';
+
+            $kelompokNama = $row->kelompok_nama ?? 'Lainnya';
+            $kelompokKode = $row->kelompok_kode ?? 'Z';
 
             $item = [
                 'no' => $counter++,
-                'mapel' => $nilai->mataPelajaran->nama ?? 'N/A',
+                'mapel' => $row->mapel_nama,
                 'kelompok' => $kelompokNama,
                 'kelompok_kode' => $kelompokKode,
-                'nilai' => round($nilai->nilai_angka ?? 0),
-                'predikat' => $nilai->predikat ?? '-',
-                'capaian' => $nilai->capaian_kompetensi ?? '',
+                'nilai' => $nilaiAngka,
+                'predikat' => $predikat,
+                'capaian' => $capaian,
             ];
 
             $nilaiArray[] = $item;
 
-            // Grouping
             if (!isset($nilaiGrouped[$kelompokNama])) {
                 $nilaiGrouped[$kelompokNama] = [
                     'kode' => $kelompokKode,

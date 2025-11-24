@@ -124,41 +124,38 @@
             max-width: 25px;
         }
 
-        .signature-section {
-            margin-top: 10px;
-            padding: 0 20px;
-        }
-
-        .signature-container {
-            display: table;
+        .signature-table {
             width: 100%;
+            font-size: 10pt;
+            margin-top: 5px;
+            border-collapse: collapse;
         }
 
-        .signature-box {
-            display: table-cell;
-            width: 50%;
+        .signature-cell {
             vertical-align: top;
+            width: 50%;
+            padding-top: 5px;
         }
 
+        .signature-left {
+            text-align: left;
+            padding-left: 10rem;
+        }
+
+        .signature-right {
+            text-align: left;
+            padding-left: 15rem;
+        }
+
+        /* Ruang tanda tangan */
+        .signature-space {
+            height: 60px;
+        }
+
+        /* Nama dan NIP */
         .signature-name {
-            margin-top: 60px;
-            font-weight: 700;
-            font-size: 13px;
-            display: inline-block;
-        }
-
-        .signature-nip {
-            margin-top: 3px;
-            font-size: 9pt;
-        }
-
-        .signature-title {
-            margin-bottom: 5px;
-            font-size: 9pt;
-        }
-
-        .signature-date {
-            font-size: 9pt;
+            font-weight: bold;
+            margin-top: 0.5rem;
         }
 
         /* Untuk tabel dengan banyak kolom */
@@ -281,31 +278,36 @@
     </table>
 
     {{-- TANDA TANGAN --}}
-    <div class="signature-section">
-        <div class="signature-container">
-            <div class="signature-box" style="text-align: left; padding-left: 10rem;">
-                <div class="signature-date">
-                    Mengetahui
-                </div>
-                <div class="signature-title">Kepala Sekolah,</div>
-                <div class="signature-name">{{ $kepala_sekolah['nama'] ?? 'N/A' }}</div>
-                <div class="signature-nip">NIP {{ $kepala_sekolah['nip'] ?? '-' }}</div>
-            </div>
+    <table class="signature-table">
+        <tr>
+            <!-- Kepala Sekolah -->
+            <td class="signature-cell signature-left">
+                <div>Mengetahui</div>
+                <div>Kepala Sekolah,</div>
 
-            <div class="signature-box" style="text-align: left; padding-left: 25rem;">
+                <div class="signature-space"></div>
+
+                <div class="signature-name">{{ $kepala_sekolah['nama'] ?? 'N/A' }}</div>
+                <div>NIP {{ $kepala_sekolah['nip'] ?? '-' }}</div>
+            </td>
+
+            <!-- Wali Kelas -->
+            <td class="signature-cell signature-right">
                 <?php
                 $tanggalRapor = $tanggal_rapor ?? date('Y-m-d');
                 $tanggalFormat = \Carbon\Carbon::parse($tanggalRapor)->locale('id')->isoFormat('D MMMM Y');
                 ?>
-                <div class="signature-date">
-                    {{ $sekolah['kota_kabupaten'] ?? 'Kota' }}, {{ $tanggalFormat }}
-                </div>
-                <div class="signature-title">Wali Kelas,</div>
+
+                <div>{{ $sekolah['kota_kabupaten'] ?? 'Kota' }}, {{ $tanggalFormat }}</div>
+                <div>Wali Kelas,</div>
+
+                <div class="signature-space"></div>
+
                 <div class="signature-name">{{ $wali_kelas['nama'] ?? 'N/A' }}</div>
-                <div class="signature-nip">NIP {{ $wali_kelas['nip'] ?? '-' }}</div>
-            </div>
-        </div>
-    </div>
+                <div>NIP {{ $wali_kelas['nip'] ?? '-' }}</div>
+            </td>
+        </tr>
+    </table>
 
     {{-- Keterangan di footer --}}
     <div style="margin-top: 15px; padding: 0 20px; font-size: 8pt; border-top: 1px solid #ccc; padding-top: 5px;">
