@@ -73,9 +73,9 @@
                     <button type="button" class="border-0 bg-transparent" title="Edit" wire:click="edit('{{ $rombel->id }}')">
                         <img src="{{ asset('assets/images/icons/edit.png') }}" width="30" height="30" alt="Edit">
                     </button>
-                    <button type="button" class="border-0 bg-transparent" title="Delete" wire:click="confirmDeleteRombel('{{ $rombel->id }}')">
+                    <!-- <button type="button" class="border-0 bg-transparent" title="Delete" wire:click="confirmDeleteRombel('{{ $rombel->id }}')">
                         <img src="{{ asset('assets/images/icons/delete.png') }}" width="30" height="30" alt="Delete">
-                    </button>
+                    </button> -->
                 </td>
             </tr>
             @empty
