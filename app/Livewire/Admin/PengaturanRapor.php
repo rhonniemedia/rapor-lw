@@ -2,15 +2,16 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\Pengaturan;
-use App\Models\TahunAjaranSemester;
-use App\Models\User; // Asumsi User adalah tabel untuk Kepala Sekolah
+use Exception;
+use Carbon\Carbon;
 use Livewire\Component;
+use App\Models\Pengaturan;
+use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use Livewire\Attributes\Rule;
+use App\Models\TahunAjaranSemester;
 use Illuminate\Validation\Rule as ValidationRule;
-use Livewire\Attributes\On;
-use Exception;
+use App\Models\User; // Asumsi User adalah tabel untuk Kepala Sekolah
 
 class PengaturanRapor extends Component
 {
@@ -133,7 +134,7 @@ class PengaturanRapor extends Component
         $this->pengaturanId = $id;
         $this->tahun_ajaran_semester_id = $pengaturan->tahun_ajaran_semester_id;
         $this->kepala_sekolah_id = $pengaturan->kepala_sekolah_id;
-        $this->tanggal_rapor = $pengaturan->tanggal_rapor->format('Y-m-d');
+        $this->tanggal_rapor = Carbon::parse($pengaturan->tanggal_rapor)->format('Y-m-d');
 
         $this->isEdit = true;
         $this->dispatch('modal:show');
