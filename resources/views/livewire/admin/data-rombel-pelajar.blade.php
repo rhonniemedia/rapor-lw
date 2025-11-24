@@ -139,10 +139,10 @@
                     <div class="badge badge-inverse-warning">{{ $item->pelajar->nisn ?? 'N/A' }}</div>
                 </td>
                 <td>
-                    <button wire:click="confirmDeleteRombelPelajar('{{ $item->id }}')"
+                    <!-- <button wire:click="confirmDeleteRombelPelajar('{{ $item->id }}')"
                         class="btn btn-sm btn-outline-danger" title="Hapus">
                         <i class="mdi mdi-delete"></i>
-                    </button>
+                    </button> -->
                 </td>
             </tr>
             @empty
