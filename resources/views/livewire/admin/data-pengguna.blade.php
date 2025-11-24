@@ -4,14 +4,14 @@
         <div class="d-flex align-items-center">
             <div class="icon-wrapper position-relative">
                 <span class="bg-gradient-primary p-2 rounded-3 shadow-sm me-3 d-inline-flex align-items-center justify-content-center">
-                    <i class="mdi mdi-account-group mdi-24px text-white"></i>
+                    <i class="mdi mdi-account-multiple-outline mdi-24px text-white"></i>
                 </span>
             </div>
 
             <div>
-                <h4 class="mb-1 text-dark fw-bold">Manajemen Pengguna</h4>
+                <h4 class="mb-1 text-dark fw-bold">Daftar Pengguna</h4>
                 <div class="d-flex align-items-center gap-2">
-                    <small class="text-muted">Kelola data pengguna</small>
+                    <small class="text-muted">Manajemen data pengguna</small>
                 </div>
             </div>
         </div>

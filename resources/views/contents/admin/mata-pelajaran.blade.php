@@ -20,65 +20,80 @@
             <div class="card">
                 <div class="card-body">
 
-                    <!-- Nav Tabs -->
-                    <ul class="nav nav-tabs mb-3" id="academicTab" role="tablist">
-                        <li class="nav-item">
-                            <button class="nav-link active" id="mapel-tab" data-bs-toggle="tab" data-bs-target="#mapel" type="button" role="tab">
-                                Mata Pelajaran
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" id="mapelGroup-tab" data-bs-toggle="tab" data-bs-target="#mapelGroup" type="button" role="tab">
-                                Kelompok Mata Pelajaran
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" id="kurikulum-tab" data-bs-toggle="tab" data-bs-target="#kurikulum" type="button" role="tab">
-                                Relasi Kurikulum
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" id="jurusan-tab" data-bs-toggle="tab" data-bs-target="#jurusan" type="button" role="tab">
-                                Relasi Jurusan
-                            </button>
-                        </li>
-                    </ul>
+                    <div class="page-header pb-3 mb-3 border-bottom">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-wrapper position-relative">
+                                <span class="bg-gradient-primary p-2 rounded-3 shadow-sm me-3 d-inline-flex align-items-center justify-content-center">
+                                    <i class="mdi mdi-calendar-clock mdi-24px text-white"></i>
+                                </span>
+                            </div>
 
-                    <!-- Tab Contents -->
-                    <div class="tab-content" id="academicTabContent">
-                        <!-- Mata Pelajaran -->
-                        <div class="tab-pane fade show active" id="mapel" role="tabpanel">
-
-                            <!-- Livewire Mata Pelajaran -->
-                            <livewire:admin.data-mata-pelajaran />
-
-                        </div>
-
-                        <!-- Kelompok Mata Pelajaran -->
-                        <div class="tab-pane fade" id="mapelGroup" role="tabpanel">
-
-                            <!-- Livewire Kelompok Mata Pelajaran -->
-                            <livewire:admin.data-kelompok-mapel />
-
-                        </div>
-
-                        <!-- Kurikulum -->
-                        <div class="tab-pane fade" id="kurikulum" role="tabpanel">
-
-                            <!-- Livewire Kurikulum -->
-                            <livewire:admin.data-maping-kurikulum-mapel />
-
-                        </div>
-
-                        <!-- Jurusan -->
-                        <div class="tab-pane fade" id="jurusan" role="tabpanel">
-
-                            <!-- Livewire Jurusan -->
-                            <livewire:admin.data-maping-jurusan-mapel />
-
-
+                            <div>
+                                <h4 class="mb-1 text-dark fw-bold">Mata Pelajaran</h4>
+                                <div class="d-flex align-items-center gap-2">
+                                    <small class="text-muted">Kelola data mata pelajaran dan relasi</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Nav Tabs -->
+                    <ul class="nav nav-tabs mb-3">
+
+                        <li class="nav-item">
+                            <a class="nav-link active d-flex align-items-center gap-2"
+                                data-bs-toggle="tab" href="#tab-mapel">
+                                <i class="mdi mdi-book-open-variant"></i> Mata Pelajaran
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2"
+                                data-bs-toggle="tab" href="#tab-mapel-group">
+                                <i class="mdi mdi-ungroup"></i> Kelompok Mata Pelajaran
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2"
+                                data-bs-toggle="tab" href="#tab-kurikulum">
+                                <i class="mdi mdi-arrow-decision"></i> Relasi Kurikulum
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2"
+                                data-bs-toggle="tab" href="#tab-jurusan">
+                                <i class="mdi mdi-account-circle-outline"></i> Relasi Jurusan
+                            </a>
+                        </li>
+
+                    </ul>
+
+                    <div class="tab-content">
+
+                        <!-- =============== TAB MAPEL =============== -->
+                        <div class="tab-pane fade show active" id="tab-mapel">
+                            <livewire:admin.data-mata-pelajaran />
+                        </div>
+
+                        <!-- =============== TAB MAPEL GROUP =============== -->
+                        <div class="tab-pane fade" id="tab-mapel-group">
+                            <livewire:admin.data-kelompok-mapel />
+                        </div>
+
+                        <!-- =============== TAB KURIKULUM =============== -->
+                        <div class="tab-pane fade" id="tab-kurikulum">
+                            <livewire:admin.data-maping-kurikulum-mapel />
+                        </div>
+
+                        <!-- =============== TAB JURUSAN =============== -->
+                        <div class="tab-pane fade" id="tab-jurusan">
+                            <livewire:admin.data-maping-jurusan-mapel />
+                        </div>
+
+                    </div>
+
 
                     <!-- LiveWire -->
 

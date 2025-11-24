@@ -43,45 +43,67 @@ Route::post('/auth/logout', function () {
 })->middleware('auth')->name('logout');
 
 
-// ====================
-// ADMIN ROUTE
-// ====================
+/*
+|--------------------------------------------------------------------------
+| SUPERADMIN ROUTES
+|--------------------------------------------------------------------------
+| Rute-rute ini hanya dapat diakses oleh pengguna dengan peran 'superadmin'.
+| Termasuk rute yang ingin Anda hapus dari akses 'admin'.
+*/
 
-Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('admin.')->group(function () {
-
-    // Dashboard
-    Route::get('/dashboard', function () {
-        return view('contents.admin.dashboard', [
-            'title' => 'Dashboard',
-        ]);
-    })->name('dashboard');
-
-    // Master Data
+Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    // 🗄️ Master Data (Superadmin Only)
     Route::prefix('master')->group(function () {
         Route::get('/sync', fn() => view('contents.admin.master-data', ['title' => 'Sinkronisasi']));
         Route::get('/school', fn() => view('contents.admin.sekolah', ['title' => 'Data Sekolah']));
         Route::get('/school-profile', fn() => view('contents.admin.profil-sekolah', ['title' => 'Profil Sekolah']));
         Route::get('/curriculum', fn() => view('contents.admin.kurikulum', ['title' => 'Kurikulum']));
         Route::get('/department', fn() => view('contents.admin.jurusan', ['title' => 'Jurusan']));
-        Route::get('/year', fn() => view('contents.admin.akademik', ['title' => 'Tahun Ajaran']));
-        // Route::get('/year', fn() => view('contents.admin.tahun-ajaran', ['title' => 'Tahun Ajaran']));
+        Route::get('/year', fn() => view('contents.admin.tahun-ajaran', ['title' => 'Tahun Ajaran']));
         Route::get('/semester', fn() => view('contents.admin.semester', ['title' => 'Semester']));
     });
 
-    // Academic Data
+    // 🎓 Academic Data Management (Superadmin Only)
     Route::prefix('academic')->group(function () {
         Route::get('/relation', fn() => view('contents.admin.relasi', ['title' => 'Relasi Akademik']));
         Route::get('/subject', fn() => view('contents.admin.mata-pelajaran', ['title' => 'Mata Pelajaran']));
-        Route::get('/manage-extracurricular', fn() => view('contents.admin.ekstrakurikuler', ['title' => 'Ekstrakurikuler']))
-            ->name('academic.extracurricular');
+        Route::get('/manage-extracurricular', fn() => view('contents.admin.ekstrakurikuler', ['title' => 'Ekstrakurikuler']))->name('academic.extracurricular');
         Route::get('/manage-description', fn() => view('contents.admin.deskripsi-capaian', ['title' => 'Deskripsi Capaian']));
     });
 
-    //  Class Management
+    // 📋 Report Finalization Settings (Superadmin Only)
+    Route::prefix('finalization')->group(function () {
+        Route::get('/settings', fn() => view('contents.admin.pengaturan', ['title' => 'Pengaturan']));
+    });
+
+    // 👤 User List (Superadmin Only)
+    Route::prefix('users')->group(function () {
+        Route::get('/user-list', fn() => view('contents.admin.pengguna', ['title' => 'Daftar Pengguna']));
+    });
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN/SUPERADMIN COMMON ROUTES
+|--------------------------------------------------------------------------
+| Rute-rute ini dapat diakses oleh pengguna dengan peran 'superadmin' ATAU 'admin'.
+| Ini adalah rute yang tersisa setelah penghapusan di atas.
+*/
+
+Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('admin.')->group(function () {
+    // 🏠 Dashboard
+    Route::get('/dashboard', function () {
+        return view('contents.admin.dashboard', [
+            'title' => 'Dashboard',
+        ]);
+    })->name('dashboard');
+
+    // 🏫 Class Management
     Route::prefix('class')->group(function () {
         Route::get('/list', fn() => view('contents.admin.rombel', ['title' => 'Daftar Rombel']))->name('rombel.list');
         Route::get('/teachers', fn() => view('contents.admin.pendidik', ['title' => 'Daftar Pendidik']));
-        Route::get('/detail/{id}', function ($id) {
+        Route::get('/list/detail/{id}', function ($id) {
             return view('contents.admin.rombel-pelajar', [
                 'title' => 'Rombongan Belajar',
                 'rombelId' => $id,
@@ -89,7 +111,7 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
         })->name('class.detail');
     });
 
-    // Data Entry
+    // 📝 Data Entry
     Route::prefix('entry')->group(function () {
         Route::get('/grades', fn() => view('contents.admin.nilai-akhir', ['title' => 'Nilai Akhir']));
         Route::get('/cocurricular', fn() => view('contents.admin.kokurikuler', ['title' => 'Kokurikuler']));
@@ -98,17 +120,15 @@ Route::middleware(['auth', 'role:superadmin|admin'])->prefix('admin')->name('adm
         Route::get('/data-extracurricular', fn() => view('contents.admin.ekstrakurikuler-input', ['title' => 'Ekstrakurikuler']))->name('entry.extracurricular');
     });
 
-    // Report Finalization
+    // 📊 Report Finalization (Preview/Archive)
     Route::prefix('finalization')->group(function () {
-        Route::get('/settings', fn() => view('contents.admin.pengaturan', ['title' => 'Pengaturan']));
         Route::get('/preview', fn() => view('contents.admin.preview-rapor', ['title' => 'Preview Rapor']));
         Route::get('/ledger', fn() => view('contents.admin.preview-leger', ['title' => 'Preview Leger']));
         Route::get('/archive', fn() => view('contents.admin.arsip', ['title' => 'Arsip Rapor']));
     });
 
-    // Users
+    // 🧑‍💻 Users Profile
     Route::prefix('users')->group(function () {
-        Route::get('/user-list', fn() => view('contents.admin.pengguna', ['title' => 'Daftar Pengguna']));
         Route::get('/user-profile', fn() => view('contents.admin.profil-pengguna', ['title' => 'Akun Pengguna']));
     });
 });

@@ -129,13 +129,14 @@
 
                     <ul class="navbar-nav navbar-nav-right ml-lg-auto">
                         <!-- Setting -->
-                        @hasanyrole(['admin', 'superadmin'])
+                        @hasanyrole('superadmin')
                         <li class="nav-item dropdown d-none d-xl-flex border-0">
                             <a class="nav-link dropdown-toggle" id="languageDropdown" href="{{ url('#') }}" data-toggle="dropdown">
                                 <i class="mdi mdi-settings"></i> Pengaturan
                             </a>
                             <div class="dropdown-menu navbar-dropdown" aria-labelledby="languageDropdown">
-                                <a class="dropdown-item" href="{{url('master-data/school-data')}}">Data Sekolah</a>
+                                <a class="dropdown-item" href="{{url('admin/master/school-profile')}}">Profil Sekolah</a>
+                                <a class="dropdown-item" href="{{url('admin/finalization/settings')}}">Konfigurasi</a>
                             </div>
                         </li>
                         @endhasanyrole
@@ -145,8 +146,9 @@
                                 <span class="profile-name">{{ Auth::user()->name ?? '' }}</span>
                             </a>
                             <div class="dropdown-menu navbar-dropdown w-100" aria-labelledby="profileDropdown">
-                                <button type="submit" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalProfile">
-                                    <i class="mdi mdi-account-badge mr-2 text-success"></i>Profil </button>
+                                <a href="{{ url('admin/users/user-profile') }}" class="dropdown-item">
+                                    <i class="mdi mdi-account-badge mr-2 text-success"></i> Profil
+                                </a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" class="dropdown-item">
@@ -213,6 +215,24 @@
     <script src="{{ asset('assets/js/misc.js') }}"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Custom script untuk fix menu active -->
+    <script>
+        $(document).ready(function() {
+            // Override behavior misc.js untuk menu Daftar Rombel
+            var currentPath = window.location.pathname;
+
+            if (currentPath.indexOf('/admin/class/list') === 0) {
+                // Hapus semua active
+                $('.sidebar .nav-link').removeClass('active');
+                $('.sidebar .nav-item').removeClass('active');
+
+                // Tambahkan active ke menu Daftar Rombel
+                $('a[href*="admin/class/list"]').addClass('active');
+                $('a[href*="admin/class/list"]').parents('.nav-item').addClass('active');
+            }
+        });
+    </script>
 
     <!-- endinject -->
 

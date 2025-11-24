@@ -1,70 +1,68 @@
-<div class="card my-4" style="width: 100%;">
-    <div class="card-body">
-        <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-3">
-            <h6 class="fw-bold mb-0">📅 Relasi Tahun Ajaran & Semester</h6>
-            <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center">
-                <i class="mdi mdi-plus"></i>
-            </button>
-        </div>
+<div>
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-3">
+        <h6 class="fw-bold mb-0">📅 Relasi Tahun Ajaran & Semester</h6>
+        <button type="button" wire:click="create" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center">
+            <i class="mdi mdi-plus"></i>
+        </button>
+    </div>
 
-        <table class="table table-hover mb-0">
-            <thead class="bg-light">
-                <tr>
-                    <th style="width: 30%;">
-                        <p class="mb-0">Tahun Ajaran & Semester</p>
-                        <small>Tahun Ajaran | Semester</small>
-                    </th>
-                    <th style="width: 30%;">
-                        <p class="mb-0">Periode</p>
-                        <small>Tgl Mulai & Tgl Selesai</small>
-                    </th>
-                    <th style="width: 30%;">
-                        <p class="mb-0">Status</p>
-                        <small>Aktif | Nonaktif</small>
-                    </th>
-                    <th style="width: 10%;">
-                        <p class="mb-0">Aksi</p>
-                        <small>Edit | Hapus</small>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($tahunAjaranSemesters as $taSemester)
-                <tr>
-                    <td>
-                        <strong>{{ $taSemester->tahunAjaran->nama ?? 'N/A' }}</strong> ~ {{ $taSemester->semester->nama ?? 'N/A' }}
-                    </td>
-                    <td>
-                        {{ \Carbon\Carbon::parse($taSemester->tgl_mulai)->format('d M Y') }}
-                        <i class="mdi mdi-arrow-right"></i>
-                        {{ \Carbon\Carbon::parse($taSemester->tgl_selesai)->format('d M Y') }}
-                    </td>
-                    <td>
-                        @if ($taSemester->status === 'aktif')
-                        <span class="badge bg-success">Aktif</span>
-                        @else
-                        <span class="badge bg-secondary">Nonaktif</span>
-                        @endif
-                    </td>
-                    <td>
-                        <button type="button" class="border-0 bg-transparent" title="Edit Periode/Status" wire:click="edit('{{ $taSemester->id }}')">
-                            <img src="{{ asset('assets/images/icons/edit.png') }}" width="30" height="30" alt="Edit">
-                        </button>
-                        <button type="button" class="border-0 bg-transparent" title="Hapus Pemetaan" wire:click="confirmDeleteMappingSemester('{{ $taSemester->id }}')">
-                            <img src="{{ asset('assets/images/icons/delete.png') }}" width="30" height="30" alt="Delete">
-                        </button>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="4" class="text-center text-muted">Belum ada data Pemetaan Semester.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-        <div class="mt-3">
-            {{ $tahunAjaranSemesters->links() }}
-        </div>
+    <table class="table table-hover mb-0">
+        <thead class="bg-light">
+            <tr>
+                <th style="width: 30%;">
+                    <p class="mb-0">Tahun Ajaran & Semester</p>
+                    <small>Tahun Ajaran | Semester</small>
+                </th>
+                <th style="width: 30%;">
+                    <p class="mb-0">Periode</p>
+                    <small>Tgl Mulai & Tgl Selesai</small>
+                </th>
+                <th style="width: 30%;">
+                    <p class="mb-0">Status</p>
+                    <small>Aktif | Nonaktif</small>
+                </th>
+                <th style="width: 10%;">
+                    <p class="mb-0">Aksi</p>
+                    <small>Edit | Hapus</small>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($tahunAjaranSemesters as $taSemester)
+            <tr>
+                <td>
+                    <strong>{{ $taSemester->tahunAjaran->nama ?? 'N/A' }}</strong> ~ {{ $taSemester->semester->nama ?? 'N/A' }}
+                </td>
+                <td>
+                    {{ \Carbon\Carbon::parse($taSemester->tgl_mulai)->format('d M Y') }}
+                    <i class="mdi mdi-arrow-right"></i>
+                    {{ \Carbon\Carbon::parse($taSemester->tgl_selesai)->format('d M Y') }}
+                </td>
+                <td>
+                    @if ($taSemester->status === 'aktif')
+                    <span class="badge bg-success">Aktif</span>
+                    @else
+                    <span class="badge bg-secondary">Nonaktif</span>
+                    @endif
+                </td>
+                <td>
+                    <button type="button" class="border-0 bg-transparent" title="Edit Periode/Status" wire:click="edit('{{ $taSemester->id }}')">
+                        <img src="{{ asset('assets/images/icons/edit.png') }}" width="30" height="30" alt="Edit">
+                    </button>
+                    <button type="button" class="border-0 bg-transparent" title="Hapus Pemetaan" wire:click="confirmDeleteMappingSemester('{{ $taSemester->id }}')">
+                        <img src="{{ asset('assets/images/icons/delete.png') }}" width="30" height="30" alt="Delete">
+                    </button>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="4" class="text-center text-muted">Belum ada data Pemetaan Semester.</td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+    <div class="mt-3">
+        {{ $tahunAjaranSemesters->links() }}
     </div>
 
     {{-- Modal Form --}}
@@ -148,18 +146,18 @@
             </form>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        // Logika untuk membuka dan menutup modal
+        window.addEventListener('openModalMappingSemester', () => {
+            new bootstrap.Modal(document.getElementById('modalMappingSemester')).show();
+        });
+
+        window.addEventListener('closeModalMappingSemester', () => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalMappingSemester'));
+            if (modal) modal.hide();
+        });
+    </script>
+    @endpush
 </div>
-
-@push('scripts')
-<script>
-    // Logika untuk membuka dan menutup modal
-    window.addEventListener('openModalMappingSemester', () => {
-        new bootstrap.Modal(document.getElementById('modalMappingSemester')).show();
-    });
-
-    window.addEventListener('closeModalMappingSemester', () => {
-        const modal = bootstrap.Modal.getInstance(document.getElementById('modalMappingSemester'));
-        if (modal) modal.hide();
-    });
-</script>
-@endpush

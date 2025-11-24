@@ -28,9 +28,9 @@
                             </div>
 
                             <div>
-                                <h4 class="mb-1 text-dark fw-bold">Manajemen Kurikulum</h4>
+                                <h4 class="mb-1 text-dark fw-bold">Kurikulum</h4>
                                 <div class="d-flex align-items-center gap-2">
-                                    <small class="text-muted">Kelola data Kurikulum</small>
+                                    <small class="text-muted">Manajemen data Kurikulum</small>
                                 </div>
                             </div>
                         </div>

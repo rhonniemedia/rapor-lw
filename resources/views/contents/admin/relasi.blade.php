@@ -38,18 +38,13 @@
 
                     <ul class="nav nav-tabs mb-3">
                         <li class="nav-item">
-                            <a class="nav-link active d-flex align-items-center gap-2" data-bs-toggle="tab" href="#tab-nilai">
-                                <i class="mdi mdi-calculator-variant"></i> Kurikulum ~ Tahun Ajaran
+                            <a class="nav-link active d-flex align-items-center gap-2" data-bs-toggle="tab" href="#tab-kurikulum">
+                                <i class="mdi mdi-book-open-page-variant"></i> Kurikulum ~ Tahun Ajaran
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" href="#tab-kokurikuler">
-                                <i class="mdi mdi-book-open-page-variant"></i>Tahun Ajaran ~ Semester
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" href="#tab-ekskul">
-                                <i class="mdi mdi-trophy"></i> Ekstrakurikuler
+                            <a class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" href="#tab-semester">
+                                <i class="mdi mdi-calendar-clock"></i>Tahun Ajaran ~ Semester
                             </a>
                         </li>
                     </ul>
@@ -57,15 +52,13 @@
                     <div class="tab-content">
 
                         <!-- ================== TAB NILAI ================== -->
-                        <div class="tab-pane fade show active" id="tab-nilai">
+                        <div class="tab-pane fade show active" id="tab-kurikulum">
+                            <livewire:admin.data-maping-kurikulum />
                         </div>
 
                         <!-- ================== TAB KOKURIKULER ================== -->
-                        <div class="tab-pane fade" id="tab-kokurikuler">
-                        </div>
-
-                        <!-- ================== TAB EKSTRAKURIKULER ================== -->
-                        <div class="tab-pane fade" id="tab-ekskul">
+                        <div class="tab-pane fade" id="tab-semester">
+                            <livewire:admin.data-maping-semester />
                         </div>
 
                     </div>

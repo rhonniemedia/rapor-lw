@@ -9,7 +9,6 @@
                 <div class="nav-profile-image">
                     <img src="{{ asset('assets/images/icons/smile.png') }}" alt="profile" />
                     <span class="login-status online"></span>
-                    <!--change to offline or busy as needed-->
                 </div>
                 <div class="nav-profile-text d-flex flex-column pr-3">
                     <span class="font-weight-medium mb-2">
@@ -28,7 +27,6 @@
             </a>
         </li>
 
-        <!-- Dashboard -->
         <li class="nav-item">
             <span class="nav-link mt-4">
                 <span class="menu-title font-weight-bold">Dashboard</span>
@@ -41,7 +39,8 @@
             </a>
         </li>
 
-        <!-- Mater Data -->
+        {{-- 🔑 BLOK INI HANYA UNTUK SUPERADMIN --}}
+        @role('superadmin')
         <li class="nav-item">
             <span class="nav-link mt-4">
                 <span class="menu-title font-weight-bold">Mater Data</span>
@@ -53,7 +52,6 @@
                 <span class="menu-title">Sinkronisasi</span>
             </a>
         </li>
-        <!-- Sekolah -->
         <li class="nav-item">
             <a class="nav-link {{ request()->is('sekolah*') ? 'active' : '' }}" data-toggle="collapse" href="#ui-school" aria-expanded="false" aria-controls="ui-school">
                 <i class="mdi mdi-school menu-icon"></i>
@@ -81,7 +79,6 @@
             </div>
         </li>
 
-        <!-- Akademik -->
         <li class="nav-item">
             <a class="nav-link {{ request()->is('admin/academic*') ? 'active' : '' }}"
                 data-toggle="collapse"
@@ -98,23 +95,10 @@
                         <a class="nav-link {{ request()->is('admin/academic/relation') ? 'active' : '' }}"
                             href="{{url('admin/academic/relation')}}">Relasi Akademik</a>
                     </li>
-                    <!-- <li class="nav-item">
-                        <a class="nav-link {{ request()->is('admin/academic/year') ? 'active' : '' }}"
-                            href="{{url('admin/academic/year')}}">Tahun Ajaran</a>
-                    </li> -->
-                    <!-- <li class="nav-item">
-                        <a class="nav-link {{ request()->is('admin/academic/semester') ? 'active' : '' }}"
-                            href="{{url('admin/academic/semester')}}">Semester</a>
-                    </li> -->
-                    <!-- <li class="nav-item">
-                        <a class="nav-link {{ request()->is('admin/academic/department') ? 'active' : '' }}"
-                            href="{{url('admin/academic/department')}}">Jurusan</a>
-                    </li> -->
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('admin/academic/subject') ? 'active' : '' }}"
                             href="{{url('admin/academic/subject')}}">Mata Pelajaran</a>
                     </li>
-                    <!-- Menu Akademik -->
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('admin/academic/manage-extracurricular') ? 'active' : '' }}"
                             href="{{url('admin/academic/manage-extracurricular')}}">Ekstrakurikuler</a>
@@ -126,15 +110,18 @@
                 </ul>
             </div>
         </li>
+        @endrole
+        {{-- 🔑 AKHIR BLOK SUPERADMIN --}}
 
-        <!-- Rombongan Belajar -->
         <li class="nav-item">
             <span class="nav-link mt-4">
                 <span class="menu-title font-weight-bold">Rombongan Belajar</span>
             </span>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{url('admin/class/list') }}">
+            <!-- Debug: {{ request()->path() }} -->
+            <a class="nav-link {{ Str::startsWith(request()->path(), 'admin/class/list') ? 'active' : '' }}"
+                href="{{url('admin/class/list') }}">
                 <i class="mdi mdi-ungroup menu-icon"></i>
                 <span class="menu-title">Daftar Rombel</span>
             </a>
@@ -146,14 +133,12 @@
             </a>
         </li>
 
-        <!-- Pembelajaran -->
         <li class="nav-item">
             <span class="nav-link mt-4">
                 <span class="menu-title font-weight-bold">Pembelajaran</span>
             </span>
         </li>
 
-        <!-- Pembelajaran -->
         <li class="nav-item">
             <a class="nav-link {{ request()->is('admin/entry*') ? 'active' : '' }}"
                 data-toggle="collapse"
@@ -182,7 +167,6 @@
                         <a class="nav-link {{ request()->is('admin/entry/class-notes') ? 'active' : '' }}"
                             href="{{url('admin/entry/class-notes')}}">Catatan Wali Kelas</a>
                     </li>
-                    <!-- Menu Entri Data -->
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('admin/entry/data-extracurricular') ? 'active' : '' }}"
                             href="{{url('admin/entry/data-extracurricular')}}">Ekstrakurikuler</a>
@@ -191,18 +175,23 @@
             </div>
         </li>
 
-        <!-- Pembelajaran -->
         <li class="nav-item">
             <span class="nav-link mt-4">
                 <span class="menu-title font-weight-bold">Finalisasi Rapor</span>
             </span>
         </li>
+
+        {{-- 🔑 MENU KONFIGURASI HANYA UNTUK SUPERADMIN --}}
+        @role('superadmin')
         <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('admin/finalization/settings') ? 'active' : '' }}" href="{{url('admin/finalization/settings')}}">
                 <i class="mdi mdi-settings menu-icon"></i>
                 <span class="menu-title">Konfigurasi</span>
             </a>
         </li>
+        @endrole
+        {{-- 🔑 AKHIR MENU KONFIGURASI --}}
+
         <li class="nav-item">
             <a class="nav-link {{ request()->url() === url('admin/finalization/preview') ? 'active' : '' }}" href="{{url('admin/finalization/preview')}}">
                 <i class="mdi mdi-file-account menu-icon"></i>
@@ -215,25 +204,23 @@
                 <span class="menu-title">Daftar Nilai</span>
             </a>
         </li>
-        <!-- <li class="nav-item">
-            <a class="nav-link {{ request()->url() === url('admin/finalization/archive') ? 'active' : '' }}" href="{{url('admin/finalization/archive')}}">
-                <i class="mdi mdi-note-text-outline menu-icon"></i>
-                <span class="menu-title">Arsip</span>
-            </a>
-        </li> -->
-
-        <!-- Pengguna -->
         <li class="nav-item">
             <span class="nav-link mt-4">
                 <span class="menu-title font-weight-bold">Pengguna</span>
             </span>
         </li>
+
+        {{-- 🔑 MENU DAFTAR PENGGUNA HANYA UNTUK SUPERADMIN --}}
+        @role('superadmin')
         <li class="nav-item">
             <a class="nav-link" href="{{url('admin/users/user-list')}}">
-                <i class="mdi mdi-account-group menu-icon"></i>
+                <i class="mdi mdi-account-multiple-outline menu-icon"></i>
                 <span class="menu-title">Daftar Pengguna</span>
             </a>
         </li>
+        @endrole
+        {{-- 🔑 AKHIR MENU DAFTAR PENGGUNA --}}
+
         <li class="nav-item">
             <a class="nav-link" href="{{url('admin/users/user-profile')}}">
                 <i class="mdi mdi-account menu-icon"></i>
