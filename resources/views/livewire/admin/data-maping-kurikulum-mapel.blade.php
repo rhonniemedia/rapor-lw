@@ -2,7 +2,7 @@
     <div class="d-flex justify-content-between mb-3">
         <div class="d-flex align-items-center gap-2">
             <span>Show</span>
-            <select class="form-select form-select-sm" wire:model.live="perPage">
+            <select class="form-select form-select" wire:model.live="perPage">
                 <option value="5">5</option>
                 <option value="10">10</option>
                 <option value="25">25</option>
@@ -10,7 +10,30 @@
             </select>
             <span>entries</span>
         </div>
+
+
         <div class="d-flex align-items-center gap-2">
+            <!-- Filter Tingkat -->
+            <div>
+                <select class="form-select form-select" wire:model.live="filterTingkat" style="width:250px;">
+                    <option value="">-- Semua Tingkat --</option>
+                    <option value="10">Tingkat X</option>
+                    <option value="11">Tingkat XI</option>
+                    <option value="12">Tingkat XII</option>
+                </select>
+            </div>
+
+            <!-- Filter Kelompok Mapel -->
+            <div>
+                <select class="form-select form-select" wire:model.live="filterKelompok" style="width:250px;">
+                    <option value="">-- Semua Kelompok --</option>
+                    @foreach ($kelompokList as $kelompok)
+                    <option value="{{ $kelompok->id }}">
+                        {{ $kelompok->kode }} - {{ $kelompok->nama ?? $kelompok->kode }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
             <div>
                 <input type="text" class="form-control" placeholder="Cari..."
                     wire:model.live.debounce.500ms="search" style="width:250px;">
@@ -22,7 +45,7 @@
     </div>
 
     <table class="table table-hover mb-0">
-        <thead class="bg-light">
+        <thead class="table-light">
             <tr>
                 <th style="width: 30%;">
                     <p class="mb-0">Mata Pelajaran</p>

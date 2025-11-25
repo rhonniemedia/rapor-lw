@@ -188,7 +188,7 @@ class PreviewRapor extends Component
             $tingkat = $this->rombel->tingkat ?? 0;
 
             // Jika tingkat adalah 10, maka E. Selain itu (11, 12, atau lainnya), maka F.
-            $fase = ($tingkat === 10) ? 'E' : 'F';
+            $fase = ((int)$tingkat === 10) ? 'E' : 'F';
 
             // Load data nilai untuk siswa ini
             $nilaiData = $this->loadNilaiPelajar($pelajar->id);

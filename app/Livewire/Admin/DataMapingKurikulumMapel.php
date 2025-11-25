@@ -21,6 +21,9 @@ class DataMapingKurikulumMapel extends Component
     public $search = '';
     public $perPage = 10;
 
+    public $filterTingkat = '';
+    public $filterKelompok = '';
+
     // 🔹 Field form
     public $kurikulum_mtp_id;
     public $kurikulum_id;
@@ -58,6 +61,16 @@ class DataMapingKurikulumMapel extends Component
 
     // 🔹 Reset pagination saat search berubah
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterTingkat()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterKelompok()
     {
         $this->resetPage();
     }
@@ -189,23 +202,34 @@ class DataMapingKurikulumMapel extends Component
     // 🔹 Render tabel data
     public function render()
     {
-        // Query dengan eager loading relasi
         $query = KurikulumMataPelajaran::with(['kurikulum', 'mataPelajaran', 'kelompok']);
 
-        // Filter pencarian
+        // 3. LOGIKA FILTER TINGKAT
+        if (!empty($this->filterTingkat)) {
+            $query->where('tingkat', $this->filterTingkat);
+        }
+
+        // 4. LOGIKA FILTER KELOMPOK
+        if (!empty($this->filterKelompok)) {
+            // Filter langsung berdasarkan foreign key 'kelompok_id'
+            $query->where('kelompok_id', $this->filterKelompok);
+        }
+
+        // 5. LOGIKA SEARCH (Updated)
         if (!empty($this->search)) {
-            $query->whereHas('kurikulum', function ($q) {
-                $q->where('nama', 'like', '%' . $this->search . '%');
-            })->orWhereHas('mataPelajaran', function ($q) {
-                $q->where('nama', 'like', '%' . $this->search . '%');
-            })->orWhere('tingkat', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->whereHas('kurikulum', function ($subQ) {
+                    $subQ->where('nama', 'like', '%' . $this->search . '%');
+                })->orWhereHas('mataPelajaran', function ($subQ) {
+                    $subQ->where('nama', 'like', '%' . $this->search . '%');
+                })->orWhere('tingkat', 'like', '%' . $this->search . '%');
+            });
         }
 
         return view('livewire.admin.data-maping-kurikulum-mapel', [
-            // Urutkan berdasarkan Kurikulum, kemudian Tingkat, kemudian Urutan
             'kurikulumMataPelajaran' => $query
                 ->join('kurikulums as k', 'k.id', '=', 'kurikulum_mata_pelajarans.kurikulum_id')
-                ->select('kurikulum_mata_pelajarans.*') // Pilih semua kolom KurikulumMataPelajaran
+                ->select('kurikulum_mata_pelajarans.*')
                 ->orderBy('k.nama', 'asc')
                 ->orderBy('tingkat', 'asc')
                 ->orderBy('urutan', 'asc')

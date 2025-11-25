@@ -131,7 +131,7 @@ class PreviewPdfRapor extends Component
 
             // Tentukan fase berdasarkan tingkat
             $tingkat = $this->rombel->tingkat ?? 0;
-            $fase = ($tingkat === 10) ? 'E' : 'F';
+            $fase = ((int)$tingkat === 10) ? 'E' : 'F';
 
             // Load data nilai untuk siswa ini
             $nilaiData = $this->loadNilaiPelajar($pelajar->id);
