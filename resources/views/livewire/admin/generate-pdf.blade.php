@@ -112,7 +112,7 @@
                 <h5 class="mb-0"><i class="mdi mdi-file-document-outline me-2"></i> Preview Laporan Hasil Belajar</h5>
                 <div class="d-flex align-items-center">
                     <div class="input-group" style="width: 250px;">
-                        <input type="text" class="form-control" placeholder="Cari nama siswa...">
+                        <input type="search" class="form-control" placeholder="Cari nama siswa...">
                     </div>
                 </div>
             </div>

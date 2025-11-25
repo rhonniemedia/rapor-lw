@@ -179,7 +179,7 @@
                         <div class="col-lg-6 d-flex justify-content-end">
                             <div class="input-group" style="width: 250px;">
                                 <input
-                                    type="text"
+                                    type="search"
                                     wire:model.live.debounce.300ms="searchPelajar"
                                     class="form-control"
                                     placeholder="Cari nama, atau nomor induk...">

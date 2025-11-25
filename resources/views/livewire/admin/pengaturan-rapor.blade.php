@@ -32,7 +32,7 @@
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <div>
-                                <input type="text" class="form-control"
+                                <input type="search" class="form-control"
                                     wire:model.live.debounce.300ms="search"
                                     placeholder="Cari Kepala Sekolah...">
                             </div>

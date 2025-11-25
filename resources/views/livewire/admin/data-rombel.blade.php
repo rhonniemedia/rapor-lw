@@ -12,7 +12,7 @@
             <span>entries</span>
         </div>
         <div>
-            <input type="text" class="form-control" placeholder="Cari..."
+            <input type="search" class="form-control" placeholder="Cari..."
                 wire:model.live.debounce.500ms="search" style="width:250px;">
         </div>
     </div>

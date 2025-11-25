@@ -152,7 +152,7 @@
                 </div>
 
                 <div class="col-md-6 d-flex align-items-start gap-2">
-                    <input type="text"
+                    <input type="search"
                         wire:model.live.debounce.300ms="searchPelajar"
                         class="form-control"
                         placeholder="Cari nama atau nomor induk..."

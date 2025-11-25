@@ -83,7 +83,7 @@
         </div>
         <div class="d-flex align-items-center gap-2">
             <div>
-                <input type="text" class="form-control"
+                <input type="search" class="form-control"
                     placeholder="{{ $activeTab === 'mapel' ? 'Cari Mata Pelajaran/Guru...' : 'Cari Pelajar...' }}"
                     wire:model.live.debounce.500ms="search" style="width:250px;">
             </div>
@@ -187,7 +187,7 @@
         </div>
         <div class="d-flex align-items-center gap-2">
             <div>
-                <input type="text" class="form-control"
+                <input type="search" class="form-control"
                     placeholder="{{ $activeTab === 'mapel' ? 'Cari Mata Pelajaran/Guru...' : 'Cari Pelajar...' }}"
                     wire:model.live.debounce.500ms="search" style="width:250px;">
             </div>

@@ -128,7 +128,7 @@
 
         <div class="input-group" style="width: 300px;">
             <input
-                type="text"
+                type="search"
                 class="form-control"
                 placeholder="Cari nama atau nomor induk..."
                 wire:model.live.debounce.500ms="search">

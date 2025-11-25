@@ -15,7 +15,7 @@
             </div>
             <div class="d-flex align-items-center gap-2">
                 <div>
-                    <input type="text" class="form-control" placeholder="Cari mata pelajaran..."
+                    <input type="search" class="form-control" placeholder="Cari mata pelajaran..."
                         wire:model.live.debounce.500ms="search" style="width:250px;">
                 </div>
                 <button type="button" wire:click="openModal"

@@ -11,7 +11,7 @@
             <span>entries</span>
         </div>
         <div>
-            <input type="text" class="form-control" placeholder="Cari ekstrakurikuler..."
+            <input type="search" class="form-control" placeholder="Cari ekstrakurikuler..."
                 wire:model.live.debounce.500ms="search" style="width:250px;">
         </div>
     </div>

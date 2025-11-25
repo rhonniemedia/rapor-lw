@@ -48,7 +48,7 @@
             </div>
             <div>
                 <div class="position-relative">
-                    <input type="text" class="form-control" placeholder="Cari nama, email, NIP..." style="width:250px;" wire:model.live="search">
+                    <input type="search" class="form-control" placeholder="Cari nama, email, NIP..." style="width:250px;" wire:model.live="search">
                 </div>
             </div>
         </div>

@@ -18,7 +18,7 @@
         </div>
         <div class="col-lg-6 d-flex justify-content-end">
             <div class="input-group w-50">
-                <input type="text"
+                <input type="search"
                     wire:model.live.debounce.300ms="searchRombel"
                     class="form-control"
                     placeholder="Cari rombel, mata pelajaran, atau wali kelas...">

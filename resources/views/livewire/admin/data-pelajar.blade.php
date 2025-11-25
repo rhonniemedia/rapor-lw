@@ -3,7 +3,7 @@
     <div class="row mb-3">
         <div class="col-md-6">
             <input
-                type="text"
+                type="search"
                 wire:model.live="search"
                 placeholder="Cari nama, NIS, atau tempat lahir..."
                 class="form-control">
