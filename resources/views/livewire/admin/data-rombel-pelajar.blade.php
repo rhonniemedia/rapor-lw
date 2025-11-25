@@ -87,10 +87,15 @@
                     placeholder="{{ $activeTab === 'mapel' ? 'Cari Mata Pelajaran/Guru...' : 'Cari Pelajar...' }}"
                     wire:model.live.debounce.500ms="search" style="width:250px;">
             </div>
-            @if($activeTab === 'mapel')
-            <button type="button" wire:click="createMapel" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center h-100" style="padding: 0 0.75rem;">
+            @if($activeTab === 'pelajar')
+
+            {{-- Hanya tampil jika user memiliki role 'superadmin' --}}
+            @role('superadmin')
+            <button type="button" wire:click="createPelajar" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center h-100" style="padding: 0 0.75rem;">
                 <i class="mdi mdi-plus"></i>
             </button>
+            @endrole
+
             @endif
         </div>
     </div>
@@ -120,15 +125,13 @@
             @forelse ($data as $index => $item)
             <tr>
                 <td>
-                    <a class="hyper-link text-decoration-none" href="">
-                        <div class="d-flex align-items-center">
-                            <img src="{{ $item->pelajar->icon }}" alt="image">
-                            <div class="table-user-name ml-3">
-                                <p class="mb-0 font-weight-medium"> {{ $item->pelajar->nama_lengkap ?? '-' }} </p>
-                                <small class="text-muted font-weight-medium"> {{ $item->pelajar->jenis_kelamin_label ?? 'N/A' }} </small>
-                            </div>
+                    <div class="d-flex align-items-center">
+                        <img src="{{ $item->pelajar->icon }}" alt="image">
+                        <div class="table-user-name ml-3">
+                            <p class="mb-0 font-weight-medium"> {{ $item->pelajar->nama_lengkap ?? '-' }} </p>
+                            <small class="text-muted font-weight-medium"> {{ $item->pelajar->jenis_kelamin_label ?? 'N/A' }} </small>
                         </div>
-                    </a>
+                    </div>
                 </td>
                 <td>
                     <p class="mb-0 font-weight-medium">{{ $item->pelajar->tempat_lahir ?? 'N/A' }}</p>
@@ -139,10 +142,18 @@
                     <div class="badge badge-inverse-warning">{{ $item->pelajar->nisn ?? 'N/A' }}</div>
                 </td>
                 <td>
-                    <!-- <button wire:click="confirmDeleteRombelPelajar('{{ $item->id }}')"
-                        class="btn btn-sm btn-outline-danger" title="Hapus">
-                        <i class="mdi mdi-delete"></i>
-                    </button> -->
+                    <button type="button"
+                        class="btn btn-sm btn-outline-info"
+                        wire:click="openDetailModal('{{ $item->pelajar->id }}')"
+                        title="Detail Data">
+                        <i class="mdi mdi-eye"></i>
+                    </button>
+                    <button type="button"
+                        class="btn btn-sm btn-outline-warning"
+                        wire:click="openEditModal('{{ $item->pelajar->id }}')"
+                        title="Edit Data">
+                        <i class="mdi mdi-pencil"></i>
+                    </button>
                 </td>
             </tr>
             @empty
@@ -321,7 +332,9 @@
             </form>
         </div>
     </div>
+    @include('livewire.admin.data-rombel-pelajar-partials')
 </div>
+
 
 @push('scripts')
 <script>
