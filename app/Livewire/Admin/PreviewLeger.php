@@ -168,22 +168,23 @@ class PreviewLeger extends Component
     {
         // 1. Validasi
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
+        $tingkatRombel = $this->rombel->tingkat ?? null; // ← TAMBAHKAN INI
 
-        if (!$this->rombelId || !$kurikulumId) {
+        if (!$this->rombelId || !$kurikulumId || !$tingkatRombel) {
             $this->mataPelajaranList = [];
             return;
         }
 
-        // 2. QUERY UTAMA: Ambil Mapel dari RombelPengajar (Bukan master kurikulum)
-        // Ini memastikan mapel yang muncul sama persis dengan yang ada di halaman input nilai / preview rapor
+        // 2. QUERY UTAMA: Ambil Mapel dari RombelPengajar dengan FILTER TINGKAT
         $allMapel = \App\Models\RombelPengajar::query()
             ->where('rombel_pengajars.rombel_id', $this->rombelId)
             // Join ke Mata Pelajaran
             ->join('mata_pelajarans as mp', 'rombel_pengajars.mata_pelajaran_id', '=', 'mp.id')
-            // Join ke Kurikulum Mapel (untuk urutan)
-            ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId) {
+            // Join ke Kurikulum Mapel dengan FILTER TINGKAT - INI KUNCI SOLUSINYA!
+            ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId, $tingkatRombel) {
                 $join->on('mp.id', '=', 'kmp.mata_pelajaran_id')
-                    ->where('kmp.kurikulum_id', '=', $kurikulumId);
+                    ->where('kmp.kurikulum_id', '=', $kurikulumId)
+                    ->where('kmp.tingkat', '=', $tingkatRombel); // ← FILTER TINGKAT
             })
             // Join ke Kelompok (untuk kode kelompok A/B/C)
             ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
@@ -200,7 +201,6 @@ class PreviewLeger extends Component
             ->get();
 
         // 3. LOGIKA AGAMA: Gabungkan semua mapel Agama menjadi satu kolom "PABP"
-        // Menggunakan filter collection Laravel
         $agamaMapels = $allMapel->filter(fn($item) => $item->is_mapel_agama == true || $item->is_mapel_agama == 1);
         $nonAgamaMapels = $allMapel->filter(fn($item) => !$item->is_mapel_agama || $item->is_mapel_agama == 0);
 

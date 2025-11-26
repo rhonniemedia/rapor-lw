@@ -100,23 +100,25 @@ class LegerKelas extends Component
     {
         // 1. Validasi
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
+        $tingkatRombel = $this->rombel->tingkat ?? null; // ← TAMBAHKAN INI
 
         // Gunakan $this->rombel karena di Wali Kelas propertinya berupa Objek Model
-        if (!$this->rombel || !$kurikulumId) {
+        if (!$this->rombel || !$kurikulumId || !$tingkatRombel) { // ← TAMBAHKAN VALIDASI TINGKAT
             $this->mataPelajaranList = [];
             return;
         }
 
-        // 2. QUERY UTAMA: Ambil Mapel dari RombelPengajar
+        // 2. QUERY UTAMA: Ambil Mapel dari RombelPengajar dengan FILTER TINGKAT
         $allMapel = \App\Models\RombelPengajar::query()
             // Perhatikan: Menggunakan $this->rombel->id
             ->where('rombel_pengajars.rombel_id', $this->rombel->id)
             // Join ke Mata Pelajaran
             ->join('mata_pelajarans as mp', 'rombel_pengajars.mata_pelajaran_id', '=', 'mp.id')
-            // Join ke Kurikulum Mapel (untuk urutan)
-            ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId) {
+            // Join ke Kurikulum Mapel dengan FILTER TINGKAT - INI KUNCI SOLUSINYA!
+            ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId, $tingkatRombel) {
                 $join->on('mp.id', '=', 'kmp.mata_pelajaran_id')
-                    ->where('kmp.kurikulum_id', '=', $kurikulumId);
+                    ->where('kmp.kurikulum_id', '=', $kurikulumId)
+                    ->where('kmp.tingkat', '=', $tingkatRombel); // ← FILTER TINGKAT
             })
             // Join ke Kelompok
             ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
@@ -132,7 +134,7 @@ class LegerKelas extends Component
             ->orderBy('kmp.urutan', 'asc')
             ->get();
 
-        // 3. LOGIKA AGAMA
+        // 3. LOGIKA AGAMA (tetap sama)
         $agamaMapels = $allMapel->filter(function ($item) {
             return $item->is_mapel_agama == true || $item->is_mapel_agama == 1;
         });
@@ -147,7 +149,7 @@ class LegerKelas extends Component
         }
         $combined = $combined->merge($nonAgamaMapels);
 
-        // 4. MAPPING FINAL
+        // 4. MAPPING FINAL (tetap sama)
         $mataPelajarans = $combined
             ->sortBy(function ($item) {
                 return [$item->kelompok_kode, $item->urutan];
@@ -159,7 +161,7 @@ class LegerKelas extends Component
                     'id'             => $isAgama ? 'agama' : $item->id,
                     'nama'           => $isAgama ? 'Pendidikan Agama dan Budi Pekerti' : $item->nama,
                     'kode'           => $isAgama ? 'PABP' : $item->kode,
-                    'kelompok_nama'  => $item->kelompok_nama, // Wali kelas biasanya butuh nama kelompok lengkap
+                    'kelompok_nama'  => $item->kelompok_nama,
                     'kelompok_kode'  => $item->kelompok_kode,
                     'urutan'         => $item->urutan,
                     'is_agama'       => $isAgama,

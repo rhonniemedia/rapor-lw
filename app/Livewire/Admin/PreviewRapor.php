@@ -245,39 +245,32 @@ class PreviewRapor extends Component
         }
 
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id;
+        $tingkatRombel = $this->rombel->tingkat; // ← TAMBAHKAN INI
 
-        // 2. QUERY UTAMA (Diubah)
-        // Sumber utama sekarang adalah RombelPengajar (Mapel yang diajarkan di kelas ini)
+        // 2. QUERY UTAMA (Diubah dengan filter tingkat)
         $dataMapel = \App\Models\RombelPengajar::query()
-            // A. Ambil Info Mapel
             ->join('mata_pelajarans as mp', 'rombel_pengajars.mata_pelajaran_id', '=', 'mp.id')
 
-            // B. Ambil Info Struktur Kurikulum (Kelompok & Urutan)
-            // Kita perlu ini untuk grouping (Muatan Nasional, Kewilayahan, dll) dan sorting
-            ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId) {
+            // JOIN dengan FILTER TINGKAT - INI KUNCI SOLUSINYA!
+            ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId, $tingkatRombel) {
                 $join->on('mp.id', '=', 'kmp.mata_pelajaran_id')
-                    ->where('kmp.kurikulum_id', '=', $kurikulumId);
+                    ->where('kmp.kurikulum_id', '=', $kurikulumId)
+                    ->where('kmp.tingkat', '=', $tingkatRombel); // ← FILTER TINGKAT
             })
-            ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
 
-            // C. LEFT JOIN ke Tabel Nilai (KUNCI UTAMA DISINI)
-            // Left join artinya: Ambil semua mapel kiri, walau data kanan (nilai) kosong
+            ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
             ->leftJoin('nilais', function ($join) use ($pelajarId) {
                 $join->on('mp.id', '=', 'nilais.mata_pelajaran_id')
                     ->where('nilais.pelajar_id', '=', $pelajarId)
                     ->where('nilais.tahun_ajaran_semester_id', '=', $this->semesterId);
             })
-
-            // D. Filter hanya untuk rombel ini
             ->where('rombel_pengajars.rombel_id', $this->rombelId)
-
-            // E. Pilih Kolom
             ->select(
+                'mp.id',
                 'mp.nama as mapel_nama',
                 'mpk.nama as kelompok_nama',
                 'mpk.kode as kelompok_kode',
                 'kmp.urutan',
-                // Data Nilai (Bisa NULL jika belum diinput)
                 'nilais.nilai_angka',
                 'nilais.predikat',
                 'nilais.capaian_kompetensi'
@@ -285,16 +278,14 @@ class PreviewRapor extends Component
             ->orderBy('kmp.urutan', 'asc')
             ->get();
 
-        // 3. Formatting Data
+        // 3. Formatting Data (tetap sama)
         $nilaiArray = [];
         $nilaiGrouped = [];
         $counter = 1;
 
         foreach ($dataMapel as $row) {
-            // Cek apakah nilai ada. Jika null, set ke 0 atau '-'
             $nilaiAngka = $row->nilai_angka ? round($row->nilai_angka) : 0;
             $predikat = $row->predikat ?? '-';
-            // Jika nilai kosong, capaian mungkin perlu pesan default atau kosongkan
             $capaian = $row->capaian_kompetensi ?? '';
 
             $item = [
@@ -309,7 +300,6 @@ class PreviewRapor extends Component
 
             $nilaiArray[] = $item;
 
-            // Grouping Logic
             $kelompokNama = $row->kelompok_nama;
             if (!isset($nilaiGrouped[$kelompokNama])) {
                 $nilaiGrouped[$kelompokNama] = [
