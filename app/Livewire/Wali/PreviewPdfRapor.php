@@ -186,45 +186,66 @@ class PreviewPdfRapor extends Component
 
     private function loadNilaiPelajar($pelajarId): array
     {
-        // 1. Validasi awal: Pastikan Rombel & Kurikulum tersedia
+        // 1. Validasi awal
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
-        $tingkatRombel = $this->rombel->tingkat ?? null; // ← TAMBAHKAN INI
+        $tingkatRombel = $this->rombel->tingkat ?? null;
 
-        // PERBAIKAN: Tambahkan validasi tingkat
         if (!$this->rombel || !$kurikulumId || !$tingkatRombel) {
-            return [
-                'nilai' => [],
-                'nilai_grouped' => []
-            ];
+            return ['nilai' => [], 'nilai_grouped' => []];
         }
 
-        // 2. QUERY BUILDER dengan FILTER TINGKAT
+        // --- [BARU] AMBIL HASH AGAMA PELAJAR ---
+        // Kita ambil hash agama dari tabel pelajars untuk pencocokan
+        $pelajar = \App\Models\Pelajar::select('id', 'agama_hash')->find($pelajarId);
+        $agamaPelajarHash = $pelajar ? $pelajar->agama_hash : null;
+        // ---------------------------------------
+
+        // 2. QUERY BUILDER
         $dataMapel = \App\Models\RombelPengajar::query()
-            // A. Ambil Detail Mata Pelajaran
+            // A. Join Detail Mapel
             ->join('mata_pelajarans as mp', 'rombel_pengajars.mata_pelajaran_id', '=', 'mp.id')
 
-            // B. Join ke Kurikulum Mapel dengan FILTER TINGKAT - INI KUNCI SOLUSINYA!
+            // B. Join Kurikulum Mapel (Filter Tingkat)
             ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId, $tingkatRombel) {
                 $join->on('mp.id', '=', 'kmp.mata_pelajaran_id')
                     ->where('kmp.kurikulum_id', '=', $kurikulumId)
-                    ->where('kmp.tingkat', '=', $tingkatRombel); // ← FILTER TINGKAT
+                    ->where('kmp.tingkat', '=', $tingkatRombel);
             })
 
-            // C. Join ke Kelompok Mapel
+            // C. Join Kelompok Mapel
             ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
 
-            // D. LEFT JOIN ke Tabel Nilai
+            // D. Left Join Nilai
             ->leftJoin('nilais', function ($join) use ($pelajarId) {
                 $join->on('mp.id', '=', 'nilais.mata_pelajaran_id')
                     ->where('nilais.pelajar_id', '=', $pelajarId)
-                    // Pastikan menggunakan ID dari semesterAktif
                     ->where('nilais.tahun_ajaran_semester_id', '=', $this->semesterAktif->id);
             })
 
             // E. Filter Rombel
             ->where('rombel_pengajars.rombel_id', $this->rombel->id)
 
-            // F. Select Columns
+            // --- [LOGIKA BARU] FILTER AGAMA ---
+            ->where(function ($query) use ($agamaPelajarHash) {
+                // 1. Ambil Mapel UMUM (is_mapel_agama = false/0)
+                $query->where('mp.is_mapel_agama', false)
+
+                    // 2. ATAU, Ambil Mapel AGAMA (is_mapel_agama = true) ...
+                    ->orWhere(function ($q) use ($agamaPelajarHash) {
+                        $q->where('mp.is_mapel_agama', true);
+
+                        // ... TAPI hanya jika hash agamanya COCOK dengan hash agama pelajar
+                        if ($agamaPelajarHash) {
+                            $q->where('mp.agama_terkait_hash', $agamaPelajarHash);
+                        } else {
+                            // Jika data agama siswa kosong/null, jangan tampilkan mapel agama apapun
+                            $q->whereNull('mp.id');
+                        }
+                    });
+            })
+            // ----------------------------------
+
+            // F. Select & Order
             ->select(
                 'mp.id',
                 'mp.nama as mapel_nama',
@@ -235,18 +256,15 @@ class PreviewPdfRapor extends Component
                 'nilais.predikat',
                 'nilais.capaian_kompetensi'
             )
-
-            // G. Order By
             ->orderBy('kmp.urutan', 'asc')
             ->get();
 
-        // 3. Formatting Data (sisanya tetap sama seperti kode asli)
+        // 3. Formatting Data
         $nilaiArray = [];
         $nilaiGrouped = [];
         $counter = 1;
 
         foreach ($dataMapel as $row) {
-            // Cek apakah nilai ada. Jika null, set ke 0 atau '-'
             $nilaiAngka = $row->nilai_angka ? round($row->nilai_angka) : 0;
             $predikat = $row->predikat ?? '-';
             $capaian = $row->capaian_kompetensi ?? '';
@@ -263,7 +281,6 @@ class PreviewPdfRapor extends Component
 
             $nilaiArray[] = $item;
 
-            // Grouping Logic
             $kelompokNama = $row->kelompok_nama;
             if (!isset($nilaiGrouped[$kelompokNama])) {
                 $nilaiGrouped[$kelompokNama] = [

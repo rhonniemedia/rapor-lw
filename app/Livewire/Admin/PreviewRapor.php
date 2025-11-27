@@ -239,23 +239,31 @@ class PreviewRapor extends Component
 
     private function loadNilaiPelajar($pelajarId): array
     {
-        // 1. Pastikan Rombel ID dan Kurikulum ID tersedia
+        // 1. Validasi Awal Rombel
         if (!$this->rombelId || !$this->rombel->tahunAjaranKurikulum) {
             return ['nilai' => [], 'nilai_grouped' => []];
         }
 
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id;
-        $tingkatRombel = $this->rombel->tingkat; // ← TAMBAHKAN INI
+        $tingkatRombel = $this->rombel->tingkat;
 
-        // 2. QUERY UTAMA (Diubah dengan filter tingkat)
+        // 2. AMBIL HASH AGAMA PELAJAR
+        // Kita hanya butuh kolom 'agama_hash' karena kolom 'agama' itu terenkripsi.
+        // Pastikan model Pelajar Anda bisa mengakses kolom ini.
+        $pelajar = \App\Models\Pelajar::select('id', 'agama_hash')->find($pelajarId);
+
+        // Default null jika data pelajar bermasalah
+        $agamaPelajarHash = $pelajar ? $pelajar->agama_hash : null;
+
+        // 3. QUERY UTAMA
         $dataMapel = \App\Models\RombelPengajar::query()
             ->join('mata_pelajarans as mp', 'rombel_pengajars.mata_pelajaran_id', '=', 'mp.id')
 
-            // JOIN dengan FILTER TINGKAT - INI KUNCI SOLUSINYA!
+            // Join Kurikulum (Filter Tingkat)
             ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId, $tingkatRombel) {
                 $join->on('mp.id', '=', 'kmp.mata_pelajaran_id')
                     ->where('kmp.kurikulum_id', '=', $kurikulumId)
-                    ->where('kmp.tingkat', '=', $tingkatRombel); // ← FILTER TINGKAT
+                    ->where('kmp.tingkat', '=', $tingkatRombel);
             })
 
             ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
@@ -265,6 +273,29 @@ class PreviewRapor extends Component
                     ->where('nilais.tahun_ajaran_semester_id', '=', $this->semesterId);
             })
             ->where('rombel_pengajars.rombel_id', $this->rombelId)
+
+            // --- [LOGIKA BARU BERDASARKAN STRUKTUR DB ANDA] ---
+            ->where(function ($query) use ($agamaPelajarHash) {
+                // Logika:
+                // 1. Ambil Mapel UMUM (is_mapel_agama = false/0)
+                $query->where('mp.is_mapel_agama', false)
+
+                    // 2. ATAU, Ambil Mapel AGAMA (is_mapel_agama = true) ...
+                    ->orWhere(function ($q) use ($agamaPelajarHash) {
+                        $q->where('mp.is_mapel_agama', true);
+
+                        // ... TAPI hanya jika hash agamanya COCOK dengan hash agama pelajar
+                        if ($agamaPelajarHash) {
+                            $q->where('mp.agama_terkait_hash', $agamaPelajarHash);
+                        } else {
+                            // Edge case: Jika pelajar tidak punya data agama (null),
+                            // jangan tampilkan mapel agama apapun (opsional, atau tampilkan semua)
+                            $q->whereNull('mp.id'); // Force false condition agar tidak muncul
+                        }
+                    });
+            })
+            // --------------------------------------------------
+
             ->select(
                 'mp.id',
                 'mp.nama as mapel_nama',
@@ -278,7 +309,7 @@ class PreviewRapor extends Component
             ->orderBy('kmp.urutan', 'asc')
             ->get();
 
-        // 3. Formatting Data (tetap sama)
+        // 4. Formatting Data (Sama seperti sebelumnya)
         $nilaiArray = [];
         $nilaiGrouped = [];
         $counter = 1;
