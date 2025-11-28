@@ -454,9 +454,9 @@ class PreviewPdfRapor extends Component
             'sekolah' => [
                 'nama_sekolah' => $this->dataSekolah->nama_sekolah ?? 'N/A',
                 'npsn' => $this->dataSekolah->npsn ?? 'N/A',
-                'nis' => $this->dataSekolah->nis ?? 'N/A',
-                'nss' => $this->dataSekolah->nss ?? 'N/A',
-                'nds' => $this->dataSekolah->nds ?? 'N/A',
+                'nis' => $this->dataSekolah->nis ?? '',
+                'nss' => $this->dataSekolah->nss ?? '',
+                'nds' => $this->dataSekolah->nds ?? '',
                 'alamat' => $this->dataSekolah->alamat ?? 'N/A',
                 'kode_pos' => $this->dataSekolah->kode_pos ?? 'N/A',
                 'kelurahan' => $this->dataSekolah->kelurahan ?? 'N/A',

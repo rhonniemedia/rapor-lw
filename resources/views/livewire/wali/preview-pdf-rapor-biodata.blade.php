@@ -306,9 +306,9 @@
                     <td>{{ $sekolah['npsn'] ?? '-' }}</td>
                 </tr>
                 <tr>
-                    <td>NIS/NSS/NDS</td>
+                    <td>NSS</td>
                     <td>:</td>
-                    <td>{{ $sekolah['nis'] ?? '-' }}/{{ $sekolah['nss'] ?? '-' }}/{{ $sekolah['nds'] ?? '-' }}</td>
+                    <td>{{ $sekolah['nss'] ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Alamat Sekolah</td>
