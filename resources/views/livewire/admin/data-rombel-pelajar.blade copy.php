@@ -17,16 +17,20 @@
     </div>
 
     {{-- Info Rombel --}}
+
     <div class="alert alert-success py-2" role="alert">
         <div class="row align-items-center">
+
             <div class="col-sm-4 py-3">
                 <small class="text-muted d-block">Tingkat & Jurusan:</small>
                 <p class="mb-0 font-weight-bold">Kelas {{ $rombel->tingkat ?? '-' }} - {{ $rombel->jurusan->alias ?? 'Tidak Dikenal' }}</p>
             </div>
+
             <div class="col-sm-4 py-3">
                 <small class="text-muted d-block">Wali Kelas:</small>
                 <p class="mb-0 font-weight-bold">{{ $rombel->waliKelas->name ?? 'Belum Ditentukan' }}</p>
             </div>
+
             <div class="col-sm-4 py-3">
                 <small class="text-muted d-block">Kurikulum:</small>
                 <p class="mb-0 font-weight-bold">
@@ -37,8 +41,10 @@
                     @endif
                 </p>
             </div>
+
         </div>
     </div>
+
 
     {{-- Tab Navigation --}}
     <ul class="nav nav-tabs mb-3" role="tablist">
@@ -60,6 +66,7 @@
         </li>
     </ul>
 
+    <!-- Tab Content: Daftar Pelajar -->
     @if($activeTab === 'pelajar')
 
     {{-- Input Search & Per Page --}}
@@ -76,17 +83,20 @@
         </div>
         <div class="d-flex align-items-center gap-2">
             <div>
-                {{-- OPTIMASI: debounce.500ms --}}
                 <input type="search" class="form-control"
-                    placeholder="Cari Pelajar..."
+                    placeholder="{{ $activeTab === 'mapel' ? 'Cari Mata Pelajaran/Guru...' : 'Cari Pelajar...' }}"
                     wire:model.live.debounce.500ms="search" style="width:250px;">
             </div>
+            @if($activeTab === 'pelajar')
 
+            {{-- Hanya tampil jika user memiliki role 'superadmin' --}}
             @role('superadmin')
             <button type="button" wire:click="createPelajar" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center h-100" style="padding: 0 0.75rem;">
                 <i class="mdi mdi-plus"></i>
             </button>
             @endrole
+
+            @endif
         </div>
     </div>
 
@@ -94,23 +104,26 @@
         <thead class="bg-light">
             <tr>
                 <th style="width: 36%;">
-                    <p class="mb-0">Peserta Didik</p><small>Nama | Jenis Kelamin</small>
+                    <p class="mb-0">Peserta Didik</p>
+                    <small>Nama | Jenis Kelamin</small>
                 </th>
                 <th style="width: 27%;">
-                    <p class="mb-0">Kelahiran</p><small>Tempat | Tanggal</small>
+                    <p class="mb-0">Kelahiran</p>
+                    <small>Tempat | Tanggal</small>
                 </th>
                 <th style="width: 27%;">
-                    <p class="mb-0">Nomor Induk Siswa</p><small>Sekolah | Nasional</small>
+                    <p class="mb-0">Nomor Induk Siswa</p>
+                    <small>Sekolah | Nasional</small>
                 </th>
                 <th style="width: 10%;">
-                    <p class="mb-0">Aksi</p><small>Delete</small>
+                    <p class="mb-0">Aksi</p>
+                    <small>Delete</small>
                 </th>
             </tr>
         </thead>
         <tbody>
             @forelse ($data as $index => $item)
-            {{-- OPTIMASI: wire:key --}}
-            <tr wire:key="pelajar-{{ $item->id }}">
+            <tr>
                 <td>
                     <div class="d-flex align-items-center">
                         <img src="{{ $item->pelajar->icon }}" alt="image">
@@ -129,14 +142,17 @@
                     <div class="badge badge-inverse-warning">{{ $item->pelajar->nisn ?? 'N/A' }}</div>
                 </td>
                 <td>
-                    <button type="button" class="btn btn-sm btn-outline-info" wire:click="openDetailModal('{{ $item->pelajar->id }}')" title="Detail Data">
+                    <button type="button"
+                        class="btn btn-sm btn-outline-info"
+                        wire:click="openDetailModal('{{ $item->pelajar->id }}')"
+                        title="Detail Data">
                         <i class="mdi mdi-eye"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-warning" wire:click="openEditModal('{{ $item->pelajar->id }}')" title="Edit Data">
+                    <button type="button"
+                        class="btn btn-sm btn-outline-warning"
+                        wire:click="openEditModal('{{ $item->pelajar->id }}')"
+                        title="Edit Data">
                         <i class="mdi mdi-pencil"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" wire:click="confirmDeleteRombelPelajar('{{ $item->id }}')" title="Hapus">
-                        <i class="mdi mdi-delete"></i>
                     </button>
                 </td>
             </tr>
@@ -154,6 +170,7 @@
 
     @endif
 
+    <!-- Tab Content: Mata Pelajaran & Pengajar -->
     @if($activeTab === 'mapel')
 
     {{-- Input Search & Per Page --}}
@@ -170,14 +187,15 @@
         </div>
         <div class="d-flex align-items-center gap-2">
             <div>
-                {{-- OPTIMASI: debounce.500ms --}}
                 <input type="search" class="form-control"
-                    placeholder="Cari Mata Pelajaran/Guru..."
+                    placeholder="{{ $activeTab === 'mapel' ? 'Cari Mata Pelajaran/Guru...' : 'Cari Pelajar...' }}"
                     wire:model.live.debounce.500ms="search" style="width:250px;">
             </div>
+            @if($activeTab === 'mapel')
             <button type="button" wire:click="createMapel" class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center h-100" style="padding: 0 0.75rem;">
                 <i class="mdi mdi-plus"></i>
             </button>
+            @endif
         </div>
     </div>
 
@@ -185,20 +203,22 @@
         <thead class="bg-light">
             <tr>
                 <th style="width: 40%;">
-                    <p class="mb-0">Mata Pelajaran</p><small>Nama Mapel</small>
+                    <p class="mb-0">Mata Pelajaran</p>
+                    <small>Nama Mapel</small>
                 </th>
                 <th style="width: 40%;">
-                    <p class="mb-0">Pengajar</p><small>Nama Guru</small>
+                    <p class="mb-0">Pengajar</p>
+                    <small>Nama Guru</small>
                 </th>
                 <th style="width: 10%;">
-                    <p class="mb-0">Aksi</p><small>Edit | Delete</small>
+                    <p class="mb-0">Aksi</p>
+                    <small>Edit | Delete</small>
                 </th>
             </tr>
         </thead>
         <tbody>
             @forelse ($data as $index => $item)
-            {{-- OPTIMASI: wire:key --}}
-            <tr wire:key="mapel-{{ $item->id }}">
+            <tr>
                 <td>
                     <div class="d-flex align-items-center">
                         <img src="{{ $item->guru->icon ?? asset('assets/images/icons/icon_13.png') }}" alt="guru" style="width: 32px; height: 32px; object-fit: cover;">
@@ -215,10 +235,12 @@
                     </div>
                 </td>
                 <td>
-                    <button wire:click="editMapel('{{ $item->id }}')" class="btn btn-sm btn-outline-primary" title="Edit">
+                    <button wire:click="editMapel('{{ $item->id }}')"
+                        class="btn btn-sm btn-outline-primary" title="Edit">
                         <i class="mdi mdi-pencil"></i>
                     </button>
-                    <button wire:click="confirmDeleteRombelPengajar('{{ $item->id }}')" class="btn btn-sm btn-outline-danger" title="Hapus">
+                    <button wire:click="confirmDeleteRombelPengajar('{{ $item->id }}')"
+                        class="btn btn-sm btn-outline-danger" title="Hapus">
                         <i class="mdi mdi-delete"></i>
                     </button>
                 </td>
@@ -251,11 +273,8 @@
                         <label for="mata_pelajaran_id" class="form-label">Mata Pelajaran <span class="text-danger">*</span></label>
                         <select id="mata_pelajaran_id" class="form-select" wire:model="mata_pelajaran_id">
                             <option value="">-- Pilih Mata Pelajaran --</option>
-                            {{-- OPTIMASI: Loop Computed Property dengan wire:key --}}
-                            @foreach($this->mataPelajaranList as $mapel)
-                            <option value="{{ $mapel->id }}" wire:key="opt-mapel-{{ $mapel->id }}">
-                                {{ $mapel->nama }} @if($mapel->kode) ({{ $mapel->kode }}) @endif
-                            </option>
+                            @foreach($mataPelajaranList as $mapel)
+                            <option value="{{ $mapel->id }}">{{ $mapel->nama }} @if($mapel->kode) ({{ $mapel->kode }}) @endif</option>
                             @endforeach
                         </select>
                         @error('mata_pelajaran_id') <small class="text-danger">{{ $message }}</small> @enderror
@@ -263,32 +282,32 @@
 
                     <div class="mb-3">
                         <label for="guru_search" class="form-label">Guru Pengajar <span class="text-danger">*</span></label>
+
                         <div class="position-relative">
                             @if($selectedGuruName)
                             <div class="form-control d-flex align-items-center justify-content-between" style="background-color: #f8f9fa;">
-                                <span>{{ $selectedGuruName }}</span>
+                                <span>
+                                    {{ $selectedGuruName }}
+                                </span>
                                 <button type="button" class="btn btn-sm px-2 py-0" wire:click="clearGuru" style="font-size: 0.75rem;">
                                     <i class="mdi mdi-close"></i>
                                 </button>
                             </div>
                             @else
-                            {{-- OPTIMASI: debounce.500ms agar tidak spam request --}}
                             <input
                                 type="text"
                                 id="guru_search"
                                 class="form-control"
-                                wire:model.live.debounce.500ms="guruSearch"
+                                wire:model.live.debounce.300ms="guruSearch"
                                 placeholder="Ketik nama guru..."
                                 autocomplete="off">
 
-                            {{-- OPTIMASI: Cek Computed Property --}}
-                            @if(!empty($guruSearch) && count($this->filteredGuruList) > 0)
+                            @if(!empty($guruSearch) && count($filteredGuruList) > 0)
                             <ul class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; max-height: 200px; overflow-y: auto; margin-top: 2px;">
-                                @foreach($this->filteredGuruList as $guru)
+                                @foreach($filteredGuruList as $guru)
                                 <li class="list-group-item list-group-item-action d-flex align-items-center"
                                     style="cursor: pointer;"
-                                    wire:click="selectGuru('{{ $guru->id }}')"
-                                    wire:key="guru-search-{{ $guru->id }}">
+                                    wire:click="selectGuru('{{ $guru->id }}')">
                                     <span>{{ $guru->name }}</span>
                                 </li>
                                 @endforeach
@@ -296,8 +315,10 @@
                             @endif
                             @endif
                         </div>
+
                         @error('guru_id') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
+
                 </div>
 
                 <div class="modal-footer">
@@ -311,12 +332,13 @@
             </form>
         </div>
     </div>
-
     @include('livewire.admin.data-rombel-pelajar-partials')
 </div>
 
+
 @push('scripts')
 <script>
+    // Event listener untuk membuka dan menutup modal
     window.addEventListener('openModalRombelPengajar', () => {
         new bootstrap.Modal(document.getElementById('modalRombelPengajar')).show();
     });
