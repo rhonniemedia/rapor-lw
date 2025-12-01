@@ -517,12 +517,22 @@ class PreviewPdfRapor extends Component
             ];
         }
 
+        // 2. AMBIL LABEL PEKERJAAN DARI CONFIG
+        $kodePekerjaan = $orangTua->pekerjaan ?? null;
+
+        // Cari di file config/enums.php array 'pekerjaan'
+        $labelPekerjaan = config("enums.pekerjaan.$kodePekerjaan") ?? $kodePekerjaan ?? '-';
+
+
+        // 3. AMBIL STATUS (Jika ada kolom status di DB)
+        $status = $orangTua->status ?? 'Masih Hidup';
+
         return [
-            'nama' => $orangTua->nama ?? '-',
-            'pekerjaan' => $orangTua->pekerjaan ?? '-',
-            'telepon' => $orangTua->telepon ?? '-',
-            'alamat' => $orangTua->alamat ?? '-',
-            'status' => $orangTua->status ?? 'masih-hidup'
+            'nama'      => $orangTua->nama ?? '-',
+            'pekerjaan' => $labelPekerjaan, // Hasil konversi array
+            'telepon'   => $orangTua->telepon ?? '-',
+            'alamat'    => $orangTua->alamat ?? '-',
+            'status'    => $status,
         ];
     }
 

@@ -1,4 +1,9 @@
-<div>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Biodata Siswa</title>
     <style>
         /* 1. Atur margin halaman bawaan dompdf ke 0 */
         @page {
@@ -8,22 +13,54 @@
         body {
             font-family: Arial, sans-serif;
             font-size: 14px;
+            /* Margin Body Global */
             margin: 15mm;
-
-            /* Tambahkan ini untuk memastikan tidak ada padding atas bawaan */
             padding-top: 0;
-
-            /* Atur ulang margin atas secara eksplisit */
-            margin-top: 15mm !important;
             height: 100%;
         }
 
-        .cover {
-            width: 100%;
-            min-height: 100vh;
+        /* --- CSS WATERMARK --- */
+        header.watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1000;
+            /* Layer paling bawah */
+            opacity: 0.1;
+            /* Transparansi */
+            width: 50%;
+            /* Lebar gambar */
             text-align: center;
+        }
+
+        header.watermark img {
+            width: 100%;
+            height: auto;
+        }
+
+        /* --- CSS COVER (FIXED) --- */
+        .cover {
+            position: absolute;
+            /* Trik Margin Negatif: "Menarik" box keluar dari batas margin body */
+            margin-top: -16mm;
+            /* Sedikit lebih dari 15mm untuk keamanan */
+            margin-left: -16mm;
+            margin-right: -16mm;
+
+            width: 100%;
+            height: 100%;
+
+            /* Background Putih Solid (Cat Penutup) */
+            background-color: #ffffff;
+
+            /* Layering: Pastikan di atas watermark */
+            z-index: 5000;
+
+            /* Formatting Konten Cover */
+            text-align: center;
+            /* Padding disesuaikan agar konten tetap di tengah visual */
             padding-top: 25vh;
-            /* sesuaikan untuk centering */
             padding-bottom: 25vh;
             box-sizing: border-box;
         }
@@ -88,7 +125,6 @@
             margin: 0;
             line-height: 1.3;
             font-weight: bold;
-
         }
 
         .cover .logo-pemda img {
@@ -96,18 +132,14 @@
             margin-bottom: 50px;
         }
 
-
         .cover .logo-sekolah img {
             width: 140px;
             margin: 50px 0;
         }
 
-
         .cover .logo-pemda img,
         .cover .logo-sekolah img {
-            /* atur ukuran logo */
             height: auto;
-            /* biar proporsional */
             object-fit: contain;
         }
 
@@ -118,9 +150,13 @@
             align-items: center;
         }
 
+        /* --- CSS BODY LAINNYA --- */
         .sekolah {
             text-align: center;
             padding: 10px;
+            position: relative;
+            z-index: 1;
+            /* Pastikan konten di atas watermark */
         }
 
         .sekolah .header-section {
@@ -142,6 +178,8 @@
 
         .identitas {
             text-align: center;
+            position: relative;
+            z-index: 1;
         }
 
         .identitas .header-section {
@@ -174,22 +212,19 @@
             line-height: 1.2rem;
         }
 
-        /* PERBAIKAN CSS */
-
         .masuk,
         .keluar {
-            /* Gaya untuk container utama */
             text-align: center;
             padding: 10px;
+            position: relative;
+            z-index: 1;
         }
 
-        /* Terapkan gaya ini ke .header-section di dalam .masuk DAN .header-section di dalam .keluar */
         .masuk .header-section,
         .keluar .header-section {
             margin-bottom: 20px;
         }
 
-        /* Terapkan gaya ini ke p di dalam .header-section di dalam .masuk DAN .keluar */
         .masuk .header-section p,
         .keluar .header-section p {
             margin: 0;
@@ -222,12 +257,10 @@
             border: 1px solid black;
         }
 
-        /* Hilangkan border bawah untuk semua baris kecuali header dan baris terakhir */
         .bordered tr:not(:first-child):not(:last-child) td:not(.keep-border) {
             border-bottom: none !important;
         }
 
-        /* Khusus untuk td yang di-rowspan */
         .bordered td.keep-border {
             border: 1px solid black !important;
         }
@@ -245,9 +278,20 @@
             page-break-after: always;
         }
     </style>
+</head>
+
+<body>
 
     {{-- ==============================
-          1. TABEL COVER
+          WATERMARK (AKAN TAMPIL DI SEMUA HALAMAN)
+    =============================== --}}
+    <header class="watermark">
+        <img src="{{ public_path('assets/images/logo-sekolah.png') }}" alt="Watermark">
+    </header>
+
+    {{-- ==============================
+          1. TABEL COVER 
+          (Margin Negatif & Background Putih Menutupi Watermark)
     =============================== --}}
     <div class="cover">
         <div class="cover-content">
@@ -286,6 +330,7 @@
 
     {{-- ==============================
           2. TABEL IDENTITAS SEKOLAH
+          (Background Transparan = Watermark Terlihat)
     =============================== --}}
     <div class="sekolah">
         <div class="header-section">
@@ -482,13 +527,13 @@
                     <td>a.</td>
                     <td>Ayah</td>
                     <td>:</td>
-                    <td>{{ ucwords(str_replace(['-', '_'], ' ', $ayah['pekerjaan'] ?? 'N/A')) }}</td>
+                    <td>{{ $ayah['pekerjaan'] ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td>b.</td>
                     <td>Ibu</td>
                     <td>:</td>
-                    <td>{{ ucwords(str_replace(['-', '_'], ' ', $ibu['pekerjaan'] ?? 'N/A')) }}</td>
+                    <td>{{ $ibu['pekerjaan'] ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td rowspan="5">15.</td>
@@ -569,7 +614,7 @@
                 <tr>
                     <td>Nomor Induk</td>
                     <td>:</td>
-                    <td>{{ $nis ?? 'N/A' }}</td>
+                    <td>{{ $nis ?? 'N/A' }} / {{ $nisn ?? 'N/A' }}</td>
 
                 </tr>
             </table>
@@ -674,7 +719,7 @@
                 <tr>
                     <td>Nomor Induk</td>
                     <td>:</td>
-                    <td>{{ $nis ?? 'N/A' }}</td>
+                    <td>{{ $nis ?? 'N/A' }} / {{ $nisn ?? 'N/A' }}</td>
 
                 </tr>
             </table>
@@ -946,4 +991,6 @@
         </table>
 
     </div>
-</div>
+</body>
+
+</html>
