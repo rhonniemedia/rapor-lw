@@ -26,7 +26,7 @@
             transform: translate(-50%, -50%);
             z-index: -1000;
             /* Di belakang teks */
-            opacity: 0.2;
+            opacity: 0.25;
             /* Transparansi */
             width: 50%;
             /* Lebar area watermark */

@@ -27,7 +27,7 @@
             transform: translate(-50%, -50%);
             z-index: -1000;
             /* Layer paling bawah */
-            opacity: 0.1;
+            opacity: 0.25;
             /* Transparansi */
             width: 50%;
             /* Lebar gambar */
