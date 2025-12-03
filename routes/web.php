@@ -229,8 +229,4 @@ Route::get('/admin/rapor/preview', function () {
 
 // Route untuk generate PDF
 Route::get('/pdf/generate', [RaporController::class, 'generatePdf'])->name('pdf.generate')->middleware(['auth']);
-
-// Route untuk generate PDF Leger (tanpa middleware auth karena menggunakan token di URL)
-// Route::get('/pdf/leger', [LegerController::class, 'generateLeger'])->name('pdf.generate.leger')->middleware(['auth']);
-
 Route::get('/cetak-leger', [LegerController::class, 'cetakLeger'])->name('pdf.leger')->middleware(['auth']);
