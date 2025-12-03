@@ -232,8 +232,8 @@
                         {{-- Sub-header untuk mata pelajaran dan kehadiran --}}
                         <tr class="header-content">
                             @foreach($mataPelajaranList as $mapel)
-                            <th class="mapel-header" title="{{ $mapel->nama }}">
-                                {{ $mapel->kode ?? substr($mapel->nama, 0, 4) }}
+                            <th class="mapel-header" title="{{ $mapel['nama'] }}">
+                                {{ $mapel['kode'] ?? substr($mapel['nama'], 0, 4) }}
                             </th>
                             @endforeach
 
@@ -255,7 +255,7 @@
                             {{-- Nilai per mata pelajaran --}}
                             @foreach($mataPelajaranList as $mapel)
                             <td class="nilai-cell">
-                                {{ $student['nilai_per_mapel'][$mapel->id] ?? '-' }}
+                                {{ $student['nilai_per_mapel'][$mapel['id']] ?? '-' }}
                             </td>
                             @endforeach
 

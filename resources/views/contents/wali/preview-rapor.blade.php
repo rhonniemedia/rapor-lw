@@ -17,7 +17,7 @@
     <!-- Ekstrakurikuler -->
 
     <!-- LiveWire -->
-    <livewire:wali.preview-pdf-rapor />
+    <livewire:wali.preview-rapor />
 
 </div>
 

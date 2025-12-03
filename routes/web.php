@@ -2,9 +2,8 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\WaliLegerController;
-use App\Http\Controllers\PdfRaporWaliController;
-use App\Http\Controllers\PdfRaporAdminController;
+use App\Http\Controllers\LegerController;
+use App\Http\Controllers\RaporController;
 
 // Redirect root ke login
 Route::get('/', function () {
@@ -172,8 +171,7 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('homeroom')->name('walikel
     // Finalization
     Route::prefix('finalization')->group(function () {
         Route::get('/preview', fn() => view('contents.wali.preview-rapor', ['title' => 'Preview Rapor']));
-        Route::get('/pdf/generate', [PdfRaporWaliController::class, 'generatePdf'])->name('pdf.generate');
-        Route::get('/ledger', fn() => view('contents.wali.leger', ['title' => 'Leger Kelas']));
+        Route::get('/ledger', fn() => view('contents.wali.preview-leger', ['title' => 'Leger Kelas']));
     });
 
     // // Route untuk menampilkan leger kelas
@@ -230,8 +228,9 @@ Route::get('/admin/rapor/preview', function () {
 })->name('rapor.preview');
 
 // Route untuk generate PDF
-Route::get('/pdf/generate', [PdfRaporAdminController::class, 'generatePdf'])->name('pdf.generate');
+Route::get('/pdf/generate', [RaporController::class, 'generatePdf'])->name('pdf.generate')->middleware(['auth']);
 
 // Route untuk generate PDF Leger (tanpa middleware auth karena menggunakan token di URL)
-Route::get('/pdf/leger', [WaliLegerController::class, 'generateLeger'])
-    ->name('pdf.generate.leger');
+// Route::get('/pdf/leger', [LegerController::class, 'generateLeger'])->name('pdf.generate.leger')->middleware(['auth']);
+
+Route::get('/cetak-leger', [LegerController::class, 'cetakLeger'])->name('pdf.leger')->middleware(['auth']);

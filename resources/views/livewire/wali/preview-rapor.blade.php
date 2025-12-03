@@ -27,8 +27,8 @@
                         </div>
                     </div>
 
-                    {{-- Info Rombel Card --}}
-                    @if(isset($rombel) && isset($semesterAktif))
+                    {{-- Info Rombel Card (Cek pakai $this->) --}}
+                    @if($this->rombel && $this->semesterAktif)
                     <div class="card border-success shadow-sm mb-4">
                         <div class="card-body">
                             <div class="row g-4">
@@ -41,7 +41,8 @@
                                         <div class="ms-3 d-flex flex-column justify-content-center">
                                             <small class="text-muted lh-2">Kurikulum</small>
                                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                                {{ $rombel->tahunAjaranKurikulum->kurikulum->nama ?? 'Global' }}
+                                                {{-- AKSES MENGGUNAKAN $this-> --}}
+                                                {{ $this->rombel->tahunAjaranKurikulum->kurikulum->nama ?? 'Global' }}
                                             </p>
                                         </div>
                                     </div>
@@ -54,7 +55,8 @@
                                         <div class="ms-3 d-flex flex-column justify-content-center">
                                             <small class="text-muted lh-2">Tahun Ajaran & Semester</small>
                                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                                {{ $semesterAktif->tahunAjaran->nama ?? 'N/A' }} ~ {{ $semesterAktif->semester->nama ?? 'Belum Ada' }}
+                                                {{-- AKSES MENGGUNAKAN $this-> --}}
+                                                {{ $this->semesterAktif->tahunAjaran->nama ?? 'N/A' }} ~ {{ $this->semesterAktif->semester->nama ?? 'Belum Ada' }}
                                             </p>
                                         </div>
                                     </div>
@@ -69,7 +71,8 @@
                                         <div class="ms-3 d-flex flex-column justify-content-center">
                                             <small class="text-muted lh-2">Kelas & Jurusan</small>
                                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                                {{ $rombel->tingkat ?? '-' }} {{ $rombel->jurusan->alias ?? 'Umum' }} {{ $rombel->nomor ?? '' }}
+                                                {{-- AKSES MENGGUNAKAN $this-> --}}
+                                                {{ $this->rombel->tingkat ?? '-' }} {{ $this->rombel->jurusan->alias ?? 'Umum' }} {{ $this->rombel->nomor ?? '' }}
                                             </p>
                                         </div>
                                     </div>
@@ -82,7 +85,8 @@
                                         <div class="ms-3 d-flex flex-column justify-content-center">
                                             <small class="text-muted lh-2">Kompetensi Keahlian</small>
                                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                                {{ $rombel->jurusan->nama ?? 'Umum' }}
+                                                {{-- AKSES MENGGUNAKAN $this-> --}}
+                                                {{ $this->rombel->jurusan->nama ?? 'Umum' }}
                                             </p>
                                         </div>
                                     </div>
@@ -97,7 +101,8 @@
                                         <div class="ms-3 d-flex flex-column justify-content-center">
                                             <small class="text-muted lh-2">Wali Kelas</small>
                                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                                {{ $rombel->waliKelas->name ?? 'Belum Ditentukan' }}
+                                                {{-- AKSES MENGGUNAKAN $this-> --}}
+                                                {{ $this->rombel->waliKelas->name ?? 'Belum Ditentukan' }}
                                             </p>
                                         </div>
                                     </div>
@@ -112,8 +117,8 @@
                     </div>
                     @endif
 
-                    {{-- Ubah kondisi @if agar menggunakan objek $rombel dan $semesterAktif --}}
-                    @if(isset($rombel) && isset($semesterAktif) && isset($currentStudent))
+                    {{-- Cek pakai $this-> --}}
+                    @if($this->rombel && $this->semesterAktif && isset($currentStudent))
                     <div class="row align-items-center mb-3">
                         <div class="col-lg-4">
                             <h5 class="text-dark mb-0">
@@ -141,7 +146,8 @@
                                     <i class="mdi mdi-account"></i>
                                 </label>
                                 <select class="form-select border rounded-end-3 h-100" wire:change="selectStudent($event.target.value)">
-                                    @foreach($studentsList as $index => $student)
+                                    {{-- PERBAIKAN UTAMA: Gunakan $this->studentsList --}}
+                                    @foreach($this->studentsList as $index => $student)
                                     <option value="{{ $index }}" {{ $currentIndex == $index ? 'selected' : '' }}>
                                         {{ $student['nama'] }}
                                     </option>

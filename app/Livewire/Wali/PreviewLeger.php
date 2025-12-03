@@ -12,9 +12,10 @@ use App\Models\Kokurikuler;
 use App\Models\RombelPelajar;
 use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use App\Models\KurikulumMataPelajaran;
 
-class LegerKelas extends Component
+class PreviewLeger extends Component
 {
     // ========================================
     // PROPERTIES
@@ -28,7 +29,7 @@ class LegerKelas extends Component
     // Data Collections
     public $studentsList = [];
     public $mataPelajaranList = [];
-    public $pdfUrl;
+    public $pdfUrl = '';
 
     // ========================================
     // MOUNT
@@ -100,25 +101,23 @@ class LegerKelas extends Component
     {
         // 1. Validasi
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
-        $tingkatRombel = $this->rombel->tingkat ?? null; // ← TAMBAHKAN INI
+        $tingkatRombel = $this->rombel->tingkat ?? null;
 
-        // Gunakan $this->rombel karena di Wali Kelas propertinya berupa Objek Model
-        if (!$this->rombel || !$kurikulumId || !$tingkatRombel) { // ← TAMBAHKAN VALIDASI TINGKAT
+        if (!$this->rombel || !$kurikulumId || !$tingkatRombel) {
             $this->mataPelajaranList = [];
             return;
         }
 
         // 2. QUERY UTAMA: Ambil Mapel dari RombelPengajar dengan FILTER TINGKAT
         $allMapel = \App\Models\RombelPengajar::query()
-            // Perhatikan: Menggunakan $this->rombel->id
             ->where('rombel_pengajars.rombel_id', $this->rombel->id)
             // Join ke Mata Pelajaran
             ->join('mata_pelajarans as mp', 'rombel_pengajars.mata_pelajaran_id', '=', 'mp.id')
-            // Join ke Kurikulum Mapel dengan FILTER TINGKAT - INI KUNCI SOLUSINYA!
+            // Join ke Kurikulum Mapel dengan FILTER TINGKAT
             ->join('kurikulum_mata_pelajarans as kmp', function ($join) use ($kurikulumId, $tingkatRombel) {
                 $join->on('mp.id', '=', 'kmp.mata_pelajaran_id')
                     ->where('kmp.kurikulum_id', '=', $kurikulumId)
-                    ->where('kmp.tingkat', '=', $tingkatRombel); // ← FILTER TINGKAT
+                    ->where('kmp.tingkat', '=', $tingkatRombel);
             })
             // Join ke Kelompok
             ->join('mata_pelajaran_kelompoks as mpk', 'kmp.kelompok_id', '=', 'mpk.id')
@@ -134,35 +133,31 @@ class LegerKelas extends Component
             ->orderBy('kmp.urutan', 'asc')
             ->get();
 
-        // 3. LOGIKA AGAMA (tetap sama)
-        $agamaMapels = $allMapel->filter(function ($item) {
-            return $item->is_mapel_agama == true || $item->is_mapel_agama == 1;
-        });
-
-        $nonAgamaMapels = $allMapel->filter(function ($item) {
-            return !$item->is_mapel_agama || $item->is_mapel_agama == 0;
-        });
+        // 3. LOGIKA AGAMA: Gabungkan semua mapel Agama menjadi satu kolom "PABP"
+        $agamaMapels = $allMapel->filter(fn($item) => $item->is_mapel_agama == true || $item->is_mapel_agama == 1);
+        $nonAgamaMapels = $allMapel->filter(fn($item) => !$item->is_mapel_agama || $item->is_mapel_agama == 0);
 
         $combined = collect();
+
+        // Jika ada mapel agama, ambil satu saja sebagai perwakilan kolom
         if ($agamaMapels->isNotEmpty()) {
             $combined->push($agamaMapels->first());
         }
+
+        // Gabungkan dengan mapel umum
         $combined = $combined->merge($nonAgamaMapels);
 
-        // 4. MAPPING FINAL (tetap sama)
+        // 4. MAPPING FINAL - KONSISTEN DENGAN ADMIN (RETURN ARRAY, BUKAN OBJECT)
         $mataPelajarans = $combined
-            ->sortBy(function ($item) {
-                return [$item->kelompok_kode, $item->urutan];
-            })
+            ->sortBy(fn($item) => [$item->kelompok_kode, $item->urutan])
             ->map(function ($item) {
                 $isAgama = $item->is_mapel_agama == true || $item->is_mapel_agama == 1;
-
-                return (object) [
+                return [
                     'id'             => $isAgama ? 'agama' : $item->id,
                     'nama'           => $isAgama ? 'Pendidikan Agama dan Budi Pekerti' : $item->nama,
                     'kode'           => $isAgama ? 'PABP' : $item->kode,
-                    'kelompok_nama'  => $item->kelompok_nama,
                     'kelompok_kode'  => $item->kelompok_kode,
+                    'kelompok_nama'  => $item->kelompok_nama,
                     'urutan'         => $item->urutan,
                     'is_agama'       => $isAgama,
                 ];
@@ -196,7 +191,7 @@ class LegerKelas extends Component
             ->orderBy('id', 'asc')
             ->get();
 
-        $studentsData = $rombelPelajars->map(function ($rombelPelajar, $index) use ($kurikulumId) {
+        $studentsData = $rombelPelajars->map(function ($rombelPelajar, $index) {
             $pelajar = $rombelPelajar->pelajar;
 
             // Load nilai untuk semua mata pelajaran
@@ -205,24 +200,23 @@ class LegerKelas extends Component
             $jumlahMapelDiisi = 0;
 
             foreach ($this->mataPelajaranList as $mapel) {
-                if (isset($mapel->is_agama) && $mapel->is_agama === true) {
+                // Cek apakah ini mapel agama (sekarang $mapel adalah array, bukan object)
+                if (isset($mapel['is_agama']) && $mapel['is_agama'] === true) {
                     // Ambil nilai agama sesuai agama siswa
                     $nilai = Nilai::where('pelajar_id', $pelajar->id)
                         ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
-                        ->whereHas('mataPelajaran', function ($q) {
-                            $q->where('is_mapel_agama', true); // ← UBAH INI
-                        })
+                        ->whereHas('mataPelajaran', fn($q) => $q->where('is_mapel_agama', true))
                         ->first();
                 } else {
                     // Nilai mata pelajaran non-agama
                     $nilai = Nilai::where('pelajar_id', $pelajar->id)
-                        ->where('mata_pelajaran_id', $mapel->id)
+                        ->where('mata_pelajaran_id', $mapel['id'])
                         ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
                         ->first();
                 }
 
                 $nilaiAngka = $nilai ? round($nilai->nilai_angka ?? 0) : 0;
-                $nilaiPerMapel[$mapel->id] = $nilaiAngka;
+                $nilaiPerMapel[$mapel['id']] = $nilaiAngka;
 
                 if ($nilaiAngka > 0) {
                     $totalNilai += $nilaiAngka;
@@ -250,38 +244,32 @@ class LegerKelas extends Component
                 'nis' => $pelajar->nomor_induk ?? '-',
                 'nisn' => $pelajar->nisn ?? '-',
                 'nama' => $pelajar->nama_lengkap ?? 'N/A',
-                'jenis_kelamin' => $pelajar->jenis_kelamin ?? '-',
+                'jenis_kelamin' => $pelajar->jenis_kelamin ?? 'L',
                 'nilai_per_mapel' => $nilaiPerMapel,
                 'kokurikuler' => $kokurikuler->predikat ?? '-',
                 'jumlah_nilai' => $totalNilai,
                 'rata_rata' => $rataRata,
-                'peringkat' => 0, // Akan dihitung setelah semua data terkumpul
+                'peringkat' => 0,
                 'sakit' => $kehadiran->jumlah_sakit ?? 0,
                 'izin' => $kehadiran->jumlah_izin ?? 0,
                 'tanpa_keterangan' => $kehadiran->jumlah_tanpa_keterangan ?? 0,
             ];
         })->toArray();
 
-        // Hitung peringkat berdasarkan jumlah nilai (descending)
-        // Sort berdasarkan jumlah nilai tertinggi
-        usort($studentsData, function ($a, $b) {
-            return $b['jumlah_nilai'] <=> $a['jumlah_nilai'];
-        });
+        // --- LOGIKA PERINGKAT (SAMA SEPERTI ADMIN) ---
+        usort($studentsData, fn($a, $b) => $b['jumlah_nilai'] <=> $a['jumlah_nilai']);
 
-        // Assign peringkat
         $currentRank = 1;
         $previousNilai = null;
         $sameRankCount = 0;
 
-        foreach ($studentsData as $key => &$student) {
+        foreach ($studentsData as &$student) {
             if ($student['jumlah_nilai'] === 0) {
                 $student['peringkat'] = '-';
             } else {
                 if ($previousNilai !== null && $student['jumlah_nilai'] === $previousNilai) {
-                    // Nilai sama dengan sebelumnya, pakai ranking yang sama
                     $sameRankCount++;
                 } else {
-                    // Nilai berbeda, update ranking
                     $currentRank += $sameRankCount;
                     $sameRankCount = 1;
                 }
@@ -289,11 +277,15 @@ class LegerKelas extends Component
                 $previousNilai = $student['jumlah_nilai'];
             }
         }
+        unset($student);
 
-        // Kembalikan urutan berdasarkan nomor urut awal (berdasarkan id)
-        usort($studentsData, function ($a, $b) {
-            return $a['no'] <=> $b['no'];
-        });
+        // Sort ulang berdasarkan nama agar rapi
+        usort($studentsData, fn($a, $b) => strcmp($a['nama'], $b['nama']));
+
+        // Re-numbering NO column after name sort
+        foreach ($studentsData as $key => &$val) {
+            $val['no'] = $key + 1;
+        }
 
         $this->studentsList = $studentsData;
     }
@@ -304,44 +296,46 @@ class LegerKelas extends Component
 
     public function generatePdfUrl()
     {
-        if (!$this->rombel || !$this->semesterAktif) {
+        if (!$this->rombel || empty($this->studentsList)) {
             $this->pdfUrl = '';
             return;
         }
 
-        // Prepare data untuk PDF
+        // FIX: Gunakan $this->semesterAktif bukan $this->semesterId
+        $semesterObj = $this->semesterAktif;
+
+        // Data yang akan dikirim ke PDF
         $pdfData = [
             'sekolah' => [
                 'nama_sekolah' => $this->dataSekolah->nama_sekolah ?? 'N/A',
-                'npsn' => $this->dataSekolah->npsn ?? 'N/A',
-                'alamat' => $this->dataSekolah->alamat ?? 'N/A',
-                'kota_kabupaten' => $this->dataSekolah->kota_kabupaten ?? 'N/A',
-                'logo_sekolah_path' => $this->dataSekolah->logo_sekolah_path ?? null,
+                'kota_kabupaten' => $this->dataSekolah->kota_kabupaten ?? 'Kota',
             ],
-            'tahun_ajaran' => $this->semesterAktif->tahunAjaran->nama ?? 'N/A',
-            'semester_nama' => $this->semesterAktif->semester->nama ?? 'N/A',
+            'tahun_ajaran' => $semesterObj->tahunAjaran->nama ?? 'N/A',
+            'semester_nama' => $semesterObj->semester->nama ?? 'N/A',
             'kelas' => $this->rombel->nama ?? 'N/A',
-            'kkm' => $this->pengaturan->kkm ?? 75,
             'wali_kelas' => [
                 'nama' => $this->rombel->waliKelas->name ?? 'N/A',
-                'nip' => $this->rombel->waliKelas->nip ?? '~'
+                'nip' => $this->rombel->waliKelas->nip ?? '-'
             ],
             'kepala_sekolah' => [
                 'nama' => $this->pengaturan->kepalaSekolah->name ?? 'N/A',
-                'nip' => $this->pengaturan->kepalaSekolah->nip ?? 'N/A'
+                'nip' => $this->pengaturan->kepalaSekolah->nip ?? '-'
             ],
-            'tanggal_rapor' => $this->pengaturan?->tanggal_rapor
-                ? \Carbon\Carbon::parse($this->pengaturan->tanggal_rapor)->format('Y-m-d')
-                : now()->format('Y-m-d'),
+            'tanggal_rapor' => $this->pengaturan?->tanggal_rapor ?? date('Y-m-d'),
             'mata_pelajaran' => $this->mataPelajaranList,
             'students' => $this->studentsList,
         ];
 
-        // Encode data
-        $encodedData = base64_encode(json_encode($pdfData));
+        // 1. Buat Key Unik (User ID + Rombel ID)
+        $userId = Auth::id() ?? 'guest';
+        // FIX: Gunakan $this->rombel->id bukan $this->rombelId
+        $cacheKey = "leger_print_{$userId}_{$this->rombel->id}";
 
-        // Generate URL
-        $this->pdfUrl = route('pdf.generate.leger') . '?data=' . $encodedData;
+        // 2. Simpan Data Besar ke Cache (Durasi 1 Jam)
+        Cache::put($cacheKey, $pdfData, 3600);
+
+        // 3. Generate URL Pendek (Hanya kirim key)
+        $this->pdfUrl = route('pdf.leger', ['key' => $cacheKey]);
     }
 
     // ========================================
@@ -350,9 +344,10 @@ class LegerKelas extends Component
 
     public function render()
     {
-        return view('livewire.wali.leger-kelas', [
+        return view('livewire.wali.preview-leger', [
             'totalStudents' => count($this->studentsList),
             'totalMataPelajaran' => count($this->mataPelajaranList),
+            'hasData' => !empty($this->studentsList),
         ]);
     }
 }

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class WaliLegerController extends Controller
+class LegerWaliController extends Controller
 {
     /**
      * Generate PDF Leger Kelas
@@ -26,7 +26,7 @@ class WaliLegerController extends Controller
         }
 
         // Load view untuk PDF
-        $pdf = Pdf::loadView('livewire.wali.leger-kelas-pdf', $data);
+        $pdf = Pdf::loadView('livewire.pdf.leger-kelas-pdf', $data);
 
         // Set paper ke landscape A4 atau A3 tergantung jumlah mata pelajaran
         $jumlahMapel = count($data['mata_pelajaran'] ?? []);

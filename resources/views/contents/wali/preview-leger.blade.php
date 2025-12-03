@@ -21,7 +21,7 @@
                 <div class="card-body">
 
                     <!-- LiveWire -->
-                    <livewire:wali.leger-kelas />
+                    <livewire:wali.preview-leger />
 
                 </div>
             </div>

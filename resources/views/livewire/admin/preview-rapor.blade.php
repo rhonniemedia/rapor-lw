@@ -17,10 +17,11 @@
                                     <label class="form-label">Tahun Ajaran</label>
                                     <select wire:model.live="tahunAjaranId" class="form-select">
                                         <option value="">-- Pilih Tahun Ajaran --</option>
-                                        @foreach($tahunAjaranList as $ta)
+                                        {{-- PERBAIKAN: Gunakan $this-> --}}
+                                        @foreach($this->tahunAjaranList as $ta)
                                         <option value="{{ $ta->id }}">
                                             {{ $ta->nama }}
-                                            @if($ta->status === 'aktif') (Aktif) @endif
+                                            @if(($ta->status ?? '') === 'aktif') (Aktif) @endif
                                         </option>
                                         @endforeach
                                     </select>
@@ -31,10 +32,11 @@
                                     <select wire:model.live="semesterId" class="form-select"
                                         @if(!$tahunAjaranId) disabled @endif>
                                         <option value="">-- Pilih Semester --</option>
-                                        @foreach($semesterList as $smt)
+                                        {{-- PERBAIKAN: Gunakan $this-> --}}
+                                        @foreach($this->semesterList as $smt)
                                         <option value="{{ $smt->id }}">
-                                            Semester {{ $smt->semester->nama }}
-                                            @if($smt->status === 'aktif') (Aktif) @endif
+                                            Semester {{ $smt->semester->nama ?? '' }}
+                                            @if(($smt->status ?? '') === 'aktif') (Aktif) @endif
                                         </option>
                                         @endforeach
                                     </select>
@@ -45,7 +47,8 @@
                                     <select wire:model.live="rombelId" class="form-select"
                                         @if(!$semesterId) disabled @endif>
                                         <option value="">-- Pilih Rombel --</option>
-                                        @foreach($rombelList as $rb)
+                                        {{-- PERBAIKAN: Gunakan $this-> --}}
+                                        @foreach($this->rombelList as $rb)
                                         <option value="{{ $rb->id }}">
                                             {{ $rb->nama }}
                                         </option>
@@ -57,7 +60,8 @@
                     </div>
 
                     {{-- Info Rombel --}}
-                    @if($rombel && $rombelId)
+                    {{-- PERBAIKAN: Gunakan $this->rombel --}}
+                    @if($this->rombel && $rombelId)
                     <div class="alert alert-success py-3 mt-3" role="alert">
                         <div class="row g-4">
                             <div class="col-md-4">
@@ -69,7 +73,7 @@
                                     <div class="ms-3 d-flex flex-column justify-content-center">
                                         <small class="text-muted lh-2">Kurikulum</small>
                                         <p class="fw-bold mb-0 text-dark lh-sm">
-                                            {{ $rombel->tahunAjaranKurikulum->kurikulum->nama ?? 'N/A' }}
+                                            {{ $this->rombel->tahunAjaranKurikulum->kurikulum->nama ?? 'N/A' }}
                                         </p>
                                     </div>
                                 </div>
@@ -83,8 +87,9 @@
                                         <small class="text-muted lh-2">Tahun Ajaran & Semester</small>
                                         <p class="fw-bold mb-0 text-dark lh-sm">
                                             @php
-                                            $selectedSemester = $semesterList->firstWhere('id', $semesterId);
-                                            $selectedTahunAjaran = $tahunAjaranList->firstWhere('id', $tahunAjaranId);
+                                            // Ambil dari computed list
+                                            $selectedSemester = $this->semesterList->firstWhere('id', $semesterId);
+                                            $selectedTahunAjaran = $this->tahunAjaranList->firstWhere('id', $tahunAjaranId);
                                             @endphp
                                             {{ $selectedTahunAjaran->nama ?? '' }}
                                             ~ {{ $selectedSemester->semester->nama ?? '' }}
@@ -101,7 +106,7 @@
                                     </div>
                                     <div class="ms-3 d-flex flex-column justify-content-center">
                                         <small class="text-muted lh-2">Rombel</small>
-                                        <p class="fw-bold mb-0 text-dark lh-sm">{{ $rombel->nama ?? 'N/A' }}</p>
+                                        <p class="fw-bold mb-0 text-dark lh-sm">{{ $this->rombel->nama ?? 'N/A' }}</p>
                                     </div>
                                 </div>
 
@@ -113,7 +118,7 @@
                                     <div class="ms-3 d-flex flex-column justify-content-center">
                                         <small class="text-muted lh-2">Jurusan</small>
                                         <p class="fw-bold mb-0 text-dark lh-sm">
-                                            {{ $rombel->jurusan->nama ?? 'Belum Ada' }}
+                                            {{ $this->rombel->jurusan->nama ?? 'Belum Ada' }}
                                         </p>
                                     </div>
                                 </div>
@@ -128,7 +133,7 @@
                                     <div class="ms-3 d-flex flex-column justify-content-center">
                                         <small class="text-muted lh-2">Wali Kelas</small>
                                         <p class="fw-bold mb-0 text-dark lh-sm">
-                                            {{ $rombel->waliKelas->name ?? 'Belum Ada' }}
+                                            {{ $this->rombel->waliKelas->name ?? 'Belum Ada' }}
                                         </p>
                                     </div>
                                 </div>
@@ -146,7 +151,6 @@
         <div class="col-xl-12 col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <!-- Header Preview -->
                     <div class="row align-items-center mb-3">
                         <div class="col-lg-4">
                             <h5 class="text-dark mb-0">
@@ -159,7 +163,6 @@
                             </small>
                         </div>
                         <div class="col-lg-8 d-flex justify-content-end align-items-center flex-wrap gap-1">
-                            <!-- Dropdown Pilih Content -->
                             <div class="input-group me-2" style="width: 300px; height: 38px;">
                                 <label class="input-group-text bg-light border rounded-start-3 h-100 d-flex align-items-center justify-content-center px-2" style="width: 40px;">
                                     <i class="mdi mdi-file-document"></i>
@@ -170,13 +173,13 @@
                                 </select>
                             </div>
 
-                            <!-- Dropdown Pilih Siswa -->
                             <div class="input-group me-2" style="width: 300px; height: 38px;">
                                 <label class="input-group-text bg-light border rounded-start-3 h-100 d-flex align-items-center justify-content-center px-2" style="width: 40px;">
                                     <i class="mdi mdi-account"></i>
                                 </label>
                                 <select class="form-select border rounded-end-3 h-100" wire:change="selectStudent($event.target.value)">
-                                    @foreach($studentsList as $index => $student)
+                                    {{-- PERBAIKAN: Gunakan $this->studentsList --}}
+                                    @foreach($this->studentsList as $index => $student)
                                     <option value="{{ $index }}" {{ $currentIndex == $index ? 'selected' : '' }}>
                                         {{ $student['nama'] }}
                                     </option>
@@ -184,7 +187,6 @@
                                 </select>
                             </div>
 
-                            <!-- Tombol Navigasi -->
                             <button
                                 type="button"
                                 class="btn btn-outline-light-muted btn-sm d-flex align-items-center justify-content-center me-1 border rounded-3"
@@ -207,7 +209,6 @@
                         </div>
                     </div>
 
-                    <!-- Preview PDF -->
                     @if($pdfUrl)
                     <div class="ratio ratio-16x9 border rounded shadow-sm mb-3" style="height: 600px;">
                         <iframe

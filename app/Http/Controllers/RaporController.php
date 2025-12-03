@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Cache;
 
-class PdfRaporAdminController extends Controller
+class RaporController extends Controller
 {
     public function generatePdf(Request $request)
     {
@@ -27,8 +27,8 @@ class PdfRaporAdminController extends Controller
 
         // 3. Tentukan View Blade
         $viewPath = ($selectedView === 'content')
-            ? 'livewire.admin.preview-pdf-rapor'
-            : 'livewire.admin.preview-pdf-biodata';
+            ? 'livewire.pdf.preview-pdf-nilai'
+            : 'livewire.pdf.preview-pdf-biodata';
 
         // 4. Render PDF
         $pdf = Pdf::loadView($viewPath, $data);

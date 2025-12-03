@@ -12,6 +12,8 @@ use App\Models\Kokurikuler;
 use App\Models\TahunAjaran;
 use App\Models\RombelPelajar;
 use App\Models\TahunAjaranSemester;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use App\Models\KurikulumMataPelajaran;
 
 class PreviewLeger extends Component
@@ -383,6 +385,7 @@ class PreviewLeger extends Component
         // Mengambil nama semester & tahun ajaran untuk header
         $semesterObj = TahunAjaranSemester::with('semester', 'tahunAjaran')->find($this->semesterId);
 
+        // Data yang akan dikirim ke PDF
         $pdfData = [
             'sekolah' => [
                 'nama_sekolah' => $this->dataSekolah->nama_sekolah ?? 'N/A',
@@ -404,9 +407,18 @@ class PreviewLeger extends Component
             'students' => $this->studentsList,
         ];
 
-        $encodedData = base64_encode(json_encode($pdfData));
-        // Pastikan route ini sesuai dengan route leger PDF yang ada di LegerKelas
-        $this->pdfUrl = route('pdf.generate.leger') . '?data=' . $encodedData;
+        // --- PERUBAHAN UTAMA DI SINI ---
+
+        // 1. Buat Key Unik (User ID + Rombel ID)
+        $userId = Auth::id() ?? 'guest';
+        $cacheKey = "leger_print_{$userId}_{$this->rombelId}";
+
+        // 2. Simpan Data Besar ke Cache (Durasi 1 Jam)
+        Cache::put($cacheKey, $pdfData, 3600);
+
+        // 3. Generate URL Pendek (Hanya kirim key)
+        // Action default kosong (akan jadi stream/view)
+        $this->pdfUrl = route('pdf.leger', ['key' => $cacheKey]);
     }
 
     public function render()

@@ -56,6 +56,12 @@
             text-transform: uppercase;
         }
 
+        hr {
+            border: none;
+            border-top: 1px solid #000;
+            margin: 6px 0;
+        }
+
         table {
             border-collapse: collapse;
             margin-bottom: 10px;
@@ -119,7 +125,7 @@
 
         .signature-table .signature td {
             padding-left: 3.5rem;
-            line-height: 0.8rem;
+            line-height: 0.7rem;
         }
 
         .signature-table .signature-space td {
@@ -131,6 +137,7 @@
         .kepala-sekolah td[colspan="2"] {
             text-align: left;
             padding-left: 40%;
+            line-height: 0.7rem;
         }
 
         .page-break {
@@ -264,113 +271,121 @@
                                         <th style="width: 25%;">Ekstrakurikuler</th>
                                         <th style="width: 70%;">Keterangan</th>
                                     </tr>
-                                    @if(isset($ekstrakurikuler) && count($ekstrakurikuler) > 0)
-                                    @foreach($ekstrakurikuler as $index => $ekskul)
-                                    <tr>
-                                        <td class="center">{{ $index + 1 }}</td>
-                                        <td>{{ $ekskul['nama'] }}</td>
-                                        <td>{{ $ekskul['keterangan'] }}</td>
-                                    </tr>
-                                    @endforeach
-                                    @else
-                                    <tr>
-                                        <td colspan="3" class="center">Tidak mengikuti ekstrakurikuler</td>
-                                    </tr>
-                                    @endif
-                                </tbody>
-                            </table>
-                        </div>
+                                    @php
+                                    $dataEkskul = $ekstrakurikuler ?? [];
+                                    $totalData = count($dataEkskul);
+                                    $minRows = 3;
+                                    $loopCount = max($totalData, $minRows);
+                                    @endphp
 
-                        <div class="section-kehadiran">
-                            <table class="kehadiran">
-                                <tr>
-                                    <th colspan="2" class="center bordered" style="width: 39%;">Ketidakhadiran</th>
-                                    <td style="width: 2%;"></td>
-                                    <th class="center bordered" style="width: 59%;">Catatan Wali Kelas</th>
-                                </tr>
-                                <tr>
-                                    <td class="bordered kehadiran">Sakit</td>
-                                    <td class="bordered kehadiran">{{ $ketidakhadiran['sakit'] ?? 0 }} Hari</td>
-                                    <td></td>
-                                    <td class="bordered catatan" rowspan="3">{{ $catatan_wali ?? 'Tidak ada catatan.' }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="bordered kehadiran">Izin</td>
-                                    <td class="bordered kehadiran">{{ $ketidakhadiran['izin'] ?? 0 }} Hari</td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td class="bordered kehadiran">Tanpa Keterangan</td>
-                                    <td class="bordered kehadiran">{{ $ketidakhadiran['tanpa_keterangan'] ?? 0 }} Hari</td>
-                                    <td></td>
-                                </tr>
-                            </table>
-                        </div>
+                                    @for ($i = 0; $i < $loopCount; $i++)
+                                        <tr>
+                                        <td class="center">{{ $i + 1 }}</td>
 
-                        <div class="tanggapan">
-                            <table class="bordered">
-                                <tbody>
-                                    <tr>
-                                        <th class="center"><strong>Tanggapan Orang Tua/Wali Murid</strong></th>
-                                    </tr>
-                                    <tr>
-                                        <td style="height: 60px;">{{ $tanggapan_ortu ?? 'Tidak ada tanggapan.' }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="body-signature">
-                            <table class="no-border signature-table" style="margin-top: 20px;">
-                                <tbody>
-                                    <tr class="signature">
-                                        <td style="width: 50%;"></td>
-                                        <td style="width: 50%;">
-                                            {{ $sekolah['kota_kabupaten'] ?? '-' }},
-                                            @if(isset($tanggal_rapor))
-                                            {{ \Carbon\Carbon::parse($tanggal_rapor)->translatedFormat('d F Y') }}
-                                            @else
-                                            {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    <tr class="signature">
-                                        <td>Orang Tua/Wali Murid,</td>
-                                        <td>Wali Kelas,</td>
-                                    </tr>
-                                    <tr class="signature signature-space">
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="signature">
-                                        <td>(__________________)</td>
-                                        <td class="bold">{{ $wali_kelas['nama'] ?? '-' }}</td>
-                                    </tr>
-                                    <tr class="signature">
-                                        <td></td>
-                                        <td>NIP {{ $wali_kelas['nip'] ?? '-' }}</td>
-                                    </tr>
-                                    <tr class="kepala-sekolah">
-                                        <td colspan="2" style="height: 1cm; vertical-align: bottom;">Mengetahui</td>
-                                    </tr>
-                                    <tr class="kepala-sekolah">
-                                        <td colspan="2">Kepala Sekolah,</td>
-                                    </tr>
-                                    <tr class="kepala-sekolah signature-space">
-                                        <td colspan="2"></td>
-                                    </tr>
-                                    <tr class="kepala-sekolah">
-                                        <td class="bold" colspan="2">{{ $kepala_sekolah['nama'] ?? '-' }}</td>
-                                    </tr>
-                                    <tr class="kepala-sekolah">
-                                        <td colspan="2">NIP {{ $kepala_sekolah['nip'] ?? '-' }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </td>
+                                        @if (isset($dataEkskul[$i]))
+                                        <td>{{ $dataEkskul[$i]['nama'] }}</td>
+                                        <td>{{ $dataEkskul[$i]['keterangan'] }}</td>
+                                        @else
+                                        <td>&nbsp;</td>
+                                        <td>&nbsp;</td>
+                                        @endif
                 </tr>
+                @endfor
+
             </tbody>
+        </table>
+        </div>
+
+        <div class="section-kehadiran">
+            <table class="kehadiran">
+                <tr>
+                    <th colspan="2" class="center bordered" style="width: 39%;">Ketidakhadiran</th>
+                    <td style="width: 2%;"></td>
+                    <th class="center bordered" style="width: 59%;">Catatan Wali Kelas</th>
+                </tr>
+                <tr>
+                    <td class="bordered kehadiran">Sakit</td>
+                    <td class="bordered kehadiran">{{ $ketidakhadiran['sakit'] ?? 0 }} Hari</td>
+                    <td></td>
+                    <td class="bordered catatan" rowspan="3">{{ $catatan_wali ?? 'Tidak ada catatan.' }}</td>
+                </tr>
+                <tr>
+                    <td class="bordered kehadiran">Izin</td>
+                    <td class="bordered kehadiran">{{ $ketidakhadiran['izin'] ?? 0 }} Hari</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="bordered kehadiran">Tanpa Keterangan</td>
+                    <td class="bordered kehadiran">{{ $ketidakhadiran['tanpa_keterangan'] ?? 0 }} Hari</td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="tanggapan">
+            <table class="bordered">
+                <tbody>
+                    <tr>
+                        <th class="center"><strong>Tanggapan Orang Tua/Wali Murid</strong></th>
+                    </tr>
+                    <tr>
+                        <td style="height: 60px;">{{ $tanggapan_ortu ?? 'Tidak ada tanggapan.' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="body-signature">
+            <table class="no-border signature-table" style="margin-top: 20px;">
+                <tbody>
+                    <tr class="signature">
+                        <td style="width: 50%;"></td>
+                        <td style="width: 50%;">
+                            {{ $sekolah['kota_kabupaten'] ?? '-' }},
+                            @if(isset($tanggal_rapor))
+                            {{ \Carbon\Carbon::parse($tanggal_rapor)->translatedFormat('d F Y') }}
+                            @else
+                            {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}
+                            @endif
+                        </td>
+                    </tr>
+                    <tr class="signature">
+                        <td>Orang Tua/Wali Murid,</td>
+                        <td>Wali Kelas,</td>
+                    </tr>
+                    <tr class="signature signature-space">
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr class="signature">
+                        <td>(__________________)</td>
+                        <td class="bold">{{ $wali_kelas['nama'] ?? '-' }}</td>
+                    </tr>
+                    <tr class="signature">
+                        <td></td>
+                        <td>NIP {{ $wali_kelas['nip'] ?? '-' }}</td>
+                    </tr>
+                    <tr class="kepala-sekolah">
+                        <td colspan="2" style="height: 1cm; vertical-align: bottom;">Mengetahui</td>
+                    </tr>
+                    <tr class="kepala-sekolah">
+                        <td colspan="2">Kepala Sekolah,</td>
+                    </tr>
+                    <tr class="kepala-sekolah signature-space">
+                        <td colspan="2"></td>
+                    </tr>
+                    <tr class="kepala-sekolah">
+                        <td class="bold" colspan="2">{{ $kepala_sekolah['nama'] ?? '-' }}</td>
+                    </tr>
+                    <tr class="kepala-sekolah">
+                        <td colspan="2">NIP {{ $kepala_sekolah['nip'] ?? '-' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        </td>
+        </tr>
+        </tbody>
         </table>
     </main>
 </body>

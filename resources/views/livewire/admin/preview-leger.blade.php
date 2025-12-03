@@ -153,9 +153,9 @@
                                     </div>
 
                                     @php
-                                    // Siapkan nama file di sini agar HTML di bawahnya bersih
+                                    // Nama file tidak perlu diurus di sini lagi (sudah di controller)
+                                    // Tapi variabel ini boleh dibiarkan jika ingin dipakai untuk hal lain
                                     $namaRombel = $rombel->nama ?? 'Kelas';
-                                    $fileName = "Leger_{$namaRombel}.pdf";
                                     @endphp
 
                                     <div class="d-flex align-items-center gap-2 ms-auto">
@@ -163,8 +163,9 @@
                                         {{-- TOMBOL DOWNLOAD --}}
                                         <button
                                             type="button"
-                                            onclick="forceDownload('{{ $pdfUrl }}', '{{ $fileName }}')"
-                                            class="btn btn-labeled btn-danger text-decoration-none d-inline-flex align-items-center">
+                                            class="btn btn-labeled btn-danger text-decoration-none d-inline-flex align-items-center"
+                                            {{-- PERUBAHAN DI SINI: Redirect ke URL download --}}
+                                            onclick="window.location.href='{{ $pdfUrl }}&action=download'">
                                             <span class="btn-label">
                                                 <i class="mdi mdi-file-pdf-box"></i>
                                             </span>
@@ -175,7 +176,8 @@
                                         <button
                                             type="button"
                                             class="btn btn-labeled btn-primary"
-                                            onclick="window.open('{{ $pdfUrl }}', '_blank').print()">
+                                            {{-- PERUBAHAN DI SINI: Buka URL stream di tab baru --}}
+                                            onclick="window.open('{{ $pdfUrl }}', '_blank')">
                                             <span class="btn-label">
                                                 <i class="mdi mdi-printer"></i>
                                             </span>
