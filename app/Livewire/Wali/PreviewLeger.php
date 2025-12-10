@@ -172,6 +172,7 @@ class PreviewLeger extends Component
 
     private function loadStudentsWithNilai(): void
     {
+        // Cek ketersediaan data awal
         if (!$this->rombel || !$this->semesterAktif || empty($this->mataPelajaranList)) {
             $this->studentsList = [];
             return;
@@ -191,21 +192,25 @@ class PreviewLeger extends Component
             ->orderBy('id', 'asc')
             ->get();
 
-        $studentsData = $rombelPelajars->map(function ($rombelPelajar, $index) {
+        // 1. HITUNG TOTAL MAPEL WAJIB (PEMBAGI RATA-RATA)
+        $totalMapelWajib = count($this->mataPelajaranList);
+
+        $studentsData = $rombelPelajars->map(function ($rombelPelajar, $index) use ($totalMapelWajib) {
             $pelajar = $rombelPelajar->pelajar;
 
-            // Load nilai untuk semua mata pelajaran
             $nilaiPerMapel = [];
             $totalNilai = 0;
-            $jumlahMapelDiisi = 0;
+            // $jumlahMapelDiisi = 0; // Dihapus karena tidak dipakai untuk pembagi lagi
 
             foreach ($this->mataPelajaranList as $mapel) {
-                // Cek apakah ini mapel agama (sekarang $mapel adalah array, bukan object)
+                // Cek apakah ini mapel agama
                 if (isset($mapel['is_agama']) && $mapel['is_agama'] === true) {
                     // Ambil nilai agama sesuai agama siswa
                     $nilai = Nilai::where('pelajar_id', $pelajar->id)
                         ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
                         ->whereHas('mataPelajaran', fn($q) => $q->where('is_mapel_agama', true))
+                        // Opsional: tambahkan latest() untuk keamanan jika ada duplikat
+                        ->latest('updated_at')
                         ->first();
                 } else {
                     // Nilai mata pelajaran non-agama
@@ -218,14 +223,13 @@ class PreviewLeger extends Component
                 $nilaiAngka = $nilai ? round($nilai->nilai_angka ?? 0) : 0;
                 $nilaiPerMapel[$mapel['id']] = $nilaiAngka;
 
-                if ($nilaiAngka > 0) {
-                    $totalNilai += $nilaiAngka;
-                    $jumlahMapelDiisi++;
-                }
+                // Selalu tambahkan ke total nilai (meskipun 0)
+                $totalNilai += $nilaiAngka;
             }
 
-            // Hitung rata-rata
-            $rataRata = $jumlahMapelDiisi > 0 ? round($totalNilai / $jumlahMapelDiisi, 1) : 0;
+            // 2. LOGIKA RATA-RATA BARU
+            // Dibagi dengan total mapel yang tersedia, bukan yang terisi
+            $rataRata = $totalMapelWajib > 0 ? round($totalNilai / $totalMapelWajib, 1) : 0;
 
             // Load kokurikuler
             $kokurikuler = Kokurikuler::where('pelajar_id', $pelajar->id)
@@ -256,7 +260,7 @@ class PreviewLeger extends Component
             ];
         })->toArray();
 
-        // --- LOGIKA PERINGKAT (SAMA SEPERTI ADMIN) ---
+        // --- LOGIKA PERINGKAT ---
         usort($studentsData, fn($a, $b) => $b['jumlah_nilai'] <=> $a['jumlah_nilai']);
 
         $currentRank = 1;

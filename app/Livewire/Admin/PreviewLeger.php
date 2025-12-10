@@ -237,26 +237,31 @@ class PreviewLeger extends Component
 
     private function loadStudentsWithNilai(): void
     {
+        // 1. Ambil data siswa di rombel tersebut
         $rombelPelajars = RombelPelajar::with('pelajar')
             ->where('rombel_id', $this->rombelId)
-            ->orderBy('id', 'asc') // Bisa diganti order by nama jika perlu
+            ->orderBy('id', 'asc')
             ->get();
 
-        $studentsData = $rombelPelajars->map(function ($rombelPelajar, $index) {
+        // 2. Hitung total mata pelajaran yang ada (sebagai pembagi tetap, misal: 10)
+        $totalMapelWajib = count($this->mataPelajaranList);
+
+        $studentsData = $rombelPelajars->map(function ($rombelPelajar, $index) use ($totalMapelWajib) {
             $pelajar = $rombelPelajar->pelajar;
 
             $nilaiPerMapel = [];
             $totalNilai = 0;
-            $jumlahMapelDiisi = 0;
 
+            // Loop melalui daftar mata pelajaran master
             foreach ($this->mataPelajaranList as $mapel) {
                 if ($mapel['is_agama'] === true) {
-                    // Cari nilai agama spesifik siswa tersebut (misal: jika siswa Islam, cari mapel Agama Islam)
+                    // Cari nilai agama spesifik siswa
                     $nilai = Nilai::where('pelajar_id', $pelajar->id)
                         ->where('tahun_ajaran_semester_id', $this->semesterId)
                         ->whereHas('mataPelajaran', fn($q) => $q->where('is_mapel_agama', true))
                         ->first();
                 } else {
+                    // Cari nilai mata pelajaran umum
                     $nilai = Nilai::where('pelajar_id', $pelajar->id)
                         ->where('mata_pelajaran_id', $mapel['id'])
                         ->where('tahun_ajaran_semester_id', $this->semesterId)
@@ -266,14 +271,15 @@ class PreviewLeger extends Component
                 $nilaiAngka = $nilai ? round($nilai->nilai_angka ?? 0) : 0;
                 $nilaiPerMapel[$mapel['id']] = $nilaiAngka;
 
-                if ($nilaiAngka > 0) {
-                    $totalNilai += $nilaiAngka;
-                    $jumlahMapelDiisi++;
-                }
+                // Tambahkan ke total (nilai 0 tetap menambah jumlah mapel di pembagi nanti)
+                $totalNilai += $nilaiAngka;
             }
 
-            $rataRata = $jumlahMapelDiisi > 0 ? round($totalNilai / $jumlahMapelDiisi, 1) : 0;
+            // --- PERHITUNGAN RATA-RATA TETAP ---
+            // Meskipun nilai yang diinput hanya 5, pembagi tetap totalMapelWajib (misal: 10)
+            $rataRata = $totalMapelWajib > 0 ? round($totalNilai / $totalMapelWajib, 1) : 0;
 
+            // Ambil data pendukung lainnya
             $kokurikuler = Kokurikuler::where('pelajar_id', $pelajar->id)
                 ->where('tahun_ajaran_semester_id', $this->semesterId)
                 ->first();
@@ -300,7 +306,7 @@ class PreviewLeger extends Component
             ];
         })->toArray();
 
-        // --- LOGIKA PERINGKAT ---
+        // --- LOGIKA PERINGKAT (Berdasarkan Total Nilai) ---
         usort($studentsData, fn($a, $b) => $b['jumlah_nilai'] <=> $a['jumlah_nilai']);
 
         $currentRank = 1;
@@ -323,11 +329,10 @@ class PreviewLeger extends Component
         }
         unset($student);
 
-        // Sort ulang berdasarkan No Urut awal (opsional, biasanya leger urut nama/absen)
-        // Disini kita urutkan berdasarkan nama agar rapi
+        // --- SORT ULANG BERDASARKAN NAMA (Untuk Tampilan Leger) ---
         usort($studentsData, fn($a, $b) => strcmp($a['nama'], $b['nama']));
 
-        // Re-numbering NO column after name sort
+        // Re-numbering urutan No setelah di-sort nama
         foreach ($studentsData as $key => &$val) {
             $val['no'] = $key + 1;
         }
