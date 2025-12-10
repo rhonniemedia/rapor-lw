@@ -5,36 +5,19 @@
     <meta charset="utf-8">
     <title>Rapor Siswa</title>
     <style>
-        /* --- 1. SETTING HALAMAN (DIUBAH) --- */
+        /* --- 1. SETTING HALAMAN --- */
         @page {
-            /* KITA BIKIN MARGIN ATAS LEBIH BESAR UNTUK TEMPAT TABEL IDENTITAS */
-            margin-top: 4cm;
-            margin-left: 15mm;
-            margin-right: 15mm;
-            margin-bottom: 15mm;
+            margin: 0;
         }
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 0.88rem;
-            /* Margin body dinolkan karena sudah dihandle @page */
-            margin: 0;
+            font-size: 14px;
+            margin: 15mm;
             padding-top: 0;
         }
 
-        /* --- 2. HEADER TETAP (Fixed Header Identitas) --- */
-        header.header-identitas {
-            position: fixed;
-            top: -2.5cm;
-            /* Tarik ke atas ke area margin yang kosong */
-            left: 0;
-            right: 0;
-            height: 5cm;
-            /* Tentukan tinggi area header */
-            /* background-color: white; Opsional, biar tidak tembus pandang */
-        }
-
-        /* --- CSS LAINNYA TETAP SAMA (Watermark, dll) --- */
+        /* --- 2. CSS WATERMARK --- */
         header.watermark {
             position: fixed;
             top: 50%;
@@ -51,7 +34,7 @@
             height: auto;
         }
 
-        /* --- 3. CSS UMUM & PAGE BREAK FIX --- */
+        /* --- 3. CSS UMUM --- */
         .center {
             text-align: center;
         }
@@ -79,64 +62,67 @@
             border-collapse: collapse;
             margin-bottom: 10px;
             width: 100%;
-            /* FIX PAGE BREAK: Izinkan tabel terpotong ke halaman baru */
-            page-break-inside: auto;
-        }
-
-        tr {
-            /* FIX PAGE BREAK: Usahakan baris tidak terpotong di tengah huruf */
-            page-break-inside: avoid;
-            page-break-after: auto;
         }
 
         th {
             background-color: #e9e7e7ff;
         }
 
+        /* Setting Dasar TD (Tanpa Line-Height spesifik dulu) */
         td {
             padding: 4px;
             vertical-align: top;
         }
 
         /* =======================================================
-           4. LOGIKA PEMISAH FASE E DAN F (TIDAK DIUBAH)
-        ======================================================= */
+       4. LOGIKA PEMISAH FASE E DAN F (PLAYING WITH LINE-HEIGHT)
+    ======================================================= */
         @if(isset($fase) && strtoupper($fase)=='E')
-
         /* --- SETTING KHUSUS FASE E --- */
+
+        /* Tabel Identitas (Atas) */
         table.identitas td {
-            line-height: 0.9rem;
+            line-height: 2rem;
+            /* Sedikit lebih renggang */
         }
 
         table.identitas thead td {
-            line-height: 0.75rem;
+            line-height: 2rem;
         }
 
+        /* Tabel Nilai (Tengah) */
         table.bordered.nilai td {
-            line-height: 0.95rem;
-            padding-top: 3px;
-            padding-bottom: 3px;
+            line-height: 2rem;
+            /* Lebih lega untuk Fase E */
+            padding-top: 5px;
+            padding-bottom: 5px;
         }
 
         @else
-
         /* --- SETTING KHUSUS FASE F (DEFAULT) --- */
+
+        /* Tabel Identitas (Atas) */
         table.identitas td {
             line-height: 0.9rem;
+            /* Lebih padat */
         }
 
         table.identitas thead td {
             line-height: 0.75rem;
         }
 
+        /* Tabel Nilai (Tengah) */
         table.bordered.nilai td {
             line-height: 1rem;
+            /* Standar */
         }
 
         @endif
         /* ======================================================= */
 
         /* --- 5. STYLE SPESIFIK TABEL --- */
+
+        /* Bordered Style */
         table.bordered td,
         table.bordered th {
             padding: 4px;
@@ -164,7 +150,7 @@
             vertical-align: middle;
         }
 
-        /* --- 6. TANDA TANGAN --- */
+        /* --- 6. TANDA TANGAN (Dikunci agar tidak terpengaruh Fase) --- */
         .signature-table {
             width: 100%;
         }
@@ -172,6 +158,7 @@
         .signature-table .signature td {
             padding-left: 3.5rem;
             line-height: 0.7rem !important;
+            /* Force line-height kecil untuk TTD */
         }
 
         .signature-table .signature-space td {
@@ -189,43 +176,26 @@
         .page-break {
             page-break-after: always;
         }
-
-        /* Agar Header Tabel (No, Mapel, Nilai) muncul lagi di halaman baru */
-        table.nilai thead {
-            display: table-header-group;
-        }
-
-        /* FIX PAGE BREAK */
-        table {
-            page-break-inside: auto;
-        }
-
-        tr {
-            page-break-inside: avoid;
-            page-break-after: auto;
-        }
-
-        thead {
-            display: table-header-group;
-        }
-
-        tfoot {
-            display: table-footer-group;
-        }
     </style>
 </head>
 
 <body>
 
+    {{-- ==============================
+          FIX: GUNAKAN TAG <HEADER> 
+          DAN TARUH PALING ATAS
+    =============================== --}}
     <header class="watermark">
         <img src="{{ public_path('assets/images/logo-sekolah.png') }}" alt="Watermark">
     </header>
 
-    <header class="watermark">
-        <img src="{{ public_path('assets/images/logo-sekolah.png') }}" alt="Watermark">
-    </header>
-
-    <header class="header-identitas">
+    {{-- ==============================
+          KONTEN UTAMA (MAIN)
+    =============================== --}}
+    <main>
+        {{-- ==============================
+              1. TABEL IDENTITAS MURID
+        =============================== --}}
         <table class="identitas">
             <thead>
                 <tr>
@@ -236,6 +206,7 @@
                     <td style="width: 1%;">:</td>
                     <td style="width: 24%;">{{ $kelas ?? '-' }}</td>
                 </tr>
+                {{-- ... SISA ROW IDENTITAS ANDA ... --}}
                 <tr>
                     <td><b>NIS/NISN</b></td>
                     <td>:</td>
@@ -266,100 +237,96 @@
                     </td>
                 </tr>
             </thead>
-        </table>
-    </header>
-
-    <main>
-        {{-- ==============================
-              2. KONTEN RAPOR (YANG BISA MULTI-PAGE)
-        =============================== --}}
-
-        <p class="title-header"><strong>LAPORAN HASIL BELAJAR</strong></p>
-
-        <table class="bordered nilai">
-            <thead>
-                <tr class="center" style="vertical-align: middle;">
-                    <th style="width: 5%;">No</th>
-                    <th style="width: 30%;">Mata Pelajaran</th>
-                    <th style="width: 8%;">Nilai Akhir</th>
-                    <th style="width: 57%;">Capaian Kompetensi</th>
-                </tr>
-            </thead>
             <tbody>
-                @if(isset($nilai_grouped) && count($nilai_grouped) > 0)
-                @foreach($nilai_grouped as $kelompokNama => $dataKelompok)
-                @php
-                $kelompokKode = $dataKelompok['kode'] ?? 'Z';
-                $nilaiList = $dataKelompok['items'] ?? [];
-                $mapelCounter = 1;
-                @endphp
+                <tr>
+                    <td colspan="6">
+                        <p class="title-header"><strong>LAPORAN HASIL BELAJAR</strong></p>
 
-                <tr>
-                    <td colspan="4" style="padding-left: 12px;"><strong>{{ $kelompokKode }}. {{ $kelompokNama }}</strong></td>
-                </tr>
+                        <table class="bordered nilai">
+                            <thead>
+                                <tr class="center" style="vertical-align: middle;">
+                                    <th style="width: 5%;">No</th>
+                                    <th style="width: 30%;">Mata Pelajaran</th>
+                                    <th style="width: 8%;">Nilai Akhir</th>
+                                    <th style="width: 57%;">Capaian Kompetensi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if(isset($nilai_grouped) && count($nilai_grouped) > 0)
+                                @foreach($nilai_grouped as $kelompokNama => $dataKelompok)
+                                @php
+                                $kelompokKode = $dataKelompok['kode'] ?? 'Z';
+                                $nilaiList = $dataKelompok['items'] ?? [];
+                                $mapelCounter = 1;
+                                @endphp
 
-                @foreach($nilaiList as $nilai)
-                <tr>
-                    <td class="center">{{ $mapelCounter++ }}</td>
-                    <td>{{ $nilai['mapel'] ?? '-' }}</td>
-                    <td class="center"><strong>{{ $nilai['nilai'] ?? '-' }}</strong></td>
-                    <td>{{ $nilai['capaian'] ?? '-' }}</td>
+                                <tr>
+                                    <td colspan="4" style="padding-left: 12px;"><strong>{{ $kelompokKode }}. {{ $kelompokNama }}</strong></td>
+                                </tr>
+
+                                @foreach($nilaiList as $nilai)
+                                <tr>
+                                    <td class="center">{{ $mapelCounter++ }}</td>
+                                    <td>{{ $nilai['mapel'] ?? '-' }}</td>
+                                    <td class="center"><strong>{{ $nilai['nilai'] ?? '-' }}</strong></td>
+                                    <td class="justify">{{ $nilai['capaian'] ?? '-' }}</td>
+                                </tr>
+                                @endforeach
+                                @endforeach
+                                @else
+                                <tr>
+                                    <td colspan="4" class="center"><em>Belum ada data nilai.</em></td>
+                                </tr>
+                                @endif
+                            </tbody>
+                        </table>
+
+                        <div class="page-break"></div>
+
+                        <div class="kokurikuler">
+                            <table class="bordered">
+                                <tbody>
+                                    <tr>
+                                        <th class="center">Kokurikuler</th>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ $kokurikuler ?? 'Tidak ada catatan kokurikuler.' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ekstrakurikuler">
+                            <table class="bordered">
+                                <tbody>
+                                    <tr class="center">
+                                        <th style="width: 5%;">No</th>
+                                        <th style="width: 25%;">Ekstrakurikuler</th>
+                                        <th style="width: 70%;">Keterangan</th>
+                                    </tr>
+                                    @php
+                                    $dataEkskul = $ekstrakurikuler ?? [];
+                                    $totalData = count($dataEkskul);
+                                    $minRows = 3;
+                                    $loopCount = max($totalData, $minRows);
+                                    @endphp
+
+                                    @for ($i = 0; $i < $loopCount; $i++)
+                                        <tr>
+                                        <td class="center">{{ $i + 1 }}</td>
+
+                                        @if (isset($dataEkskul[$i]))
+                                        <td>{{ $dataEkskul[$i]['nama'] }}</td>
+                                        <td>{{ $dataEkskul[$i]['keterangan'] }}</td>
+                                        @else
+                                        <td>&nbsp;</td>
+                                        <td>&nbsp;</td>
+                                        @endif
                 </tr>
-                @endforeach
-                @endforeach
-                @else
-                <tr>
-                    <td colspan="4" class="center"><em>Belum ada data nilai.</em></td>
-                </tr>
-                @endif
+                @endfor
+
             </tbody>
         </table>
-
-        {{-- PAGE BREAK UNTUK HALAMAN BERIKUTNYA --}}
-        <div class="page-break"></div>
-
-        <div class="kokurikuler">
-            <table class="bordered">
-                <tbody>
-                    <tr>
-                        <th class="center">Kokurikuler</th>
-                    </tr>
-                    <tr>
-                        <td>{{ $kokurikuler ?? 'Tidak ada catatan kokurikuler.' }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="ekstrakurikuler">
-            <table class="bordered">
-                <tbody>
-                    <tr class="center">
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 25%;">Ekstrakurikuler</th>
-                        <th style="width: 70%;">Keterangan</th>
-                    </tr>
-                    @php
-                    $dataEkskul = $ekstrakurikuler ?? [];
-                    $totalData = count($dataEkskul);
-                    $minRows = 3;
-                    $loopCount = max($totalData, $minRows);
-                    @endphp
-
-                    @for ($i = 0; $i < $loopCount; $i++)
-                        <tr>
-                        <td class="center">{{ $i + 1 }}</td>
-                        @if (isset($dataEkskul[$i]))
-                        <td>{{ $dataEkskul[$i]['nama'] }}</td>
-                        <td>{{ $dataEkskul[$i]['keterangan'] }}</td>
-                        @else
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        @endif
-                        </tr>
-                        @endfor
-                </tbody>
-            </table>
         </div>
 
         <div class="section-kehadiran">
@@ -449,7 +416,10 @@
                 </tbody>
             </table>
         </div>
-
+        </td>
+        </tr>
+        </tbody>
+        </table>
     </main>
 </body>
 
