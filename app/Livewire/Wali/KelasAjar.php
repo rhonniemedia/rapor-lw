@@ -3,11 +3,11 @@
 namespace App\Livewire\Wali;
 
 use App\Models\Nilai;
-use App\Models\Rombel;
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Livewire\WithPagination;
 use App\Models\RombelPengajar;
+use App\Models\TahunAjaranSemester;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -26,21 +26,19 @@ class KelasAjar extends Component
         'searchRombel' => ['except' => ''],
     ];
 
-    public function mount()
-    {
-        // Initialization if needed
-    }
-
     public function updatingSearchRombel(): void
     {
         $this->resetPage();
     }
 
+    /**
+     * Mengambil query dasar Rombel Pengajar dengan filter Tahun Ajaran & Semester Aktif
+     */
     private function getRombelQuery(): Builder
     {
         $user = Auth::user();
 
-        // Query rombel yang diampu oleh guru yang sedang login
+        // 1. Inisialisasi Query dengan Relasi
         $query = RombelPengajar::where('guru_id', $user->id)
             ->with([
                 'rombel.jurusan',
@@ -49,22 +47,30 @@ class KelasAjar extends Component
                 'rombel.waliKelas',
                 'mataPelajaran'
             ])
-            ->whereHas('rombel'); // Pastikan rombel masih ada
+            // 2. Filter Tahun Ajaran Aktif (berdasarkan tabel tahun_ajarans)
+            ->whereHas('rombel.tahunAjaranKurikulum.tahunAjaran', function ($q) {
+                $q->where('status', 'aktif');
+            })
+            // 3. Filter Semester Aktif (berdasarkan tabel tahun_ajaran_semesters)
+            ->whereHas('rombel.tahunAjaranKurikulum.tahunAjaran.tahunAjaranSemesters', function ($q) {
+                $q->where('status', 'aktif');
+            })
+            ->whereHas('rombel');
 
-        // Search functionality
+        // 4. Implementasi Search Functionality
         if (!empty($this->searchRombel)) {
             $query->where(function ($q) {
                 $search = $this->searchRombel;
 
-                // Search by rombel name
+                // Cari berdasarkan nama rombel
                 $q->whereHas('rombel', function ($subQ) use ($search) {
                     $subQ->where('nama', 'like', "%{$search}%");
                 })
-                    // Search by mata pelajaran name
+                    // Cari berdasarkan nama mata pelajaran
                     ->orWhereHas('mataPelajaran', function ($subQ) use ($search) {
                         $subQ->where('nama', 'like', "%{$search}%");
                     })
-                    // Search by wali kelas name
+                    // Cari berdasarkan nama wali kelas
                     ->orWhereHas('rombel.waliKelas', function ($subQ) use ($search) {
                         $subQ->where('name', 'like', "%{$search}%");
                     });
@@ -76,7 +82,6 @@ class KelasAjar extends Component
 
     public function detail($rombelId, $mataPelajaranId)
     {
-        // Validasi parameter
         if (!$rombelId || !$mataPelajaranId) {
             $this->dispatch('swal:error', [
                 'title' => 'Error!',
@@ -85,7 +90,6 @@ class KelasAjar extends Component
             return;
         }
 
-        // Redirect tanpa dependency injection
         $this->redirect(route('walikelas.class.detail', [
             'rombelId' => $rombelId,
             'mataPelajaranId' => $mataPelajaranId
@@ -94,61 +98,63 @@ class KelasAjar extends Component
 
     public function render()
     {
+        // Ambil data semester yang sedang aktif untuk memfilter perhitungan nilai
+        $semesterAktif = TahunAjaranSemester::where('status', 'aktif')->first();
+
         $rombelPengajars = $this->getRombelQuery()
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPageRombel);
 
-        // Transform data untuk menambahkan informasi jumlah pelajar dan statistik penilaian
-        $rombels = $rombelPengajars->through(function ($rombelPengajar) {
+        $rombels = $rombelPengajars->through(function ($rombelPengajar) use ($semesterAktif) {
             $rombel = $rombelPengajar->rombel;
             $mataPelajaran = $rombelPengajar->mataPelajaran;
 
-            // 1. Tentukan Agama Terkait & Hash
-            $agamaTerkait = $mataPelajaran->agama_terkait ?? null;
+            // 1. Logika Filter Agama (Mapping Mapel Agama ke Pelajar yang sesuai)
             $agamaHash = null;
-
-            if ($agamaTerkait) {
-                $agamaHash = hash('sha256', Str::lower($agamaTerkait));
+            if ($mataPelajaran->agama_terkait) {
+                $agamaHash = hash('sha256', Str::lower($mataPelajaran->agama_terkait));
             }
 
-            // 2. Base query untuk pelajar di rombel ini
-            $basePelajarQuery = $rombel->pelajars();
+            // 2. Ambil ID Pelajar yang relevan dalam rombel ini
+            $relevantPelajarIds = $rombel->pelajars()
+                ->when($agamaHash, function ($q) use ($agamaHash) {
+                    return $q->where('agama_hash', $agamaHash);
+                })
+                ->pluck('pelajars.id');
 
-            // 3. Terapkan Filter Agama jika ada
-            if ($agamaHash) {
-                // Filter pelajar yang agamanya cocok dengan Mata Pelajaran
-                $basePelajarQuery->where('agama_hash', $agamaHash);
-            }
-
-            // Hitung total pelajar yang relevan (sudah difilter jika Mapel Agama)
-            $relevantPelajarIds = $basePelajarQuery->pluck('pelajars.id');
             $totalPelajar = $relevantPelajarIds->count();
 
-            // Hitung pelajar yang sudah dinilai untuk mata pelajaran ini
-            $selesaiDinilai = Nilai::where('mata_pelajaran_id', $rombelPengajar->mata_pelajaran_id)
-                ->whereIn('pelajar_id', $relevantPelajarIds)
-                ->where('guru_id', Auth::id())
-                ->distinct('pelajar_id')
-                ->count('pelajar_id');
+            // 3. Hitung statistik progres penilaian berdasarkan SEMESTER AKTIF
+            $selesaiDinilai = 0;
+            if ($semesterAktif && $totalPelajar > 0) {
+                $selesaiDinilai = Nilai::where('mata_pelajaran_id', $rombelPengajar->mata_pelajaran_id)
+                    ->where('tahun_ajaran_semester_id', $semesterAktif->id) // Filter krusial agar tidak muncul nilai semester lalu
+                    ->whereIn('pelajar_id', $relevantPelajarIds)
+                    ->where('guru_id', Auth::id())
+                    ->distinct('pelajar_id')
+                    ->count('pelajar_id');
+            }
 
             return (object) [
                 'id' => $rombel->id,
                 'nama' => $rombel->nama,
                 'tingkat' => $rombel->tingkat,
                 'jurusan_nama' => $rombel->jurusan->nama ?? '-',
-                'mata_pelajaran_nama' => $rombelPengajar->mataPelajaran->nama ?? '-',
+                'mata_pelajaran_nama' => $mataPelajaran->nama ?? '-',
                 'mata_pelajaran_id' => $rombelPengajar->mata_pelajaran_id,
                 'walikelas_name' => $rombel->waliKelas->name ?? 'Belum Ditentukan',
                 'walikelas_telephone' => $rombel->waliKelas->telephone ?? '~',
                 'total_pelajar' => $totalPelajar,
                 'selesai_dinilai' => $selesaiDinilai,
                 'tahun_ajaran' => $rombel->tahunAjaranKurikulum->tahunAjaran->nama ?? '-',
+                'semester_aktif' => $semesterAktif->semester->nama ?? '-',
                 'kurikulum' => $rombel->tahunAjaranKurikulum->kurikulum->nama ?? '-',
             ];
         });
 
         return view('livewire.wali.kelas-ajar', [
             'rombels' => $rombels,
+            'semesterAktif' => $semesterAktif
         ]);
     }
 }

@@ -2,18 +2,19 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\Rombel;
-use Livewire\Component;
-use App\Models\TahunAjaran;
-use Livewire\WithPagination;
 use App\Models\Kokurikuler;
+use App\Models\Pelajar;
+use App\Models\Rombel;
 use App\Models\RombelPelajar;
-use Illuminate\Support\Facades\DB;
+use App\Models\TahunAjaran;
 use App\Models\TahunAjaranSemester;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Models\TemplateKokurikulerCapaian;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class InputKokurikuler extends Component
 {
@@ -767,7 +768,10 @@ class InputKokurikuler extends Component
                 ->keyBy('pelajar_id');
 
             $pelajarPaginated = $this->getPelajarQuery()
-                ->orderBy('id', 'asc')
+                ->orderBy(
+                    Pelajar::select('nama_lengkap')
+                        ->whereColumn('pelajars.id', 'rombel_pelajars.pelajar_id')
+                )
                 ->paginate($this->perPagePelajar);
 
             $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($kokurikulerExist) {

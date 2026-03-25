@@ -352,7 +352,10 @@ class EntriAbsensi extends Component
             $kehadiranExist = $this->cachedKehadiranExist ?? collect();
 
             $pelajarPaginated = $this->getPelajarQuery()
-                ->orderBy('id', 'asc')
+                ->orderBy(
+                    Pelajar::select('nama_lengkap')
+                        ->whereColumn('pelajars.id', 'rombel_pelajars.pelajar_id')
+                )
                 ->paginate($this->perPagePelajar);
 
             $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($kehadiranExist) {

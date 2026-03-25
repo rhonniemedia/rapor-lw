@@ -332,7 +332,10 @@ class EntriCatatanPelajar extends Component
             $catatanExist = $this->cachedCatatanExist ?? collect();
 
             $pelajarPaginated = $this->getPelajarQuery()
-                ->orderBy('id', 'asc')
+                ->orderBy(
+                    Pelajar::select('nama_lengkap')
+                        ->whereColumn('pelajars.id', 'rombel_pelajars.pelajar_id')
+                )
                 ->paginate($this->perPagePelajar);
 
             $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($catatanExist) {

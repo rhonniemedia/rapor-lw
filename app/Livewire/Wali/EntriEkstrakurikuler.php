@@ -2,18 +2,19 @@
 
 namespace App\Livewire\Wali;
 
-use App\Models\Rombel;
-use Livewire\Component;
-use Livewire\WithPagination;
-use App\Models\RombelPelajar;
-use App\Models\Ekstrakurikuler;
 use App\Models\EkskulPelajar;
-use Illuminate\Support\Facades\DB;
+use App\Models\Ekstrakurikuler;
+use App\Models\Pelajar;
+use App\Models\Rombel;
+use App\Models\RombelPelajar;
 use App\Models\TahunAjaranSemester;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Models\TemplateEkstrakurikulerDeskripsi;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class EntriEkstrakurikuler extends Component
 {
@@ -677,7 +678,10 @@ class EntriEkstrakurikuler extends Component
             $ekskulExist = $this->cachedEkskulExist ?? collect();
 
             $pelajarPaginated = $this->getPelajarQuery()
-                ->orderBy('id', 'asc')
+                ->orderBy(
+                    Pelajar::select('nama_lengkap')
+                        ->whereColumn('pelajars.id', 'rombel_pelajars.pelajar_id')
+                )
                 ->paginate($this->perPagePelajar);
 
             $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($ekskulExist) {

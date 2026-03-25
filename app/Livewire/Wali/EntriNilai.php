@@ -3,18 +3,19 @@
 namespace App\Livewire\Wali;
 
 use App\Models\Nilai;
+use App\Models\Pelajar;
 use App\Models\Rombel;
-use Livewire\Component;
-use Illuminate\Support\Str;
-use Livewire\WithPagination;
 use App\Models\RombelPelajar;
 use App\Models\RombelPengajar;
-use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaranSemester;
-use Illuminate\Support\Facades\Log;
 use App\Models\TemplateNilaiCapaian;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class EntriNilai extends Component
 {
@@ -592,7 +593,10 @@ class EntriNilai extends Component
             $nilaiExist = $this->cachedNilaiExist ?? collect();
 
             $pelajarPaginated = $this->getPelajarQuery()
-                ->orderBy('id', 'asc')
+                ->orderBy(
+                    Pelajar::select('nama_lengkap')
+                        ->whereColumn('pelajars.id', 'rombel_pelajars.pelajar_id')
+                )
                 ->paginate($this->perPagePelajar);
 
             $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($nilaiExist) {
