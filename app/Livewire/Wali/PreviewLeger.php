@@ -172,48 +172,42 @@ class PreviewLeger extends Component
 
     private function loadStudentsWithNilai(): void
     {
-        // Cek ketersediaan data awal
+        // 1. VALIDASI AWAL
         if (!$this->rombel || !$this->semesterAktif || empty($this->mataPelajaranList)) {
             $this->studentsList = [];
             return;
         }
 
-        // Get kurikulum_id
         $kurikulumId = $this->rombel->tahunAjaranKurikulum->kurikulum_id ?? null;
-
         if (!$kurikulumId) {
             $this->studentsList = [];
             return;
         }
 
-        // Load students dari rombel
+        // 2. LOAD SISWA DALAM ROMBEL
         $rombelPelajars = RombelPelajar::with('pelajar')
             ->where('rombel_id', $this->rombel->id)
-            ->orderBy('id', 'asc')
             ->get();
 
-        // 1. HITUNG TOTAL MAPEL WAJIB (PEMBAGI RATA-RATA)
         $totalMapelWajib = count($this->mataPelajaranList);
+        // Ambil urutan ID mapel untuk digunakan sebagai tie-breaker peringkat nanti
+        $mapelOrderIds = array_column($this->mataPelajaranList, 'id');
 
+        // 3. MAPPING DATA SISWA & PERHITUNGAN NILAI
         $studentsData = $rombelPelajars->map(function ($rombelPelajar, $index) use ($totalMapelWajib) {
             $pelajar = $rombelPelajar->pelajar;
-
             $nilaiPerMapel = [];
             $totalNilai = 0;
-            // $jumlahMapelDiisi = 0; // Dihapus karena tidak dipakai untuk pembagi lagi
 
             foreach ($this->mataPelajaranList as $mapel) {
-                // Cek apakah ini mapel agama
+                // Logika pengambilan nilai (Agama vs Umum)
                 if (isset($mapel['is_agama']) && $mapel['is_agama'] === true) {
-                    // Ambil nilai agama sesuai agama siswa
                     $nilai = Nilai::where('pelajar_id', $pelajar->id)
                         ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
                         ->whereHas('mataPelajaran', fn($q) => $q->where('is_mapel_agama', true))
-                        // Opsional: tambahkan latest() untuk keamanan jika ada duplikat
                         ->latest('updated_at')
                         ->first();
                 } else {
-                    // Nilai mata pelajaran non-agama
                     $nilai = Nilai::where('pelajar_id', $pelajar->id)
                         ->where('mata_pelajaran_id', $mapel['id'])
                         ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
@@ -221,72 +215,77 @@ class PreviewLeger extends Component
                 }
 
                 $nilaiAngka = $nilai ? round($nilai->nilai_angka ?? 0) : 0;
+                
+                // Simpan nilai per mapel menggunakan ID mapel sebagai key
                 $nilaiPerMapel[$mapel['id']] = $nilaiAngka;
-
-                // Selalu tambahkan ke total nilai (meskipun 0)
                 $totalNilai += $nilaiAngka;
             }
 
-            // 2. LOGIKA RATA-RATA BARU
-            // Dibagi dengan total mapel yang tersedia, bukan yang terisi
             $rataRata = $totalMapelWajib > 0 ? round($totalNilai / $totalMapelWajib, 1) : 0;
 
-            // Load kokurikuler
+            // Load Data Penunjang
             $kokurikuler = Kokurikuler::where('pelajar_id', $pelajar->id)
                 ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
                 ->first();
 
-            // Load kehadiran
             $kehadiran = Kehadiran::where('pelajar_id', $pelajar->id)
                 ->where('rombel_id', $this->rombel->id)
                 ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
                 ->first();
 
             return [
-                'no' => $index + 1,
-                'id' => $pelajar->id,
-                'nis' => $pelajar->nomor_induk ?? '-',
-                'nisn' => $pelajar->nisn ?? '-',
-                'nama' => $pelajar->nama_lengkap ?? 'N/A',
-                'jenis_kelamin' => $pelajar->jenis_kelamin ?? 'L',
-                'nilai_per_mapel' => $nilaiPerMapel,
-                'kokurikuler' => $kokurikuler->predikat ?? '-',
-                'jumlah_nilai' => $totalNilai,
-                'rata_rata' => $rataRata,
-                'peringkat' => 0,
-                'sakit' => $kehadiran->jumlah_sakit ?? 0,
-                'izin' => $kehadiran->jumlah_izin ?? 0,
-                'tanpa_keterangan' => $kehadiran->jumlah_tanpa_keterangan ?? 0,
+                'id'                => $pelajar->id,
+                'nis'               => $pelajar->nomor_induk ?? '-',
+                'nisn'              => $pelajar->nisn ?? '-',
+                'nama'              => $pelajar->nama_lengkap ?? 'N/A',
+                'jenis_kelamin'     => $pelajar->jenis_kelamin ?? 'L',
+                'nilai_per_mapel'   => $nilaiPerMapel,
+                'kokurikuler'       => $kokurikuler->predikat ?? '-',
+                'jumlah_nilai'      => $totalNilai,
+                'rata_rata'         => $rataRata,
+                'peringkat'         => 0,
+                'sakit'             => $kehadiran->jumlah_sakit ?? 0,
+                'izin'              => $kehadiran->jumlah_izin ?? 0,
+                'tanpa_keterangan'  => $kehadiran->jumlah_tanpa_keterangan ?? 0,
             ];
         })->toArray();
 
-        // --- LOGIKA PERINGKAT ---
-        usort($studentsData, fn($a, $b) => $b['jumlah_nilai'] <=> $a['jumlah_nilai']);
+        // 4. LOGIKA PERINGKAT UNIK (TIE-BREAKER BERLAPIS)
+        usort($studentsData, function ($a, $b) use ($mapelOrderIds) {
+            // Kriteria 1: Total Nilai (Terbesar ke Terkecil)
+            if ($b['jumlah_nilai'] !== $a['jumlah_nilai']) {
+                return $b['jumlah_nilai'] <=> $a['jumlah_nilai'];
+            }
 
-        $currentRank = 1;
-        $previousNilai = null;
-        $sameRankCount = 0;
+            // Kriteria 2: Tie-breaker Nilai per Mata Pelajaran (berdasarkan urutan kmp.urutan)
+            foreach ($mapelOrderIds as $mapelId) {
+                $nilaiA = $a['nilai_per_mapel'][$mapelId] ?? 0;
+                $nilaiB = $b['nilai_per_mapel'][$mapelId] ?? 0;
 
+                if ($nilaiB !== $nilaiA) {
+                    return $nilaiB <=> $nilaiA;
+                }
+            }
+
+            // Kriteria 3: Nama Siswa (A-Z) jika semua nilai identik
+            return strcmp($a['nama'], $b['nama']);
+        });
+
+        // 5. PENETAPAN NOMOR PERINGKAT SEKUANSIAL
+        $rankCounter = 1;
         foreach ($studentsData as &$student) {
             if ($student['jumlah_nilai'] === 0) {
                 $student['peringkat'] = '-';
             } else {
-                if ($previousNilai !== null && $student['jumlah_nilai'] === $previousNilai) {
-                    $sameRankCount++;
-                } else {
-                    $currentRank += $sameRankCount;
-                    $sameRankCount = 1;
-                }
-                $student['peringkat'] = $currentRank;
-                $previousNilai = $student['jumlah_nilai'];
+                $student['peringkat'] = $rankCounter++;
             }
         }
         unset($student);
 
-        // Sort ulang berdasarkan nama agar rapi
+        // 6. FINALISASI: URUTKAN BERDASARKAN NAMA UNTUK TAMPILAN TABEL
         usort($studentsData, fn($a, $b) => strcmp($a['nama'], $b['nama']));
 
-        // Re-numbering NO column after name sort
+        // 7. PENOMORAN ULANG KOLOM 'NO'
         foreach ($studentsData as $key => &$val) {
             $val['no'] = $key + 1;
         }

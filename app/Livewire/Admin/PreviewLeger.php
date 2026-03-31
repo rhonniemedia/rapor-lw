@@ -237,31 +237,36 @@ class PreviewLeger extends Component
 
     private function loadStudentsWithNilai(): void
     {
-        // 1. Ambil data siswa di rombel tersebut
+        // 1. VALIDASI DATA AWAL
+        if (!$this->rombelId || !$this->semesterId || empty($this->mataPelajaranList)) {
+            $this->studentsList = [];
+            return;
+        }
+
+        // Ambil data siswa di rombel tersebut
         $rombelPelajars = RombelPelajar::with('pelajar')
             ->where('rombel_id', $this->rombelId)
             ->orderBy('id', 'asc')
             ->get();
 
-        // 2. Hitung total mata pelajaran yang ada (sebagai pembagi tetap, misal: 10)
+        // Persiapkan pembagi rata-rata dan urutan ID mapel untuk tie-breaker peringkat
         $totalMapelWajib = count($this->mataPelajaranList);
+        $mapelOrderIds = array_column($this->mataPelajaranList, 'id');
 
+        // 2. PROSES PENGAMBILAN NILAI SISWA
         $studentsData = $rombelPelajars->map(function ($rombelPelajar, $index) use ($totalMapelWajib) {
             $pelajar = $rombelPelajar->pelajar;
-
             $nilaiPerMapel = [];
             $totalNilai = 0;
 
-            // Loop melalui daftar mata pelajaran master
             foreach ($this->mataPelajaranList as $mapel) {
+                // Logika Nilai Agama vs Umum
                 if ($mapel['is_agama'] === true) {
-                    // Cari nilai agama spesifik siswa
                     $nilai = Nilai::where('pelajar_id', $pelajar->id)
                         ->where('tahun_ajaran_semester_id', $this->semesterId)
                         ->whereHas('mataPelajaran', fn($q) => $q->where('is_mapel_agama', true))
                         ->first();
                 } else {
-                    // Cari nilai mata pelajaran umum
                     $nilai = Nilai::where('pelajar_id', $pelajar->id)
                         ->where('mata_pelajaran_id', $mapel['id'])
                         ->where('tahun_ajaran_semester_id', $this->semesterId)
@@ -270,16 +275,13 @@ class PreviewLeger extends Component
 
                 $nilaiAngka = $nilai ? round($nilai->nilai_angka ?? 0) : 0;
                 $nilaiPerMapel[$mapel['id']] = $nilaiAngka;
-
-                // Tambahkan ke total (nilai 0 tetap menambah jumlah mapel di pembagi nanti)
                 $totalNilai += $nilaiAngka;
             }
 
-            // --- PERHITUNGAN RATA-RATA TETAP ---
-            // Meskipun nilai yang diinput hanya 5, pembagi tetap totalMapelWajib (misal: 10)
+            // Hitung Rata-rata (Pembagi tetap sesuai jumlah mapel yang ditentukan sekolah)
             $rataRata = $totalMapelWajib > 0 ? round($totalNilai / $totalMapelWajib, 1) : 0;
 
-            // Ambil data pendukung lainnya
+            // Load data pendukung (Kokurikuler & Kehadiran)
             $kokurikuler = Kokurikuler::where('pelajar_id', $pelajar->id)
                 ->where('tahun_ajaran_semester_id', $this->semesterId)
                 ->first();
@@ -290,49 +292,58 @@ class PreviewLeger extends Component
                 ->first();
 
             return [
-                'no' => $index + 1,
-                'nis' => $pelajar->nomor_induk ?? '-',
-                'nisn' => $pelajar->nisn ?? '-',
-                'nama' => $pelajar->nama_lengkap ?? 'N/A',
-                'jenis_kelamin' => $pelajar->jenis_kelamin ?? 'L',
-                'nilai_per_mapel' => $nilaiPerMapel,
-                'kokurikuler' => $kokurikuler->predikat ?? '-',
-                'jumlah_nilai' => $totalNilai,
-                'rata_rata' => $rataRata,
-                'peringkat' => 0,
-                'sakit' => $kehadiran->jumlah_sakit ?? 0,
-                'izin' => $kehadiran->jumlah_izin ?? 0,
-                'tanpa_keterangan' => $kehadiran->jumlah_tanpa_keterangan ?? 0,
+                'id'                => $pelajar->id,
+                'nis'               => $pelajar->nomor_induk ?? '-',
+                'nisn'              => $pelajar->nisn ?? '-',
+                'nama'              => $pelajar->nama_lengkap ?? 'N/A',
+                'jenis_kelamin'     => $pelajar->jenis_kelamin ?? 'L',
+                'nilai_per_mapel'   => $nilaiPerMapel,
+                'kokurikuler'       => $kokurikuler->predikat ?? '-',
+                'jumlah_nilai'      => $totalNilai,
+                'rata_rata'         => $rataRata,
+                'peringkat'         => 0,
+                'sakit'             => $kehadiran->jumlah_sakit ?? 0,
+                'izin'              => $kehadiran->jumlah_izin ?? 0,
+                'tanpa_keterangan'  => $kehadiran->jumlah_tanpa_keterangan ?? 0,
             ];
         })->toArray();
 
-        // --- LOGIKA PERINGKAT (Berdasarkan Total Nilai) ---
-        usort($studentsData, fn($a, $b) => $b['jumlah_nilai'] <=> $a['jumlah_nilai']);
+        // 3. LOGIKA PERINGKAT (TIE-BREAKER BERDASARKAN URUTAN MAPEL)
+        usort($studentsData, function ($a, $b) use ($mapelOrderIds) {
+            // Cek Total Nilai dulu
+            if ($b['jumlah_nilai'] !== $a['jumlah_nilai']) {
+                return $b['jumlah_nilai'] <=> $a['jumlah_nilai'];
+            }
 
-        $currentRank = 1;
-        $previousNilai = null;
-        $sameRankCount = 0;
+            // Jika Total Nilai sama, adu berdasarkan nilai per mapel sesuai urutan PABP, PKN, dst.
+            foreach ($mapelOrderIds as $mapelId) {
+                $nilaiA = $a['nilai_per_mapel'][$mapelId] ?? 0;
+                $nilaiB = $b['nilai_per_mapel'][$mapelId] ?? 0;
 
+                if ($nilaiB !== $nilaiA) {
+                    return $nilaiB <=> $nilaiA;
+                }
+            }
+
+            // Jika benar-benar identik, urutkan nama A-Z
+            return strcmp($a['nama'], $b['nama']);
+        });
+
+        // 4. BERIKAN NOMOR PERINGKAT (1, 2, 3...)
+        $rankCounter = 1;
         foreach ($studentsData as &$student) {
             if ($student['jumlah_nilai'] === 0) {
                 $student['peringkat'] = '-';
             } else {
-                if ($previousNilai !== null && $student['jumlah_nilai'] === $previousNilai) {
-                    $sameRankCount++;
-                } else {
-                    $currentRank += $sameRankCount;
-                    $sameRankCount = 1;
-                }
-                $student['peringkat'] = $currentRank;
-                $previousNilai = $student['jumlah_nilai'];
+                $student['peringkat'] = $rankCounter++;
             }
         }
         unset($student);
 
-        // --- SORT ULANG BERDASARKAN NAMA (Untuk Tampilan Leger) ---
+        // 5. URUTKAN KEMBALI BERDASARKAN NAMA (Agar rapi di tampilan tabel leger)
         usort($studentsData, fn($a, $b) => strcmp($a['nama'], $b['nama']));
 
-        // Re-numbering urutan No setelah di-sort nama
+        // 6. PENOMORAN ULANG KOLOM NO
         foreach ($studentsData as $key => &$val) {
             $val['no'] = $key + 1;
         }
