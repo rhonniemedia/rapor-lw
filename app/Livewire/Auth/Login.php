@@ -38,6 +38,9 @@ class Login extends Component
             Auth::login($user, $this->remember);
             session()->regenerate();
 
+            // PENTING: Pancarkan event ke frontend agar Alpine.js menahan state tombol
+            $this->dispatch('login-success');
+
             // Redirect berdasarkan role
             $roleRoutes = [
                 'superadmin' => 'admin.dashboard',

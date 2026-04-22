@@ -1,4 +1,4 @@
-<div class="login-body">
+<div class="login-body" x-data="{ redirecting: false }" @login-success.window="redirecting = true">
     @if ($errors->has('auth'))
     <div class="alert alert-danger d-flex gap-2" role="alert">
         <i class="mdi mdi-shield-alert-outline fs-2"></i>
@@ -59,14 +59,20 @@
             <a href="#" class="forgot-password">Lupa kata sandi?</a>
         </div>
 
-        <button type="submit" class="btn btn-login" wire:loading.attr="disabled">
-            <span wire:loading.remove wire:target="login">
+        <button type="submit" class="btn btn-login" wire:loading.attr="disabled" x-bind:disabled="redirecting">
+
+            <span wire:loading.remove wire:target="login" x-show="!redirecting">
                 <i class="mdi mdi-login me-2"></i> Login
             </span>
 
             <span wire:loading wire:target="login" style="display: none;">
                 <i class="mdi mdi-loading mdi-spin me-2"></i> Memproses...
             </span>
+
+            <span x-show="redirecting" style="display: none;">
+                <i class="mdi mdi-loading mdi-spin me-2"></i> Mengalihkan...
+            </span>
+
         </button>
     </form>
 </div>

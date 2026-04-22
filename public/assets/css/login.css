@@ -79,6 +79,11 @@ body::before {
     z-index: 2;
 }
 
+input[type="password"] {
+    letter-spacing: normal;
+    font-family: Arial, sans-serif;
+}
+
 .form-group {
     margin-bottom: 20px;
     position: relative;
