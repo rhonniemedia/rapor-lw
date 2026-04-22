@@ -19,7 +19,7 @@
     </div>
 
     {{-- Info Rombel Card --}}
-    @if($rombel && $semesterAktif)
+    @if($rombel && $semesterId)
     <div class="card border-success shadow-sm mb-4">
         <div class="card-body">
             <div class="row g-4">
@@ -45,7 +45,12 @@
                         <div class="ms-3 d-flex flex-column justify-content-center">
                             <small class="text-muted lh-2">Tahun Ajaran & Semester</small>
                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                {{ $semesterAktif->tahunAjaran->nama ?? 'N/A' }} ~ {{ $semesterAktif->semester->nama ?? 'Belum Ada' }}
+                                @if($selectedSemesterObj)
+                                {{ $selectedSemesterObj->tahunAjaran->nama ?? 'N/A' }} ~
+                                {{ $selectedSemesterObj->semester->nama ?? 'N/A' }}
+                                @else
+                                <span class="text-muted">Belum Dipilih</span>
+                                @endif
                             </p>
                         </div>
                     </div>
@@ -99,43 +104,92 @@
     @else
     <div class="alert alert-danger" role="alert">
         <i class="mdi mdi-alert-circle me-2"></i>
-        <strong>Perhatian!</strong> Tidak ada kelas binaan atau semester aktif.
+        <strong>Perhatian!</strong>
+        @if(!$rombel)
+        Anda tidak memiliki kelas binaan yang aktif.
+        @else
+        Pilih tahun ajaran dan semester untuk melanjutkan.
+        @endif
+    </div>
+    @endif
+
+    {{-- Filter Tahun Ajaran & Semester --}}
+    @if($rombel)
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="page-header mb-0 border-bottom mb-3">
+                <div class="d-flex align-items-center">
+                    <h5 class="text-dark"><i class="mdi mdi-filter"></i> Filter dan Generate Data</h5>
+                </div>
+            </div>
+            <div class="row g-3">
+
+                {{-- Tahun Ajaran --}}
+                <div class="col-md-4">
+                    <label class="form-label">Tahun Ajaran</label>
+                    <select wire:model.live="tahunAjaranId" class="form-select">
+                        <option value="">-- Pilih Tahun Ajaran --</option>
+                        @foreach($tahunAjaranList as $ta)
+                        <option value="{{ $ta->id }}">
+                            {{ $ta->nama }}
+                            @if($ta->status === 'aktif')
+                            (Aktif)
+                            @endif
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Semester --}}
+                <div class="col-md-4">
+                    <label class="form-label">Semester</label>
+                    <select wire:model.live="semesterId" class="form-select"
+                        @if(!$tahunAjaranId) disabled @endif>
+                        <option value="">-- Pilih Semester --</option>
+                        @foreach($semesterList as $sem)
+                        <option value="{{ $sem->id }}">
+                            {{ $sem->semester->nama ?? $sem->id }}
+                            @if($sem->status === 'aktif')
+                            (Aktif)
+                            @endif
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Pencarian + Generate --}}
+                <div class="col-md-4">
+                    <label class="form-label">Cari & Generate</label>
+                    <div class="d-flex gap-2">
+                        <input type="search"
+                            wire:model.live.debounce.300ms="searchPelajar"
+                            class="form-control"
+                            placeholder="Cari..."
+                            @if(!$semesterId) disabled @endif>
+
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary"
+                            wire:click="openGenerateModal"
+                            wire:key="btn-generate-capaian"
+                            title="Generate"
+                            @if(!$semesterId) disabled @endif
+                            style="width: 2.5rem; display: flex; align-items: center; justify-content: center;">
+                            <i class="mdi mdi-auto-fix"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
     @endif
 
     {{-- Tabel Input Kokurikuler --}}
-    @if($rombel && $semesterAktif)
+    @if($rombel && $semesterId)
     <div class="row mb-3 align-items-center">
         <div class="col-lg-6">
             <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Entri Data Kokurikuler</h5>
-        </div>
-        <div class="col-lg-6 d-flex justify-content-end">
-            <div class="input-group w-50">
-                <input type="search"
-                    wire:model.live.debounce.300ms="searchPelajar"
-                    class="form-control"
-                    placeholder="Cari nama, atau nomor induk...">
-                @if($searchPelajar)
-                <div class="input-group-append">
-                    <button type="button"
-                        class="btn btn-secondary"
-                        wire:click="$set('searchPelajar', '')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                @endif
-            </div>
-
-            {{-- TOMBOL GENERATE CAPAIAN DITAMBAHKAN --}}
-            <button
-                type="button"
-                class="btn btn-outline-primary btn-sm ms-2"
-                wire:click="openGenerateModal"
-                wire:key="btn-generate-capaian"
-                title="Generate Capaian Kokurikuler"
-                style="padding: 0.25rem 0.5rem; width: 2.25rem; height: calc(2.25rem + 2px); display: flex; align-items: center; justify-content: center;">
-                <i class="mdi mdi-auto-fix"></i>
-            </button>
         </div>
     </div>
 
@@ -180,7 +234,6 @@
                         <small>{{ $pelajar->nomor_induk ?? '-' }} | {{ $pelajar->nisn ?? '-' }}</small>
                     </td>
                     <td>
-                        {{-- DIUBAH MENYESUAIKAN PREDIIKAT (A, B, C) --}}
                         <select
                             wire:key="predikat-input-{{ $pelajar->pelajar_id }}"
                             wire:model.defer="kokurikulerInput.{{ $pelajar->pelajar_id }}.predikat"
@@ -198,10 +251,8 @@
                         @if($pelajar->kokurikuler_existing)
                         <div class="mb-1">
                             @if($pelajar->kokurikuler_existing->predikat)
-                            @php
-                            $predikatKey = $pelajar->kokurikuler_existing->predikat;
-                            @endphp
-                            <span class="badge 
+                            @php $predikatKey = $pelajar->kokurikuler_existing->predikat; @endphp
+                            <span class="badge
                                 @if($predikatKey == 'A') bg-success
                                 @elseif($predikatKey == 'B') bg-primary
                                 @elseif($predikatKey == 'C') bg-warning
@@ -216,7 +267,7 @@
                         @endif
                     </td>
                     <td style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 300px;">
-                        @if ($pelajar->kokurikuler_existing && $pelajar->kokurikuler_existing->capaian)
+                        @if($pelajar->kokurikuler_existing && $pelajar->kokurikuler_existing->capaian)
                         @php
                         $capaian = $pelajar->kokurikuler_existing->capaian;
                         $teksPendek = Str::limit($capaian, 90);
@@ -227,8 +278,6 @@
                                 onclick="showFullCapaian('{{ addslashes($pelajar->nama_lengkap) }}', `{{ addslashes($capaian) }}`)"
                                 title="Klik untuk melihat capaian lengkap">
                                 {{ $teksPendek }}
-                                @if (strlen($capaian) > 90)
-                                @endif
                             </a>
                         </p>
                         @else
@@ -305,16 +354,16 @@
             </span>
         </button>
     </div>
-    @else
+    @elseif($rombel && !$semesterId)
     <div class="alert alert-warning text-center" role="alert">
         <i class="mdi mdi-information-outline me-2"></i>
-        <strong>Tidak ada kelas binaan atau semester aktif.</strong>
+        <strong>Silakan pilih Tahun Ajaran dan Semester untuk mulai mengentri data kokurikuler.</strong>
     </div>
     @endif
 
     {{-- Loading Overlay --}}
     <div wire:loading.flex
-        wire:target="saveKokurikuler,searchPelajar"
+        wire:target="saveKokurikuler,searchPelajar,tahunAjaranId,semesterId"
         class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center"
         style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: none;">
         <div class="spinner-border text-success" role="status">
@@ -322,7 +371,7 @@
         </div>
     </div>
 
-    {{-- MODAL GENERATE CAPAIAN KOKURIKULER (DIADOPSI) --}}
+    {{-- MODAL GENERATE CAPAIAN KOKURIKULER --}}
     <div
         class="modal fade"
         id="generateKokurikulerModal"
@@ -351,13 +400,12 @@
                             Informasi Data
                         </h6>
                         <ul class="mb-0 ps-3">
-                            <li>Pelajar dengan **Predikat** tersimpan: <strong><span id="modal-count-kokurikuler">0</span> orang</strong></li>
+                            <li>Pelajar dengan predikat tersimpan: <strong><span id="modal-count-kokurikuler">0</span> orang</strong></li>
                             <li>Capaian yang belum terisi: <strong><span id="modal-count-kosong">0</span> orang</strong></li>
                             <li>Template tersedia: <strong><span id="modal-count-template">0</span> template</strong></li>
                         </ul>
                     </div>
 
-                    {{-- Pilihan Mode Generate --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Pilih Mode Generate:</label>
                         <div class="form-check mb-2">
@@ -386,7 +434,7 @@
                                 <strong>Regenerate Semua Capaian</strong>
                                 <br>
                                 <small class="text-muted">
-                                    Menimpa semua capaian yang ada **dengan predikat yang sudah diinput** (<span id="modal-count-kokurikuler-2">0</span> pelajar)
+                                    Menimpa semua capaian yang ada dengan predikat yang sudah diinput (<span id="modal-count-kokurikuler-2">0</span> pelajar)
                                 </small>
                             </label>
                         </div>
@@ -447,7 +495,7 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Inisialisasi Modal Generate ---
+        // Inisialisasi Modal Generate
         const generateModalEl = document.getElementById('generateKokurikulerModal');
         let generateModal = null;
 
@@ -459,18 +507,14 @@
 
             // Reset mode ke 'empty' saat modal ditutup
             generateModalEl.addEventListener('hidden.bs.modal', function() {
-                // Panggil method Livewire untuk reset state terkait generate
                 Livewire.dispatch('closeGenerateModal');
             });
         }
 
-        // --- Livewire Event Listeners ---
-
-        // ✅ Listener untuk membuka modal
+        // Listener untuk membuka modal
         window.addEventListener('show-generate-modal', event => {
             const data = event.detail.params ?? event.detail[0] ?? event.detail;
 
-            // Update nilai di modal (disesuaikan dengan property Kokurikuler)
             document.getElementById('modal-count-kokurikuler').textContent = data.countPelajarWithKokurikuler || 0;
             document.getElementById('modal-count-kokurikuler-2').textContent = data.countPelajarWithKokurikuler || 0;
             document.getElementById('modal-count-kosong').textContent = data.countCapaianKosong || 0;
@@ -482,14 +526,14 @@
             }
         });
 
-        // ✅ Listener untuk menutup modal
+        // Listener untuk menutup modal
         window.addEventListener('hide-generate-modal', event => {
             if (generateModal) {
                 generateModal.hide();
             }
         });
 
-        // ✅ Function untuk menampilkan capaian lengkap
+        // Function untuk menampilkan capaian lengkap
         window.showFullCapaian = function(namaPelajar, capaian) {
             Swal.fire({
                 title: 'Capaian Kokurikuler - ' + namaPelajar,
@@ -500,7 +544,7 @@
             });
         };
 
-        // ✅ Function untuk handle delete confirmation kokurikuler
+        // Function untuk handle delete confirmation kokurikuler
         window.confirmDeleteKokurikuler = function(pelajarId) {
             Swal.fire({
                 icon: 'warning',
@@ -518,26 +562,22 @@
                         btn.disabled = true;
                         btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
                     }
-
-                    // Dispatch ke backend
                     Livewire.dispatch('deleteKokurikuler', [pelajarId]);
                 }
             });
         };
 
-        // --- SweetAlert Handlers (DIADOPSI DAN DIOPTIMALKAN) ---
-
+        // SweetAlert Handlers
         window.addEventListener('swal:success', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
             const params = typeof detail === 'string' ? {
                 text: detail
             } : detail;
-
             Swal.fire({
                 icon: 'success',
                 title: params.title ?? 'Berhasil!',
                 text: params.text ?? '',
-                showConfirmButton: true,
+                showConfirmButton: true
             });
         });
 
@@ -546,7 +586,6 @@
             const params = typeof detail === 'string' ? {
                 text: detail
             } : detail;
-
             Swal.fire({
                 icon: 'error',
                 title: params.title ?? 'Error!',
@@ -560,7 +599,6 @@
             const params = typeof detail === 'string' ? {
                 text: detail
             } : detail;
-
             Swal.fire({
                 icon: 'info',
                 title: params.title ?? 'Info',
@@ -575,13 +613,12 @@
             const params = typeof detail === 'string' ? {
                 text: detail
             } : detail;
-
             Swal.fire({
                 icon: 'warning',
                 title: params.title ?? 'Perhatian!',
                 html: (params.text ?? '').replace(/\n/g, '<br>'),
                 confirmButtonText: 'OK',
-                width: '600px',
+                width: '600px'
             });
         });
 
@@ -590,7 +627,6 @@
             const params = typeof detail === 'string' ? {
                 text: detail
             } : detail;
-
             Swal.fire({
                 icon: 'question',
                 title: params.title ?? 'Konfirmasi',

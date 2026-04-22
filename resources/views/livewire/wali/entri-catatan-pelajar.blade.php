@@ -19,7 +19,7 @@
     </div>
 
     {{-- Info Rombel Card --}}
-    @if($rombel && $semesterAktif)
+    @if($rombel && $semesterId)
     <div class="card border-success shadow-sm mb-4">
         <div class="card-body">
             <div class="row g-4">
@@ -39,7 +39,7 @@
                         </div>
                     </div>
 
-                    <!-- Tahun Ajaran -->
+                    <!-- Tahun Ajaran & Semester -->
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
@@ -48,7 +48,12 @@
                         <div class="ms-3 d-flex flex-column justify-content-center">
                             <small class="text-muted lh-2">Tahun Ajaran & Semester</small>
                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                {{ $semesterAktif->tahunAjaran->nama ?? 'N/A' }} ~ {{ $semesterAktif->semester->nama ?? 'Belum Ada' }}
+                                @if($selectedSemesterObj)
+                                {{ $selectedSemesterObj->tahunAjaran->nama ?? 'N/A' }} ~
+                                {{ $selectedSemesterObj->semester->nama ?? 'N/A' }}
+                                @else
+                                <span class="text-muted">Belum Dipilih</span>
+                                @endif
                             </p>
                         </div>
                     </div>
@@ -107,32 +112,81 @@
     @else
     <div class="alert alert-danger" role="alert">
         <i class="mdi mdi-alert-circle me-2"></i>
-        <strong>Perhatian!</strong> Tidak ada kelas binaan atau semester aktif.
+        <strong>Perhatian!</strong>
+        @if(!$rombel)
+        Anda tidak memiliki kelas binaan yang aktif.
+        @else
+        Pilih tahun ajaran dan semester untuk melanjutkan.
+        @endif
+    </div>
+    @endif
+
+    {{-- Filter Tahun Ajaran & Semester --}}
+    @if($rombel)
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="page-header mb-0 border-bottom mb-3">
+                <div class="d-flex align-items-center">
+                    <h5 class="text-dark"><i class="mdi mdi-filter"></i> Filter Data</h5>
+                </div>
+            </div>
+            <div class="row g-3">
+
+                {{-- Tahun Ajaran --}}
+                <div class="col-md-4">
+                    <label class="form-label">Tahun Ajaran</label>
+                    <select wire:model.live="tahunAjaranId" class="form-select">
+                        <option value="">-- Pilih Tahun Ajaran --</option>
+                        @foreach($tahunAjaranList as $ta)
+                        <option value="{{ $ta->id }}">
+                            {{ $ta->nama }}
+                            @if($ta->status === 'aktif')
+                            (Aktif)
+                            @endif
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Semester --}}
+                <div class="col-md-4">
+                    <label class="form-label">Semester</label>
+                    <select wire:model.live="semesterId" class="form-select"
+                        @if(!$tahunAjaranId) disabled @endif>
+                        <option value="">-- Pilih Semester --</option>
+                        @foreach($semesterList as $sem)
+                        <option value="{{ $sem->id }}">
+                            {{ $sem->semester->nama ?? $sem->id }}
+                            @if($sem->status === 'aktif')
+                            (Aktif)
+                            @endif
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Pencarian --}}
+                <div class="col-md-4">
+                    <label class="form-label">Pencarian</label>
+                    <div class="d-flex">
+                        <input type="search"
+                            wire:model.live.debounce.300ms="searchPelajar"
+                            class="form-control"
+                            placeholder="Cari..."
+                            @if(!$semesterId) disabled @endif>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
     @endif
 
     {{-- Tabel Input Catatan --}}
-    @if($rombel && $semesterAktif)
+    @if($rombel && $semesterId)
     <div class="row mb-3 align-items-center">
         <div class="col-lg-6">
             <h5 class="text-dark"><i class="mdi mdi-account-multiple me-2"></i> Entri Data Catatan Wali Kelas</h5>
-        </div>
-        <div class="col-lg-6 d-flex justify-content-end">
-            <div class="input-group w-50">
-                <input type="search"
-                    wire:model.live.debounce.300ms="searchPelajar"
-                    class="form-control"
-                    placeholder="Cari nama, atau nomor induk...">
-                @if($searchPelajar)
-                <div class="input-group-append">
-                    <button type="button"
-                        class="btn btn-secondary"
-                        wire:click="$set('searchPelajar', '')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                @endif
-            </div>
         </div>
     </div>
 
@@ -185,28 +239,29 @@
                         @enderror
                     </td>
                     <td style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 300px;">
-                        @if ($pelajar->catatan_sekarang)
+                        @if($pelajar->catatan_sekarang)
                         @php
                         $catatan = $pelajar->catatan_sekarang;
                         $teksPendek = Str::limit($catatan, 150);
                         @endphp
-
                         <p class="mb-0">
                             <a href="javascript:void(0)"
                                 class="text-muted fs-7 text-decoration-none"
                                 onclick="showFullCatatan('{{ addslashes($pelajar->nama_lengkap) }}', `{{ addslashes($catatan) }}`)"
                                 title="Klik untuk melihat catatan lengkap">
                                 {{ $teksPendek }}
-                                @if (strlen($catatan) > 150)
-                                @endif
                             </a>
                         </p>
-
+                        @if($pelajar->tanggal_input)
+                        <small class="text-muted">
+                            <i class="mdi mdi-clock-outline me-1"></i>
+                            {{ \Carbon\Carbon::parse($pelajar->tanggal_input)->format('d/m/Y') }}
+                        </small>
+                        @endif
                         @else
                         <span class="text-muted">-</span>
                         @endif
                     </td>
-
                     <td>
                         @if($pelajar->catatan_sekarang)
                         <button type="button"
@@ -277,16 +332,16 @@
             </span>
         </button>
     </div>
-    @else
+    @elseif($rombel && !$semesterId)
     <div class="alert alert-warning text-center" role="alert">
         <i class="mdi mdi-information-outline me-2"></i>
-        <strong>Tidak ada kelas binaan atau semester aktif.</strong>
+        <strong>Silakan pilih Tahun Ajaran dan Semester untuk mulai mengentri catatan pelajar.</strong>
     </div>
     @endif
 
     {{-- Loading Overlay --}}
     <div wire:loading.flex
-        wire:target="saveCatatan,searchPelajar"
+        wire:target="saveCatatan,searchPelajar,tahunAjaranId,semesterId"
         class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center"
         style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: none;">
         <div class="spinner-border text-success" role="status">
@@ -328,36 +383,33 @@
                         btn.disabled = true;
                         btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
                     }
-
                     Livewire.dispatch('deleteCatatan', [pelajarId]);
                 }
             });
         };
 
-        // Handler untuk response dari backend
+        // SweetAlert Handlers
         window.addEventListener('swal:success', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
-
             if (typeof detail === 'string') {
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
                     text: detail,
-                    showConfirmButton: true,
+                    showConfirmButton: true
                 });
             } else if (typeof detail === 'object' && detail !== null) {
                 Swal.fire({
                     icon: 'success',
                     title: detail.title ?? 'Berhasil!',
                     text: detail.text ?? '',
-                    showConfirmButton: true,
+                    showConfirmButton: true
                 });
             }
         });
 
         window.addEventListener('swal:error', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
-
             if (typeof detail === 'string') {
                 Swal.fire({
                     icon: 'error',
@@ -377,7 +429,6 @@
 
         window.addEventListener('swal:info', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
-
             if (typeof detail === 'string') {
                 Swal.fire({
                     icon: 'info',

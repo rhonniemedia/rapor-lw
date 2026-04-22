@@ -19,7 +19,7 @@
     </div>
 
     {{-- Info Rombel Card --}}
-    @if($rombel && $semesterAktif)
+    @if($rombel && $semesterId)
     <div class="card border-success shadow-sm mb-4">
         <div class="card-body">
             <div class="row g-4">
@@ -45,7 +45,12 @@
                         <div class="ms-3 d-flex flex-column justify-content-center">
                             <small class="text-muted lh-2">Tahun Ajaran & Semester</small>
                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                {{ $semesterAktif->tahunAjaran->nama ?? 'N/A' }} ~ {{ $semesterAktif->semester->nama ?? 'Belum Ada' }}
+                                @if($selectedSemesterObj)
+                                {{ $selectedSemesterObj->tahunAjaran->nama ?? 'N/A' }} ~
+                                {{ $selectedSemesterObj->semester->nama ?? 'N/A' }}
+                                @else
+                                <span class="text-muted">Belum Dipilih</span>
+                                @endif
                             </p>
                         </div>
                     </div>
@@ -123,12 +128,17 @@
     @else
     <div class="alert alert-danger" role="alert">
         <i class="mdi mdi-alert-circle me-2"></i>
-        <strong>Perhatian!</strong> Tidak ada kelas binaan atau semester aktif.
+        <strong>Perhatian!</strong>
+        @if(!$rombel)
+        Anda tidak memiliki kelas binaan yang aktif.
+        @else
+        Pilih tahun ajaran dan semester untuk melanjutkan.
+        @endif
     </div>
     @endif
 
-    {{-- Filter Mata Pelajaran --}}
-    @if($rombel && $semesterAktif)
+    {{-- Filter Tahun Ajaran, Semester & Mata Pelajaran --}}
+    @if($rombel)
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <div class="page-header mb-0 border-bottom mb-3">
@@ -137,8 +147,45 @@
                 </div>
             </div>
             <div class="row g-3">
-                <div class="col-md-6">
-                    <select wire:model.live="selectedRombelPengajarId" class="form-select">
+
+                {{-- Tahun Ajaran --}}
+                <div class="col-md-3">
+                    <label class="form-label">Tahun Ajaran</label>
+                    <select wire:model.live="tahunAjaranId" class="form-select">
+                        <option value="">-- Pilih Tahun Ajaran --</option>
+                        @foreach($tahunAjaranList as $ta)
+                        <option value="{{ $ta->id }}">
+                            {{ $ta->nama }}
+                            @if($ta->status === 'aktif')
+                            (Aktif)
+                            @endif
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Semester --}}
+                <div class="col-md-3">
+                    <label class="form-label">Semester</label>
+                    <select wire:model.live="semesterId" class="form-select"
+                        @if(!$tahunAjaranId) disabled @endif>
+                        <option value="">-- Pilih Semester --</option>
+                        @foreach($semesterList as $sem)
+                        <option value="{{ $sem->id }}">
+                            {{ $sem->semester->nama ?? $sem->id }}
+                            @if($sem->status === 'aktif')
+                            (Aktif)
+                            @endif
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Mata Pelajaran --}}
+                <div class="col-md-3">
+                    <label class="form-label">Mata Pelajaran</label>
+                    <select wire:model.live="selectedRombelPengajarId" class="form-select"
+                        @if(!$semesterId) disabled @endif>
                         <option value="">-- Pilih Mata Pelajaran --</option>
                         @foreach($mataPelajaranList as $rp)
                         <option value="{{ $rp->id }}">
@@ -151,25 +198,29 @@
                     </select>
                 </div>
 
-                <div class="col-md-6 d-flex align-items-start gap-2">
-                    <input type="search"
-                        wire:model.live.debounce.300ms="searchPelajar"
-                        class="form-control"
-                        placeholder="Cari nama atau nomor induk..."
-                        @if(!$selectedRombelPengajarId) disabled @endif>
+                {{-- Pencarian + Generate --}}
+                <div class="col-md-3">
+                    <label class="form-label">Cari & Generate</label>
+                    <div class="d-flex gap-2">
+                        <input type="search"
+                            wire:model.live.debounce.300ms="searchPelajar"
+                            class="form-control"
+                            placeholder="Cari..."
+                            @if(!$selectedRombelPengajarId) disabled @endif>
 
-                    {{-- TOMBOL GENERATE CAPAIAN DITAMBAHKAN --}}
-                    <button
-                        type="button"
-                        class="btn btn-outline-primary"
-                        wire:click="openGenerateModal"
-                        wire:key="btn-generate-capaian"
-                        title="Generate Capaian Kompetensi"
-                        @if(!$selectedRombelPengajarId) disabled @endif
-                        style="width: 2.5rem; display: flex; align-items: center; justify-content: center;">
-                        <i class="mdi mdi-auto-fix"></i>
-                    </button>
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary"
+                            wire:click="openGenerateModal"
+                            wire:key="btn-generate-capaian"
+                            title="Generate"
+                            @if(!$selectedRombelPengajarId) disabled @endif
+                            style="width: 2.5rem; display: flex; align-items: center; justify-content: center;">
+                            <i class="mdi mdi-auto-fix"></i>
+                        </button>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -245,9 +296,7 @@
                     </td>
                     <td style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 300px;">
                         @if($pelajar->capaian_kompetensi)
-                        @php
-                        $capaian = $pelajar->capaian_kompetensi;
-                        @endphp
+                        @php $capaian = $pelajar->capaian_kompetensi; @endphp
                         @if (strlen($capaian) > 100)
                         <p class="mb-0">
                             <a href="javascript:void(0)"
@@ -311,7 +360,6 @@
             Reset
         </button>
 
-        {{-- WIRE:CLICK DIUBAH DARI confirmSaveNilai MENJADI saveNilai --}}
         <button type="button"
             class="btn btn-labeled btn-primary"
             wire:click="saveNilai"
@@ -335,16 +383,16 @@
             </span>
         </button>
     </div>
-    @elseif($rombel && $semesterAktif)
+    @elseif($rombel && $semesterId)
     <div class="alert alert-warning text-center" role="alert">
         <i class="mdi mdi-information-outline me-2"></i>
         <strong>Silakan pilih Mata Pelajaran untuk mulai mengentri nilai.</strong>
     </div>
     @endif
 
-    {{-- Loading Overlay - Hanya untuk saveNilai dan actions penting --}}
+    {{-- Loading Overlay --}}
     <div wire:loading.flex
-        wire:target="saveNilai,selectedRombelPengajarId,searchPelajar"
+        wire:target="saveNilai,selectedRombelPengajarId,searchPelajar,tahunAjaranId,semesterId"
         class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center"
         style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: none;">
         <div class="spinner-border text-primary" role="status">
@@ -480,16 +528,14 @@
 
             // Reset mode ke 'empty' saat modal ditutup
             generateModalEl.addEventListener('hidden.bs.modal', function() {
-                // Menggunakan Livewire.dispatch('$set', ...) untuk Livewire 3
                 Livewire.dispatch('$set', ['generateMode', 'empty']);
             });
         }
 
-        // ✅ Listener untuk membuka modal
+        // Listener untuk membuka modal
         window.addEventListener('show-generate-modal', event => {
             const data = event.detail[0] || event.detail;
 
-            // Update nilai di modal
             document.getElementById('modal-count-nilai').textContent = data.countPelajarWithNilai || 0;
             document.getElementById('modal-count-nilai-2').textContent = data.countPelajarWithNilai || 0;
             document.getElementById('modal-count-kosong').textContent = data.countCapaianKosong || 0;
@@ -501,14 +547,14 @@
             }
         });
 
-        // ✅ Listener untuk menutup modal
+        // Listener untuk menutup modal
         window.addEventListener('hide-generate-modal', event => {
             if (generateModal) {
                 generateModal.hide();
             }
         });
 
-        // ✅ Function untuk handle delete confirmation dengan loading state
+        // Function untuk handle delete confirmation dengan loading state
         window.confirmDeleteNilai = function(pelajarId) {
             Swal.fire({
                 icon: 'warning',
@@ -521,14 +567,11 @@
                 cancelButtonColor: '#3085d6',
             }).then(result => {
                 if (result.isConfirmed) {
-                    // Tampilkan loading pada tombol spesifik
                     const btn = document.getElementById(`delete-btn-${pelajarId}`);
                     if (btn) {
                         btn.disabled = true;
                         btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
                     }
-
-                    // Dispatch ke backend
                     Livewire.dispatch('deleteNilai', [pelajarId]);
                 }
             });
@@ -537,27 +580,25 @@
         // SweetAlert Handlers
         window.addEventListener('swal:success', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
-
             if (typeof detail === 'string') {
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
                     text: detail,
-                    showConfirmButton: true,
+                    showConfirmButton: true
                 });
             } else if (typeof detail === 'object' && detail !== null) {
                 Swal.fire({
                     icon: 'success',
                     title: detail.title ?? 'Berhasil!',
                     text: detail.text ?? '',
-                    showConfirmButton: true,
+                    showConfirmButton: true
                 });
             }
         });
 
         window.addEventListener('swal:error', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
-
             if (typeof detail === 'string') {
                 Swal.fire({
                     icon: 'error',
@@ -577,7 +618,6 @@
 
         window.addEventListener('swal:info', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
-
             if (typeof detail === 'string') {
                 Swal.fire({
                     icon: 'info',
@@ -597,10 +637,8 @@
             }
         });
 
-        // Handler untuk konfirmasi umum (Simpan/Reset) - Tetap dipertahankan untuk RESET dan DELETE
         window.addEventListener('swal:confirm', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
-
             Swal.fire({
                 title: detail.title ?? 'Konfirmasi',
                 text: detail.text ?? 'Anda yakin?',
@@ -624,14 +662,13 @@
 
         window.addEventListener('swal:warning', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;
-
             if (typeof detail === 'string') {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Peringatan',
                     html: detail.replace(/\n/g, '<br>'),
                     confirmButtonText: 'Tutup',
-                    width: '600px',
+                    width: '600px'
                 });
             } else if (typeof detail === 'object' && detail !== null) {
                 Swal.fire({
@@ -639,7 +676,7 @@
                     title: detail.title ?? 'Peringatan',
                     html: (detail.text ?? '').replace(/\n/g, '<br>'),
                     confirmButtonText: 'Tutup',
-                    width: '600px',
+                    width: '600px'
                 });
             }
         });

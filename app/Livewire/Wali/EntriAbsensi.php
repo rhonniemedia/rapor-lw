@@ -8,8 +8,9 @@ use App\Models\Pelajar;
 use Livewire\WithPagination;
 use App\Models\Kehadiran;
 use App\Models\RombelPelajar;
-use Illuminate\Support\Facades\DB;
+use App\Models\TahunAjaran;
 use App\Models\TahunAjaranSemester;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,9 +21,16 @@ class EntriAbsensi extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    // Properties
+    // Filter Properties
+    public $tahunAjaranId = null;
+    public $semesterId = null;
+
+    // Data Collections
+    public $tahunAjaranList = [];
+    public $semesterList = [];
+
+    // Main Data
     public $rombel;
-    public $semesterAktif;
 
     // Search & Pagination
     public $searchPelajar = '';
@@ -38,27 +46,31 @@ class EntriAbsensi extends Component
 
     // Query string
     protected $queryString = [
+        'tahunAjaranId' => ['except' => null],
+        'semesterId'    => ['except' => null],
         'searchPelajar' => ['except' => ''],
     ];
 
     // Validation
     protected $rules = [
-        'sakitInput.*' => 'nullable|integer|min:0|max:999',
-        'izinInput.*' => 'nullable|integer|min:0|max:999',
-        'tanpaKeteranganInput.*' => 'nullable|integer|min:0|max:999',
+        'sakitInput.*'             => 'nullable|integer|min:0|max:999',
+        'izinInput.*'              => 'nullable|integer|min:0|max:999',
+        'tanpaKeteranganInput.*'   => 'nullable|integer|min:0|max:999',
     ];
 
     protected $messages = [
-        'sakitInput.*.integer' => 'Jumlah sakit harus berupa angka',
-        'sakitInput.*.min' => 'Jumlah sakit tidak boleh negatif',
-        'sakitInput.*.max' => 'Jumlah sakit maksimal 999',
-        'izinInput.*.integer' => 'Jumlah izin harus berupa angka',
-        'izinInput.*.min' => 'Jumlah izin tidak boleh negatif',
-        'izinInput.*.max' => 'Jumlah izin maksimal 999',
+        'sakitInput.*.integer'           => 'Jumlah sakit harus berupa angka',
+        'sakitInput.*.min'               => 'Jumlah sakit tidak boleh negatif',
+        'sakitInput.*.max'               => 'Jumlah sakit maksimal 999',
+        'izinInput.*.integer'            => 'Jumlah izin harus berupa angka',
+        'izinInput.*.min'                => 'Jumlah izin tidak boleh negatif',
+        'izinInput.*.max'                => 'Jumlah izin maksimal 999',
         'tanpaKeteranganInput.*.integer' => 'Jumlah tanpa keterangan harus berupa angka',
-        'tanpaKeteranganInput.*.min' => 'Jumlah tanpa keterangan tidak boleh negatif',
-        'tanpaKeteranganInput.*.max' => 'Jumlah tanpa keterangan maksimal 999',
+        'tanpaKeteranganInput.*.min'     => 'Jumlah tanpa keterangan tidak boleh negatif',
+        'tanpaKeteranganInput.*.max'     => 'Jumlah tanpa keterangan maksimal 999',
     ];
+
+    protected $listeners = ['deleteKehadiran'];
 
     public function mount()
     {
@@ -69,16 +81,55 @@ class EntriAbsensi extends Component
             return redirect()->route('walikelas.dashboard');
         }
 
-        $this->loadSemesterAktif();
-
-        if (!$this->semesterAktif) {
-            session()->flash('warning', 'Tidak ada semester aktif saat ini.');
-        }
-
-        $this->loadKehadiranPelajar();
+        $this->initializeFilters();
     }
 
-    protected $listeners = ['deleteKehadiran'];
+    // ========================================
+    // INITIALIZATION METHODS
+    // ========================================
+
+    private function initializeFilters(): void
+    {
+        $this->loadTahunAjaran();
+
+        if (!$this->tahunAjaranId) {
+            $this->setActiveTahunAjaran();
+        }
+
+        if ($this->tahunAjaranId) {
+            $this->loadSemester();
+
+            if (!$this->semesterId) {
+                $this->setActiveSemester();
+            }
+        }
+
+        if ($this->tahunAjaranId && $this->semesterId) {
+            $this->loadKehadiranPelajar();
+        }
+    }
+
+    private function setActiveTahunAjaran(): void
+    {
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+        if ($activeTahunAjaran) {
+            $this->tahunAjaranId = $activeTahunAjaran->id;
+        }
+    }
+
+    private function setActiveSemester(): void
+    {
+        $activeSemester = TahunAjaranSemester::where('tahun_ajaran_id', $this->tahunAjaranId)
+            ->where('status', 'aktif')
+            ->first();
+        if ($activeSemester) {
+            $this->semesterId = $activeSemester->id;
+        }
+    }
+
+    // ========================================
+    // DATA LOADING METHODS
+    // ========================================
 
     private function loadRombelWaliKelas(): void
     {
@@ -92,21 +143,26 @@ class EntriAbsensi extends Component
         ])->where('wali_kelas_slug', $user->slug)->first();
     }
 
-    private function loadSemesterAktif(): void
+    private function loadTahunAjaran(): void
     {
-        $this->semesterAktif = TahunAjaranSemester::where('status', 'aktif')
-            ->with(['semester', 'tahunAjaran'])
-            ->first();
+        $this->tahunAjaranList = TahunAjaran::orderBy('tgl_mulai', 'desc')->get();
     }
 
-    public function updatingSearchPelajar(): void
+    private function loadSemester(): void
     {
-        $this->resetPage();
+        if (!$this->tahunAjaranId) {
+            $this->semesterList = [];
+            return;
+        }
+
+        $this->semesterList = TahunAjaranSemester::with('semester')
+            ->where('tahun_ajaran_id', $this->tahunAjaranId)
+            ->get();
     }
 
     private function loadKehadiranPelajar(): void
     {
-        if (!$this->semesterAktif || !$this->rombel) {
+        if (!$this->semesterId || !$this->rombel) {
             $this->sakitInput = [];
             $this->izinInput = [];
             $this->tanpaKeteranganInput = [];
@@ -114,14 +170,50 @@ class EntriAbsensi extends Component
             return;
         }
 
-        // Reload cache dari database
         $kehadiranData = Kehadiran::where('rombel_id', $this->rombel->id)
-            ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+            ->where('tahun_ajaran_semester_id', $this->semesterId)
             ->get()
             ->keyBy('pelajar_id');
 
         $this->cachedKehadiranExist = $kehadiranData;
     }
+
+    // ========================================
+    // FILTER UPDATE HANDLERS
+    // ========================================
+
+    public function updatedTahunAjaranId(): void
+    {
+        $this->resetFilters();
+        $this->loadSemester();
+        $this->setActiveSemester();
+
+        if ($this->semesterId) {
+            $this->updatedSemesterId();
+        }
+
+        $this->resetPage();
+    }
+
+    public function updatedSemesterId(): void
+    {
+        $this->sakitInput = [];
+        $this->izinInput = [];
+        $this->tanpaKeteranganInput = [];
+        $this->cachedKehadiranExist = null;
+
+        $this->loadKehadiranPelajar();
+        $this->resetPage();
+    }
+
+    public function updatingSearchPelajar(): void
+    {
+        $this->resetPage();
+    }
+
+    // ========================================
+    // QUERY HELPER
+    // ========================================
 
     private function getPelajarQuery(): Builder
     {
@@ -144,12 +236,16 @@ class EntriAbsensi extends Component
         return $query;
     }
 
+    // ========================================
+    // SAVE / RESET / DELETE METHODS
+    // ========================================
+
     public function saveKehadiran(): void
     {
-        if (!$this->semesterAktif || !$this->rombel) {
+        if (!$this->semesterId || !$this->rombel) {
             $this->dispatch('swal:error', [
                 'title' => 'Error!',
-                'text' => 'Tidak ada semester aktif atau kelas binaan.',
+                'text'  => 'Tidak ada semester dipilih atau kelas binaan.',
             ]);
             return;
         }
@@ -160,7 +256,7 @@ class EntriAbsensi extends Component
             Log::error('Validation failed', ['errors' => $e->errors()]);
             $this->dispatch('swal:error', [
                 'title' => 'Validasi Gagal!',
-                'text' => 'Periksa input Anda. ' . implode(', ', array_map(fn($err) => implode(', ', $err), $e->errors())),
+                'text'  => 'Periksa input Anda. ' . implode(', ', array_map(fn($err) => implode(', ', $err), $e->errors())),
             ]);
             return;
         }
@@ -172,47 +268,45 @@ class EntriAbsensi extends Component
         DB::beginTransaction();
         try {
             $savedCount = 0;
-            $userId = Auth::id();
+            $userId     = Auth::id();
 
             foreach ($this->sakitInput as $pelajarId => $sakit) {
                 if (!in_array($pelajarId, $validPelajarIds)) {
                     continue;
                 }
 
-                $izin = $this->izinInput[$pelajarId] ?? 0;
+                $izin            = $this->izinInput[$pelajarId] ?? 0;
                 $tanpaKeterangan = $this->tanpaKeteranganInput[$pelajarId] ?? 0;
 
-                // Jika semua nilai kosong atau 0, skip
                 if (empty($sakit) && empty($izin) && empty($tanpaKeterangan)) {
                     continue;
                 }
 
-                // Convert empty to 0
-                $sakit = empty($sakit) ? 0 : (int)$sakit;
-                $izin = empty($izin) ? 0 : (int)$izin;
+                $sakit           = empty($sakit) ? 0 : (int)$sakit;
+                $izin            = empty($izin) ? 0 : (int)$izin;
                 $tanpaKeterangan = empty($tanpaKeterangan) ? 0 : (int)$tanpaKeterangan;
 
                 try {
                     $existingKehadiran = Kehadiran::where([
-                        'pelajar_id' => $pelajarId,
-                        'rombel_id' => $this->rombel->id,
-                        'tahun_ajaran_semester_id' => $this->semesterAktif->id,
+                        'pelajar_id'               => $pelajarId,
+                        'rombel_id'                => $this->rombel->id,
+                        'tahun_ajaran_semester_id' => $this->semesterId,
                     ])->lockForUpdate()->first();
 
                     $dataToSave = [
-                        'jumlah_sakit' => $sakit,
-                        'jumlah_izin' => $izin,
-                        'jumlah_tanpa_keterangan' => $tanpaKeterangan,
-                        'updated_by' => $userId,
+                        'jumlah_sakit'             => $sakit,
+                        'jumlah_izin'              => $izin,
+                        'jumlah_tanpa_keterangan'  => $tanpaKeterangan,
+                        'updated_by'               => $userId,
                     ];
 
                     if ($existingKehadiran) {
                         $existingKehadiran->update($dataToSave);
                     } else {
-                        $dataToSave['pelajar_id'] = $pelajarId;
-                        $dataToSave['rombel_id'] = $this->rombel->id;
-                        $dataToSave['tahun_ajaran_semester_id'] = $this->semesterAktif->id;
-                        $dataToSave['created_by'] = $userId;
+                        $dataToSave['pelajar_id']               = $pelajarId;
+                        $dataToSave['rombel_id']                = $this->rombel->id;
+                        $dataToSave['tahun_ajaran_semester_id'] = $this->semesterId;
+                        $dataToSave['created_by']               = $userId;
 
                         Kehadiran::create($dataToSave);
                     }
@@ -221,9 +315,9 @@ class EntriAbsensi extends Component
                 } catch (\Illuminate\Database\QueryException $e) {
                     if ($e->errorInfo[1] == 1062) {
                         Kehadiran::where([
-                            'pelajar_id' => $pelajarId,
-                            'rombel_id' => $this->rombel->id,
-                            'tahun_ajaran_semester_id' => $this->semesterAktif->id,
+                            'pelajar_id'               => $pelajarId,
+                            'rombel_id'                => $this->rombel->id,
+                            'tahun_ajaran_semester_id' => $this->semesterId,
                         ])->update($dataToSave);
 
                         $savedCount++;
@@ -243,21 +337,21 @@ class EntriAbsensi extends Component
 
             $this->dispatch('swal:success', [
                 'title' => 'Berhasil!',
-                'text' => "Berhasil menyimpan {$savedCount} data kehadiran pelajar.",
+                'text'  => "Berhasil menyimpan {$savedCount} data kehadiran pelajar.",
             ]);
         } catch (\Exception $e) {
             DB::rollback();
 
             Log::error('Error saving kehadiran', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'rombel_id' => $this->rombel->id,
-                'semester_id' => $this->semesterAktif->id,
+                'message'     => $e->getMessage(),
+                'trace'       => $e->getTraceAsString(),
+                'rombel_id'   => $this->rombel->id,
+                'semester_id' => $this->semesterId,
             ]);
 
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'Gagal menyimpan data: ' . $e->getMessage(),
+                'text'  => 'Gagal menyimpan data: ' . $e->getMessage(),
             ]);
         }
     }
@@ -270,19 +364,19 @@ class EntriAbsensi extends Component
 
         foreach ($this->sakitInput as $pelajarId => $value) {
             if ($this->cachedKehadiranExist && $this->cachedKehadiranExist->has($pelajarId)) {
-                $this->sakitInput[$pelajarId] = $this->cachedKehadiranExist->get($pelajarId)->jumlah_sakit;
-                $this->izinInput[$pelajarId] = $this->cachedKehadiranExist->get($pelajarId)->jumlah_izin;
+                $this->sakitInput[$pelajarId]           = $this->cachedKehadiranExist->get($pelajarId)->jumlah_sakit;
+                $this->izinInput[$pelajarId]            = $this->cachedKehadiranExist->get($pelajarId)->jumlah_izin;
                 $this->tanpaKeteranganInput[$pelajarId] = $this->cachedKehadiranExist->get($pelajarId)->jumlah_tanpa_keterangan;
             } else {
-                $this->sakitInput[$pelajarId] = null;
-                $this->izinInput[$pelajarId] = null;
+                $this->sakitInput[$pelajarId]           = null;
+                $this->izinInput[$pelajarId]            = null;
                 $this->tanpaKeteranganInput[$pelajarId] = null;
             }
         }
 
         $this->dispatch('swal:info', [
             'title' => 'Direset!',
-            'text' => 'Input telah dikembalikan ke data tersimpan.',
+            'text'  => 'Input telah dikembalikan ke data tersimpan.',
         ]);
     }
 
@@ -292,10 +386,10 @@ class EntriAbsensi extends Component
             $pelajarId = $pelajarId[0];
         }
 
-        if (!$pelajarId || !$this->semesterAktif || !$this->rombel) {
+        if (!$pelajarId || !$this->semesterId || !$this->rombel) {
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'ID Pelajar tidak ditemukan atau data tidak valid.',
+                'text'  => 'ID Pelajar tidak ditemukan atau data tidak valid.',
             ]);
             return;
         }
@@ -303,52 +397,70 @@ class EntriAbsensi extends Component
         try {
             $deleted = Kehadiran::where('pelajar_id', $pelajarId)
                 ->where('rombel_id', $this->rombel->id)
-                ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
                 ->delete();
 
             if ($deleted) {
-                if (isset($this->sakitInput[$pelajarId])) {
-                    unset($this->sakitInput[$pelajarId]);
-                }
-                if (isset($this->izinInput[$pelajarId])) {
-                    unset($this->izinInput[$pelajarId]);
-                }
-                if (isset($this->tanpaKeteranganInput[$pelajarId])) {
-                    unset($this->tanpaKeteranganInput[$pelajarId]);
-                }
+                unset(
+                    $this->sakitInput[$pelajarId],
+                    $this->izinInput[$pelajarId],
+                    $this->tanpaKeteranganInput[$pelajarId]
+                );
 
                 $this->cachedKehadiranExist = null;
                 $this->loadKehadiranPelajar();
 
                 $this->dispatch('swal:success', [
                     'title' => 'Berhasil!',
-                    'text' => 'Data kehadiran berhasil dihapus.',
+                    'text'  => 'Data kehadiran berhasil dihapus.',
                 ]);
             } else {
                 $this->dispatch('swal:info', [
                     'title' => 'Info',
-                    'text' => 'Data tidak ditemukan.',
+                    'text'  => 'Data tidak ditemukan.',
                 ]);
             }
         } catch (\Exception $e) {
             Log::error('Error deleting kehadiran: ' . $e->getMessage(), ['pelajar_id' => $pelajarId]);
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'Terjadi kesalahan saat menghapus data.',
+                'text'  => 'Terjadi kesalahan saat menghapus data.',
             ]);
         }
     }
 
+    // ========================================
+    // UTILITY METHODS
+    // ========================================
+
+    private function resetFilters(): void
+    {
+        $this->semesterId              = null;
+        $this->semesterList            = [];
+        $this->sakitInput              = [];
+        $this->izinInput               = [];
+        $this->tanpaKeteranganInput    = [];
+        $this->cachedKehadiranExist    = null;
+    }
+
+    // ========================================
+    // RENDER METHOD
+    // ========================================
+
     public function render()
     {
         $pelajarData = collect();
-        $totalSiswa = 0;
+        $totalSiswa  = 0;
 
         if ($this->rombel) {
             $totalSiswa = RombelPelajar::where('rombel_id', $this->rombel->id)->count();
         }
 
-        if ($this->semesterAktif && $this->rombel) {
+        if ($this->rombel && $this->semesterId) {
+            if ($this->cachedKehadiranExist === null) {
+                $this->loadKehadiranPelajar();
+            }
+
             $kehadiranExist = $this->cachedKehadiranExist ?? collect();
 
             $pelajarPaginated = $this->getPelajarQuery()
@@ -371,8 +483,8 @@ class EntriAbsensi extends Component
                     $this->tanpaKeteranganInput[$pelajarId] = $kehadiranExist->get($pelajarId)?->jumlah_tanpa_keterangan;
                 }
 
-                $kehadiranData = $kehadiranExist->get($pelajarId);
-                $totalKehadiran = 0;
+                $kehadiranData    = $kehadiranExist->get($pelajarId);
+                $totalKehadiran   = 0;
 
                 if ($kehadiranData) {
                     $totalKehadiran = ($kehadiranData->jumlah_sakit ?? 0) +
@@ -381,22 +493,28 @@ class EntriAbsensi extends Component
                 }
 
                 return (object) [
-                    'rombel_pelajar_id' => $rombelPelajar->id,
-                    'pelajar_id' => $pelajarId,
-                    'nama_lengkap' => $rombelPelajar->pelajar->nama_lengkap,
-                    'nomor_induk' => $rombelPelajar->pelajar->nomor_induk,
-                    'nisn' => $rombelPelajar->pelajar->nisn,
-                    'sakit_sekarang' => $kehadiranData?->jumlah_sakit,
-                    'izin_sekarang' => $kehadiranData?->jumlah_izin,
+                    'rombel_pelajar_id'         => $rombelPelajar->id,
+                    'pelajar_id'                => $pelajarId,
+                    'nama_lengkap'              => $rombelPelajar->pelajar->nama_lengkap,
+                    'nomor_induk'               => $rombelPelajar->pelajar->nomor_induk,
+                    'nisn'                      => $rombelPelajar->pelajar->nisn,
+                    'sakit_sekarang'            => $kehadiranData?->jumlah_sakit,
+                    'izin_sekarang'             => $kehadiranData?->jumlah_izin,
                     'tanpa_keterangan_sekarang' => $kehadiranData?->jumlah_tanpa_keterangan,
-                    'total_ketidakhadiran' => $totalKehadiran,
+                    'total_ketidakhadiran'      => $totalKehadiran,
                 ];
             });
         }
 
+        // Resolve selected semester label for display
+        $selectedSemesterObj = $this->semesterId
+            ? collect($this->semesterList)->firstWhere('id', $this->semesterId)
+            : null;
+
         return view('livewire.wali.entri-absensi', [
-            'pelajarData' => $pelajarData,
-            'totalSiswa' => $totalSiswa,
+            'pelajarData'         => $pelajarData,
+            'totalSiswa'          => $totalSiswa,
+            'selectedSemesterObj' => $selectedSemesterObj,
         ]);
     }
 }

@@ -9,8 +9,9 @@ use Livewire\WithPagination;
 use App\Models\CatatanPelajar;
 use App\Models\CatatanWaliKelas;
 use App\Models\RombelPelajar;
-use Illuminate\Support\Facades\DB;
+use App\Models\TahunAjaran;
 use App\Models\TahunAjaranSemester;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,9 +22,16 @@ class EntriCatatanPelajar extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    // Properties
+    // Filter Properties
+    public $tahunAjaranId = null;
+    public $semesterId = null;
+
+    // Data Collections
+    public $tahunAjaranList = [];
+    public $semesterList = [];
+
+    // Main Data
     public $rombel;
-    public $semesterAktif;
 
     // Search & Pagination
     public $searchPelajar = '';
@@ -37,6 +45,8 @@ class EntriCatatanPelajar extends Component
 
     // Query string
     protected $queryString = [
+        'tahunAjaranId' => ['except' => null],
+        'semesterId'    => ['except' => null],
         'searchPelajar' => ['except' => ''],
     ];
 
@@ -47,8 +57,10 @@ class EntriCatatanPelajar extends Component
 
     protected $messages = [
         'catatanInput.*.string' => 'Catatan harus berupa teks',
-        'catatanInput.*.max' => 'Catatan maksimal 5000 karakter',
+        'catatanInput.*.max'    => 'Catatan maksimal 5000 karakter',
     ];
+
+    protected $listeners = ['deleteCatatan'];
 
     public function mount()
     {
@@ -59,16 +71,55 @@ class EntriCatatanPelajar extends Component
             return redirect()->route('walikelas.dashboard');
         }
 
-        $this->loadSemesterAktif();
-
-        if (!$this->semesterAktif) {
-            session()->flash('warning', 'Tidak ada semester aktif saat ini.');
-        }
-
-        $this->loadCatatanPelajar();
+        $this->initializeFilters();
     }
 
-    protected $listeners = ['deleteCatatan'];
+    // ========================================
+    // INITIALIZATION METHODS
+    // ========================================
+
+    private function initializeFilters(): void
+    {
+        $this->loadTahunAjaran();
+
+        if (!$this->tahunAjaranId) {
+            $this->setActiveTahunAjaran();
+        }
+
+        if ($this->tahunAjaranId) {
+            $this->loadSemester();
+
+            if (!$this->semesterId) {
+                $this->setActiveSemester();
+            }
+        }
+
+        if ($this->tahunAjaranId && $this->semesterId) {
+            $this->loadCatatanPelajar();
+        }
+    }
+
+    private function setActiveTahunAjaran(): void
+    {
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+        if ($activeTahunAjaran) {
+            $this->tahunAjaranId = $activeTahunAjaran->id;
+        }
+    }
+
+    private function setActiveSemester(): void
+    {
+        $activeSemester = TahunAjaranSemester::where('tahun_ajaran_id', $this->tahunAjaranId)
+            ->where('status', 'aktif')
+            ->first();
+        if ($activeSemester) {
+            $this->semesterId = $activeSemester->id;
+        }
+    }
+
+    // ========================================
+    // DATA LOADING METHODS
+    // ========================================
 
     private function loadRombelWaliKelas(): void
     {
@@ -82,11 +133,69 @@ class EntriCatatanPelajar extends Component
         ])->where('wali_kelas_slug', $user->slug)->first();
     }
 
-    private function loadSemesterAktif(): void
+    private function loadTahunAjaran(): void
     {
-        $this->semesterAktif = TahunAjaranSemester::where('status', 'aktif')
-            ->with(['semester', 'tahunAjaran'])
-            ->first();
+        $this->tahunAjaranList = TahunAjaran::orderBy('tgl_mulai', 'desc')->get();
+    }
+
+    private function loadSemester(): void
+    {
+        if (!$this->tahunAjaranId) {
+            $this->semesterList = [];
+            return;
+        }
+
+        $this->semesterList = TahunAjaranSemester::with('semester')
+            ->where('tahun_ajaran_id', $this->tahunAjaranId)
+            ->get();
+    }
+
+    private function loadCatatanPelajar(): void
+    {
+        if (!$this->semesterId) {
+            $this->catatanInput      = [];
+            $this->cachedCatatanExist = null;
+            return;
+        }
+
+        $userId = Auth::id();
+
+        $catatanData = CatatanWaliKelas::where('guru_id', $userId)
+            ->where('tahun_ajaran_semester_id', $this->semesterId)
+            ->orderBy('tanggal_input', 'desc')
+            ->get()
+            ->groupBy('pelajar_id')
+            ->map(function ($group) {
+                return $group->first();
+            });
+
+        $this->cachedCatatanExist = $catatanData;
+    }
+
+    // ========================================
+    // FILTER UPDATE HANDLERS
+    // ========================================
+
+    public function updatedTahunAjaranId(): void
+    {
+        $this->resetFilters();
+        $this->loadSemester();
+        $this->setActiveSemester();
+
+        if ($this->semesterId) {
+            $this->updatedSemesterId();
+        }
+
+        $this->resetPage();
+    }
+
+    public function updatedSemesterId(): void
+    {
+        $this->catatanInput      = [];
+        $this->cachedCatatanExist = null;
+
+        $this->loadCatatanPelajar();
+        $this->resetPage();
     }
 
     public function updatingSearchPelajar(): void
@@ -94,28 +203,9 @@ class EntriCatatanPelajar extends Component
         $this->resetPage();
     }
 
-    private function loadCatatanPelajar(): void
-    {
-        if (!$this->semesterAktif) {
-            $this->catatanInput = [];
-            $this->cachedCatatanExist = null;
-            return;
-        }
-
-        $userId = Auth::id();
-
-        // Reload cache dari database - ambil catatan terbaru per pelajar
-        $catatanData = CatatanWaliKelas::where('guru_id', $userId)
-            ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
-            ->orderBy('tanggal_input', 'desc')
-            ->get()
-            ->groupBy('pelajar_id')
-            ->map(function ($group) {
-                return $group->first(); // Ambil catatan terbaru
-            });
-
-        $this->cachedCatatanExist = $catatanData;
-    }
+    // ========================================
+    // QUERY HELPER
+    // ========================================
 
     private function getPelajarQuery(): Builder
     {
@@ -138,12 +228,16 @@ class EntriCatatanPelajar extends Component
         return $query;
     }
 
+    // ========================================
+    // SAVE / RESET / DELETE METHODS
+    // ========================================
+
     public function saveCatatan(): void
     {
-        if (!$this->semesterAktif || !$this->rombel) {
+        if (!$this->semesterId || !$this->rombel) {
             $this->dispatch('swal:error', [
                 'title' => 'Error!',
-                'text' => 'Tidak ada semester aktif atau kelas binaan.',
+                'text'  => 'Tidak ada semester dipilih atau kelas binaan.',
             ]);
             return;
         }
@@ -154,7 +248,7 @@ class EntriCatatanPelajar extends Component
             Log::error('Validation failed', ['errors' => $e->errors()]);
             $this->dispatch('swal:error', [
                 'title' => 'Validasi Gagal!',
-                'text' => 'Periksa input Anda. ' . implode(', ', array_map(fn($err) => implode(', ', $err), $e->errors())),
+                'text'  => 'Periksa input Anda. ' . implode(', ', array_map(fn($err) => implode(', ', $err), $e->errors())),
             ]);
             return;
         }
@@ -165,8 +259,8 @@ class EntriCatatanPelajar extends Component
 
         DB::beginTransaction();
         try {
-            $savedCount = 0;
-            $userId = Auth::id();
+            $savedCount   = 0;
+            $userId       = Auth::id();
             $tanggalInput = now();
 
             foreach ($this->catatanInput as $pelajarId => $catatan) {
@@ -174,34 +268,30 @@ class EntriCatatanPelajar extends Component
                     continue;
                 }
 
-                // Jika catatan kosong, skip
                 if (empty($catatan)) {
                     continue;
                 }
 
                 try {
-                    // Cari catatan yang sudah ada untuk di-update
                     $existingCatatan = CatatanWaliKelas::where([
-                        'pelajar_id' => $pelajarId,
-                        'guru_id' => $userId,
-                        'tahun_ajaran_semester_id' => $this->semesterAktif->id,
+                        'pelajar_id'               => $pelajarId,
+                        'guru_id'                  => $userId,
+                        'tahun_ajaran_semester_id' => $this->semesterId,
                     ])->lockForUpdate()->first();
 
                     $dataToSave = [
-                        'catatan' => $catatan,
+                        'catatan'       => $catatan,
                         'tanggal_input' => $tanggalInput,
-                        'updated_by' => $userId,
+                        'updated_by'    => $userId,
                     ];
 
                     if ($existingCatatan) {
-                        // Update catatan yang sudah ada
                         $existingCatatan->update($dataToSave);
                     } else {
-                        // Buat catatan baru jika belum ada
-                        $dataToSave['pelajar_id'] = $pelajarId;
-                        $dataToSave['guru_id'] = $userId;
-                        $dataToSave['tahun_ajaran_semester_id'] = $this->semesterAktif->id;
-                        $dataToSave['created_by'] = $userId;
+                        $dataToSave['pelajar_id']               = $pelajarId;
+                        $dataToSave['guru_id']                  = $userId;
+                        $dataToSave['tahun_ajaran_semester_id'] = $this->semesterId;
+                        $dataToSave['created_by']               = $userId;
 
                         CatatanWaliKelas::create($dataToSave);
                     }
@@ -210,7 +300,7 @@ class EntriCatatanPelajar extends Component
                 } catch (\Exception $e) {
                     Log::error('Error saving individual catatan', [
                         'pelajar_id' => $pelajarId,
-                        'error' => $e->getMessage()
+                        'error'      => $e->getMessage(),
                     ]);
                     throw $e;
                 }
@@ -218,33 +308,33 @@ class EntriCatatanPelajar extends Component
 
             DB::commit();
 
-            $this->catatanInput = [];
+            $this->catatanInput      = [];
             $this->cachedCatatanExist = null;
             $this->loadCatatanPelajar();
 
             if ($savedCount > 0) {
                 $this->dispatch('swal:success', [
                     'title' => 'Berhasil!',
-                    'text' => "Berhasil menyimpan {$savedCount} catatan pelajar.",
+                    'text'  => "Berhasil menyimpan {$savedCount} catatan pelajar.",
                 ]);
             } else {
                 $this->dispatch('swal:info', [
                     'title' => 'Info',
-                    'text' => 'Tidak ada catatan baru yang disimpan.',
+                    'text'  => 'Tidak ada catatan baru yang disimpan.',
                 ]);
             }
         } catch (\Exception $e) {
             DB::rollback();
 
             Log::error('Error saving catatan', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'semester_id' => $this->semesterAktif->id,
+                'message'     => $e->getMessage(),
+                'trace'       => $e->getTraceAsString(),
+                'semester_id' => $this->semesterId,
             ]);
 
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'Gagal menyimpan data: ' . $e->getMessage(),
+                'text'  => 'Gagal menyimpan data: ' . $e->getMessage(),
             ]);
         }
     }
@@ -265,7 +355,7 @@ class EntriCatatanPelajar extends Component
 
         $this->dispatch('swal:info', [
             'title' => 'Direset!',
-            'text' => 'Input telah dikembalikan ke data tersimpan.',
+            'text'  => 'Input telah dikembalikan ke data tersimpan.',
         ]);
     }
 
@@ -275,10 +365,10 @@ class EntriCatatanPelajar extends Component
             $pelajarId = $pelajarId[0];
         }
 
-        if (!$pelajarId || !$this->semesterAktif) {
+        if (!$pelajarId || !$this->semesterId) {
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'ID Pelajar tidak ditemukan atau data tidak valid.',
+                'text'  => 'ID Pelajar tidak ditemukan atau data tidak valid.',
             ]);
             return;
         }
@@ -286,49 +376,66 @@ class EntriCatatanPelajar extends Component
         $userId = Auth::id();
 
         try {
-            // Hapus semua catatan untuk pelajar ini di semester aktif oleh guru ini
             $deleted = CatatanWaliKelas::where('pelajar_id', $pelajarId)
                 ->where('guru_id', $userId)
-                ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
                 ->delete();
 
             if ($deleted) {
-                if (isset($this->catatanInput[$pelajarId])) {
-                    unset($this->catatanInput[$pelajarId]);
-                }
+                unset($this->catatanInput[$pelajarId]);
 
                 $this->cachedCatatanExist = null;
                 $this->loadCatatanPelajar();
 
                 $this->dispatch('swal:success', [
                     'title' => 'Berhasil!',
-                    'text' => "Berhasil menghapus {$deleted} catatan pelajar.",
+                    'text'  => "Berhasil menghapus {$deleted} catatan pelajar.",
                 ]);
             } else {
                 $this->dispatch('swal:info', [
                     'title' => 'Info',
-                    'text' => 'Data tidak ditemukan.',
+                    'text'  => 'Data tidak ditemukan.',
                 ]);
             }
         } catch (\Exception $e) {
             Log::error('Error deleting catatan: ' . $e->getMessage(), ['pelajar_id' => $pelajarId]);
             $this->dispatch('swal:error', [
                 'title' => 'Gagal!',
-                'text' => 'Terjadi kesalahan saat menghapus data.',
+                'text'  => 'Terjadi kesalahan saat menghapus data.',
             ]);
         }
     }
 
+    // ========================================
+    // UTILITY METHODS
+    // ========================================
+
+    private function resetFilters(): void
+    {
+        $this->semesterId        = null;
+        $this->semesterList      = [];
+        $this->catatanInput      = [];
+        $this->cachedCatatanExist = null;
+    }
+
+    // ========================================
+    // RENDER METHOD
+    // ========================================
+
     public function render()
     {
         $pelajarData = collect();
-        $totalSiswa = 0;
+        $totalSiswa  = 0;
 
         if ($this->rombel) {
             $totalSiswa = RombelPelajar::where('rombel_id', $this->rombel->id)->count();
         }
 
-        if ($this->semesterAktif && $this->rombel) {
+        if ($this->rombel && $this->semesterId) {
+            if ($this->cachedCatatanExist === null) {
+                $this->loadCatatanPelajar();
+            }
+
             $catatanExist = $this->cachedCatatanExist ?? collect();
 
             $pelajarPaginated = $this->getPelajarQuery()
@@ -349,19 +456,25 @@ class EntriCatatanPelajar extends Component
 
                 return (object) [
                     'rombel_pelajar_id' => $rombelPelajar->id,
-                    'pelajar_id' => $pelajarId,
-                    'nama_lengkap' => $rombelPelajar->pelajar->nama_lengkap,
-                    'nomor_induk' => $rombelPelajar->pelajar->nomor_induk,
-                    'nisn' => $rombelPelajar->pelajar->nisn,
-                    'catatan_sekarang' => $catatanData?->catatan,
-                    'tanggal_input' => $catatanData?->tanggal_input,
+                    'pelajar_id'        => $pelajarId,
+                    'nama_lengkap'      => $rombelPelajar->pelajar->nama_lengkap,
+                    'nomor_induk'       => $rombelPelajar->pelajar->nomor_induk,
+                    'nisn'              => $rombelPelajar->pelajar->nisn,
+                    'catatan_sekarang'  => $catatanData?->catatan,
+                    'tanggal_input'     => $catatanData?->tanggal_input,
                 ];
             });
         }
 
+        // Resolve selected semester label for display
+        $selectedSemesterObj = $this->semesterId
+            ? collect($this->semesterList)->firstWhere('id', $this->semesterId)
+            : null;
+
         return view('livewire.wali.entri-catatan-pelajar', [
-            'pelajarData' => $pelajarData,
-            'totalSiswa' => $totalSiswa,
+            'pelajarData'         => $pelajarData,
+            'totalSiswa'          => $totalSiswa,
+            'selectedSemesterObj' => $selectedSemesterObj,
         ]);
     }
 }

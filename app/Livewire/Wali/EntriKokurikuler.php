@@ -8,12 +8,13 @@ use App\Models\Pelajar;
 use Livewire\WithPagination;
 use App\Models\Kokurikuler;
 use App\Models\RombelPelajar;
-use Illuminate\Support\Facades\DB;
+use App\Models\TahunAjaran;
 use App\Models\TahunAjaranSemester;
+use App\Models\TemplateKokurikulerCapaian;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Models\TemplateKokurikulerCapaian; // DITAMBAHKAN
-use Illuminate\Database\Eloquent\Builder;
 
 class EntriKokurikuler extends Component
 {
@@ -21,22 +22,29 @@ class EntriKokurikuler extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    // Properties
+    // Filter Properties
+    public $tahunAjaranId = null;
+    public $semesterId = null;
+
+    // Data Collections
+    public $tahunAjaranList = [];
+    public $semesterList = [];
+
+    // Main Data
     public $rombel;
-    public $semesterAktif;
 
     // Search & Pagination
     public $searchPelajar = '';
     public $perPagePelajar = 50;
 
-    // Input kokurikuler (DIUBAH MENJADI SATU ARRAY MULTIDIMENSI SEPERTI INPUTKOKURIKULER)
+    // Input kokurikuler
     public $kokurikulerInput = [];
-    public $generateMode = 'empty'; // DITAMBAHKAN
+    public $generateMode = 'empty';
 
     // Cache
     private $cachedKokurikulerExist = null;
 
-    // Predikat Options (DIUBAH SESUAI ACUAN: A, B, C)
+    // Predikat Options
     public $predikatOptions = [
         'A' => 'Mahir',
         'B' => 'Cakap',
@@ -45,23 +53,30 @@ class EntriKokurikuler extends Component
 
     // Query string
     protected $queryString = [
+        'tahunAjaranId' => ['except' => null],
+        'semesterId'    => ['except' => null],
         'searchPelajar' => ['except' => ''],
     ];
 
     // Validation
     protected $rules = [
-        // DIUBAH MENYESUAIKAN STRUKTUR BARU DAN PILIHAN PREDIIKAT (A, B, C)
         'kokurikulerInput.*.predikat' => 'nullable|string|in:A,B,C',
-        'kokurikulerInput.*.capaian' => 'nullable|string|max:1000',
-        'generateMode' => 'required|in:empty,all', // DITAMBAHKAN
+        'kokurikulerInput.*.capaian'  => 'nullable|string|max:1000',
+        'generateMode'                => 'required|in:empty,all',
     ];
 
     protected $messages = [
-        'kokurikulerInput.*.predikat.in' => 'Predikat harus salah satu dari: A, B, C',
+        'kokurikulerInput.*.predikat.in'  => 'Predikat harus salah satu dari: A, B, C',
         'kokurikulerInput.*.capaian.string' => 'Capaian harus berupa teks',
-        'kokurikulerInput.*.capaian.max' => 'Capaian maksimal 1000 karakter',
-        'generateMode.required' => 'Pilih mode generate', // DITAMBAHKAN
-        'generateMode.in' => 'Mode generate tidak valid', // DITAMBAHKAN
+        'kokurikulerInput.*.capaian.max'  => 'Capaian maksimal 1000 karakter',
+        'generateMode.required'           => 'Pilih mode generate',
+        'generateMode.in'                 => 'Mode generate tidak valid',
+    ];
+
+    protected $listeners = [
+        'deleteKokurikuler',
+        'confirmResetKokurikuler' => 'resetKokurikuler',
+        'closeGenerateModal',
     ];
 
     public function mount()
@@ -73,21 +88,55 @@ class EntriKokurikuler extends Component
             return redirect()->route('walikelas.dashboard');
         }
 
-        $this->loadSemesterAktif();
-
-        if (!$this->semesterAktif) {
-            session()->flash('warning', 'Tidak ada semester aktif saat ini.');
-        }
-
-        $this->loadKokurikulerPelajar();
+        $this->initializeFilters();
     }
 
-    protected $listeners = [
-        'deleteKokurikuler',
-        'confirmResetKokurikuler' => 'resetKokurikuler',
-        // DITAMBAHKAN UNTUK MODAL
-        'closeGenerateModal'
-    ];
+    // ========================================
+    // INITIALIZATION METHODS
+    // ========================================
+
+    private function initializeFilters(): void
+    {
+        $this->loadTahunAjaran();
+
+        if (!$this->tahunAjaranId) {
+            $this->setActiveTahunAjaran();
+        }
+
+        if ($this->tahunAjaranId) {
+            $this->loadSemester();
+
+            if (!$this->semesterId) {
+                $this->setActiveSemester();
+            }
+        }
+
+        if ($this->tahunAjaranId && $this->semesterId) {
+            $this->loadKokurikulerPelajar();
+        }
+    }
+
+    private function setActiveTahunAjaran(): void
+    {
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+        if ($activeTahunAjaran) {
+            $this->tahunAjaranId = $activeTahunAjaran->id;
+        }
+    }
+
+    private function setActiveSemester(): void
+    {
+        $activeSemester = TahunAjaranSemester::where('tahun_ajaran_id', $this->tahunAjaranId)
+            ->where('status', 'aktif')
+            ->first();
+        if ($activeSemester) {
+            $this->semesterId = $activeSemester->id;
+        }
+    }
+
+    // ========================================
+    // DATA LOADING METHODS
+    // ========================================
 
     private function loadRombelWaliKelas(): void
     {
@@ -101,28 +150,32 @@ class EntriKokurikuler extends Component
         ])->where('wali_kelas_slug', $user->slug)->first();
     }
 
-    private function loadSemesterAktif(): void
+    private function loadTahunAjaran(): void
     {
-        $this->semesterAktif = TahunAjaranSemester::where('status', 'aktif')
-            ->with(['semester', 'tahunAjaran'])
-            ->first();
+        $this->tahunAjaranList = TahunAjaran::orderBy('tgl_mulai', 'desc')->get();
     }
 
-    public function updatingSearchPelajar(): void
+    private function loadSemester(): void
     {
-        $this->resetPage();
+        if (!$this->tahunAjaranId) {
+            $this->semesterList = [];
+            return;
+        }
+
+        $this->semesterList = TahunAjaranSemester::with('semester')
+            ->where('tahun_ajaran_id', $this->tahunAjaranId)
+            ->get();
     }
 
     private function loadKokurikulerPelajar(): void
     {
-        if (!$this->semesterAktif || !$this->rombel) {
+        if (!$this->semesterId || !$this->rombel) {
             $this->kokurikulerInput = [];
             $this->cachedKokurikulerExist = null;
             return;
         }
 
-        // AMBIL SEMUA data kokurikuler di rombel ini untuk semester aktif
-        $kokurikulerData = Kokurikuler::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+        $kokurikulerData = Kokurikuler::where('tahun_ajaran_semester_id', $this->semesterId)
             ->whereIn('pelajar_id', function ($q) {
                 $q->select('pelajar_id')
                     ->from('rombel_pelajars')
@@ -134,14 +187,48 @@ class EntriKokurikuler extends Component
         $this->cachedKokurikulerExist = $kokurikulerData;
         $this->kokurikulerInput = [];
 
-        // Mengisi input array dari cache
         foreach ($kokurikulerData as $pelajarId => $data) {
             $this->kokurikulerInput[$pelajarId] = [
                 'predikat' => $data->predikat ?? null,
-                'capaian' => $data->capaian ?? '',
+                'capaian'  => $data->capaian ?? '',
             ];
         }
     }
+
+    // ========================================
+    // FILTER UPDATE HANDLERS
+    // ========================================
+
+    public function updatedTahunAjaranId(): void
+    {
+        $this->resetFilters();
+        $this->loadSemester();
+        $this->setActiveSemester();
+
+        if ($this->semesterId) {
+            $this->updatedSemesterId();
+        }
+
+        $this->resetPage();
+    }
+
+    public function updatedSemesterId(): void
+    {
+        $this->kokurikulerInput = [];
+        $this->cachedKokurikulerExist = null;
+
+        $this->loadKokurikulerPelajar();
+        $this->resetPage();
+    }
+
+    public function updatingSearchPelajar(): void
+    {
+        $this->resetPage();
+    }
+
+    // ========================================
+    // QUERY HELPER
+    // ========================================
 
     private function getPelajarQuery(): Builder
     {
@@ -164,18 +251,21 @@ class EntriKokurikuler extends Component
         return $query;
     }
 
+    // ========================================
+    // SAVE / RESET / DELETE METHODS
+    // ========================================
+
     public function saveKokurikuler(): void
     {
-        if (!$this->semesterAktif || !$this->rombel) {
-            $this->dispatchError('Tidak ada semester aktif atau kelas binaan.');
+        if (!$this->semesterId || !$this->rombel) {
+            $this->dispatchError('Tidak ada semester dipilih atau kelas binaan.');
             return;
         }
 
         try {
-            // Menggunakan rules yang disederhanakan
             $this->validate([
                 'kokurikulerInput.*.predikat' => 'nullable|string|in:A,B,C',
-                'kokurikulerInput.*.capaian' => 'nullable|string|max:1000',
+                'kokurikulerInput.*.capaian'  => 'nullable|string|max:1000',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed', ['errors' => $e->errors()]);
@@ -189,7 +279,7 @@ class EntriKokurikuler extends Component
 
         DB::beginTransaction();
         try {
-            $result = $this->processKokurikulerSaving($validPelajarIds); // Panggil processSaving
+            $result = $this->processKokurikulerSaving($validPelajarIds);
 
             DB::commit();
 
@@ -207,22 +297,21 @@ class EntriKokurikuler extends Component
             DB::rollback();
 
             Log::error('Error saving kokurikuler', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'semester_id' => $this->semesterAktif->id,
+                'message'     => $e->getMessage(),
+                'trace'       => $e->getTraceAsString(),
+                'semester_id' => $this->semesterId,
             ]);
 
             $this->dispatchError('Gagal menyimpan data: ' . $e->getMessage());
         }
     }
 
-    // DIADOPSI DARI InputKokurikuler.php
     private function processKokurikulerSaving(array $validPelajarIds): array
     {
-        $savedCount = 0;
+        $savedCount   = 0;
         $updatedCount = 0;
         $deletedCount = 0;
-        $guruId = Auth::id();
+        $guruId       = Auth::id();
         $tanggalInput = now();
 
         foreach ($this->kokurikulerInput as $pelajarId => $input) {
@@ -231,13 +320,12 @@ class EntriKokurikuler extends Component
             }
 
             $predikat = trim($input['predikat'] ?? '');
-            $capaian = trim($input['capaian'] ?? '');
+            $capaian  = trim($input['capaian'] ?? '');
 
             $existingData = Kokurikuler::where('pelajar_id', $pelajarId)
-                ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
                 ->first();
 
-            // Logic untuk menghapus jika predikat dikosongkan (Mengikuti acuan)
             if (empty($predikat) && empty($capaian)) {
                 if ($existingData) {
                     $existingData->delete();
@@ -246,32 +334,29 @@ class EntriKokurikuler extends Component
                 continue;
             }
 
-            // Memastikan predikat yang diinput valid (A, B, atau C)
             if (!in_array($predikat, array_keys($this->predikatOptions)) && !empty($predikat)) {
                 continue;
             }
 
-            // Jika ada predikat yang terisi, simpan/update
             if ($existingData) {
                 $existingData->update([
-                    'predikat' => $predikat,
-                    'capaian' => $capaian,
-                    'guru_id' => $guruId,
+                    'predikat'      => $predikat,
+                    'capaian'       => $capaian,
+                    'guru_id'       => $guruId,
                     'tanggal_input' => $tanggalInput,
-                    'updated_by' => $guruId,
+                    'updated_by'    => $guruId,
                 ]);
                 $updatedCount++;
             } else {
-                // Hanya buat baru jika ada predikat yang dipilih
                 if (!empty($predikat)) {
                     Kokurikuler::create([
-                        'pelajar_id' => $pelajarId,
-                        'guru_id' => $guruId,
-                        'tahun_ajaran_semester_id' => $this->semesterAktif->id,
-                        'predikat' => $predikat,
-                        'capaian' => $capaian,
-                        'tanggal_input' => $tanggalInput,
-                        'created_by' => $guruId,
+                        'pelajar_id'               => $pelajarId,
+                        'guru_id'                  => $guruId,
+                        'tahun_ajaran_semester_id' => $this->semesterId,
+                        'predikat'                 => $predikat,
+                        'capaian'                  => $capaian,
+                        'tanggal_input'            => $tanggalInput,
+                        'created_by'               => $guruId,
                     ]);
                     $savedCount++;
                 }
@@ -279,18 +364,17 @@ class EntriKokurikuler extends Component
         }
 
         return [
-            'savedCount' => $savedCount,
-            'updatedCount' => $updatedCount,
-            'deletedCount' => $deletedCount,
+            'savedCount'     => $savedCount,
+            'updatedCount'   => $updatedCount,
+            'deletedCount'   => $deletedCount,
             'totalProcessed' => $savedCount + $updatedCount + $deletedCount,
         ];
     }
 
-    // DIADOPSI DARI InputKokurikuler.php
     private function buildSaveSuccessMessage(string $rombelNama, array $result): string
     {
         $messages = [];
-        if ($result['savedCount'] > 0) $messages[] = "{$result['savedCount']} baru";
+        if ($result['savedCount'] > 0)   $messages[] = "{$result['savedCount']} baru";
         if ($result['updatedCount'] > 0) $messages[] = "{$result['updatedCount']} diperbarui";
         if ($result['deletedCount'] > 0) $messages[] = "{$result['deletedCount']} dihapus";
 
@@ -303,20 +387,18 @@ class EntriKokurikuler extends Component
             $this->loadKokurikulerPelajar();
         }
 
-        // Mengembalikan input ke nilai tersimpan (cache)
         foreach ($this->cachedKokurikulerExist as $pelajarId => $data) {
             $this->kokurikulerInput[$pelajarId] = [
                 'predikat' => $data->predikat ?? null,
-                'capaian' => $data->capaian ?? '',
+                'capaian'  => $data->capaian ?? '',
             ];
         }
 
-        // Mengosongkan input yang tidak ada di cache
         foreach ($this->kokurikulerInput as $pelajarId => $input) {
             if (!isset($this->cachedKokurikulerExist[$pelajarId])) {
                 $this->kokurikulerInput[$pelajarId] = [
                     'predikat' => null,
-                    'capaian' => ''
+                    'capaian'  => ''
                 ];
             }
         }
@@ -330,7 +412,7 @@ class EntriKokurikuler extends Component
             $pelajarId = $pelajarId[0];
         }
 
-        if (!$pelajarId || !$this->semesterAktif) {
+        if (!$pelajarId || !$this->semesterId) {
             $this->dispatchError('ID Pelajar tidak ditemukan atau data tidak valid.', 'Gagal!');
             return;
         }
@@ -339,17 +421,15 @@ class EntriKokurikuler extends Component
 
         try {
             $deleted = Kokurikuler::where('pelajar_id', $pelajarId)
-                // Hapus data kokurikuler yang dibuat oleh guru ini (Wali Kelas)
                 ->where('guru_id', $userId)
-                ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
                 ->delete();
 
             if ($deleted) {
-                // Menghapus data dari input array
                 if (isset($this->kokurikulerInput[$pelajarId])) {
                     $this->kokurikulerInput[$pelajarId] = [
                         'predikat' => null,
-                        'capaian' => ''
+                        'capaian'  => ''
                     ];
                 }
 
@@ -367,7 +447,7 @@ class EntriKokurikuler extends Component
     }
 
     // ========================================
-    // GENERATE CAPAIAN METHODS (DIADOPSI)
+    // GENERATE CAPAIAN METHODS
     // ========================================
 
     public function openGenerateModal(): void
@@ -382,14 +462,12 @@ class EntriKokurikuler extends Component
             return;
         }
 
-        // Mengirimkan statistik yang diperbarui ke modal
         $this->dispatch('show-generate-modal', $statistics);
     }
 
     private function calculateGenerateStatistics(): array
     {
-        // Mengikuti logika acuan yang dioptimalkan untuk menghitung Capaian Kosong
-        $countPelajarWithKokurikuler = Kokurikuler::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+        $countPelajarWithKokurikuler = Kokurikuler::where('tahun_ajaran_semester_id', $this->semesterId)
             ->whereIn('pelajar_id', function ($query) {
                 $query->select('pelajar_id')
                     ->from('rombel_pelajars')
@@ -397,7 +475,7 @@ class EntriKokurikuler extends Component
             })
             ->count();
 
-        $countCapaianKosong = Kokurikuler::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+        $countCapaianKosong = Kokurikuler::where('tahun_ajaran_semester_id', $this->semesterId)
             ->whereIn('pelajar_id', function ($query) {
                 $query->select('pelajar_id')
                     ->from('rombel_pelajars')
@@ -411,8 +489,8 @@ class EntriKokurikuler extends Component
 
         return [
             'countPelajarWithKokurikuler' => $countPelajarWithKokurikuler,
-            'countCapaianKosong' => $countCapaianKosong,
-            'countTemplateAvailable' => TemplateKokurikulerCapaian::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+            'countCapaianKosong'          => $countCapaianKosong,
+            'countTemplateAvailable'      => TemplateKokurikulerCapaian::where('tahun_ajaran_semester_id', $this->semesterId)
                 ->where('tingkat', $this->rombel->tingkat)
                 ->where('aktif', true)
                 ->count(),
@@ -437,7 +515,6 @@ class EntriKokurikuler extends Component
     public function closeGenerateModal(): void
     {
         $this->dispatch('hide-generate-modal');
-        // Reset generate mode saat modal ditutup
         $this->generateMode = 'empty';
     }
 
@@ -464,14 +541,14 @@ class EntriKokurikuler extends Component
             $this->dispatchGenerateResult($result);
         } catch (\Exception $e) {
             DB::rollback();
-            $this->logError('generating capaian kokurikuler', $e);
+            Log::error('Error generating capaian kokurikuler: ' . $e->getMessage());
             $this->dispatchError('Terjadi kesalahan saat generate capaian.');
         }
     }
 
     private function processCapaianGeneration(): array
     {
-        $query = Kokurikuler::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+        $query = Kokurikuler::where('tahun_ajaran_semester_id', $this->semesterId)
             ->whereIn('pelajar_id', function ($q) {
                 $q->select('pelajar_id')
                     ->from('rombel_pelajars')
@@ -486,8 +563,8 @@ class EntriKokurikuler extends Component
         }
 
         $kokurikulerList = $query->get();
-        $successCount = 0;
-        $errorList = [];
+        $successCount    = 0;
+        $errorList       = [];
 
         foreach ($kokurikulerList as $kokurikuler) {
             if (!isset($this->predikatOptions[$kokurikuler->predikat])) {
@@ -501,9 +578,9 @@ class EntriKokurikuler extends Component
                 $kokurikuler->save();
                 $successCount++;
             } else {
-                $pelajar = $kokurikuler->pelajar;
+                $pelajar     = $kokurikuler->pelajar;
                 $errorList[] = [
-                    'nama' => $pelajar->nama_lengkap ?? 'N/A',
+                    'nama'     => $pelajar->nama_lengkap ?? 'N/A',
                     'predikat' => $this->predikatOptions[$kokurikuler->predikat] ?? $kokurikuler->predikat,
                 ];
             }
@@ -514,7 +591,7 @@ class EntriKokurikuler extends Component
 
     private function getMatchingTemplate(string $predikat): ?TemplateKokurikulerCapaian
     {
-        return TemplateKokurikulerCapaian::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+        return TemplateKokurikulerCapaian::where('tahun_ajaran_semester_id', $this->semesterId)
             ->where('tingkat', $this->rombel->tingkat)
             ->where('predikat', $predikat)
             ->where('aktif', true)
@@ -531,13 +608,13 @@ class EntriKokurikuler extends Component
         $errorMessage = $this->buildGenerateErrorMessage($result);
         $this->dispatch('swal:warning', [
             'title' => 'Generate Selesai!',
-            'text' => $errorMessage,
+            'text'  => $errorMessage,
         ]);
     }
 
     private function buildGenerateErrorMessage(array $result): string
     {
-        $message = "Generate selesai dengan catatan:\n";
+        $message  = "Generate selesai dengan catatan:\n";
         $message .= "- Berhasil: {$result['successCount']} pelajar\n";
         $message .= "- Gagal: " . count($result['errorList']) . " pelajar (tidak ada template yang cocok)\n\n";
         $message .= "Detail error:\n";
@@ -550,13 +627,21 @@ class EntriKokurikuler extends Component
     }
 
     // ========================================
-    // VALIDATION METHODS
+    // UTILITY / VALIDATION METHODS
     // ========================================
+
+    private function resetFilters(): void
+    {
+        $this->semesterId            = null;
+        $this->semesterList          = [];
+        $this->kokurikulerInput      = [];
+        $this->cachedKokurikulerExist = null;
+    }
 
     private function validateGenerateContext(): bool
     {
-        if (!$this->rombel || !$this->semesterAktif) {
-            $this->dispatchError('Pastikan Anda memiliki kelas binaan dan semester aktif.');
+        if (!$this->rombel || !$this->semesterId) {
+            $this->dispatchError('Pastikan tahun ajaran dan semester sudah dipilih.');
             return false;
         }
         return true;
@@ -581,8 +666,6 @@ class EntriKokurikuler extends Component
         $this->dispatch('swal:info', ['title' => $title, 'text' => $text]);
     }
 
-    // LOG ERROR METHOD TETAP, HANYA DIPASTIKAN MENGGUNAKAN PROPERTY ROMBEL YANG TEPAT
-
     // ========================================
     // RENDER METHOD
     // ========================================
@@ -591,9 +674,8 @@ class EntriKokurikuler extends Component
     {
         $pelajarData = collect();
 
-        if ($this->rombel && $this->semesterAktif) {
+        if ($this->rombel && $this->semesterId) {
 
-            // Pastikan cache sudah dimuat
             if ($this->cachedKokurikulerExist === null) {
                 $this->loadKokurikulerPelajar();
             }
@@ -610,30 +692,35 @@ class EntriKokurikuler extends Component
             $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($kokurikulerExist) {
                 $pelajarId = $rombelPelajar->pelajar_id;
 
-                // Memastikan input array terisi dengan nilai tersimpan jika belum diubah
                 if (!isset($this->kokurikulerInput[$pelajarId])) {
                     $existingKokurikuler = $kokurikulerExist->get($pelajarId);
                     $this->kokurikulerInput[$pelajarId] = [
                         'predikat' => $existingKokurikuler->predikat ?? null,
-                        'capaian' => $existingKokurikuler->capaian ?? '',
+                        'capaian'  => $existingKokurikuler->capaian ?? '',
                     ];
                 }
 
                 $existingKokurikulerData = $kokurikulerExist->get($pelajarId);
 
                 return (object) [
-                    'rombel_pelajar_id' => $rombelPelajar->id,
-                    'pelajar_id' => $pelajarId,
-                    'nama_lengkap' => $rombelPelajar->pelajar->nama_lengkap,
-                    'nomor_induk' => $rombelPelajar->pelajar->nomor_induk,
-                    'nisn' => $rombelPelajar->pelajar->nisn,
+                    'rombel_pelajar_id'   => $rombelPelajar->id,
+                    'pelajar_id'          => $pelajarId,
+                    'nama_lengkap'        => $rombelPelajar->pelajar->nama_lengkap,
+                    'nomor_induk'         => $rombelPelajar->pelajar->nomor_induk,
+                    'nisn'                => $rombelPelajar->pelajar->nisn,
                     'kokurikuler_existing' => $existingKokurikulerData,
                 ];
             });
         }
 
+        // Resolve selected semester label for display
+        $selectedSemesterObj = $this->semesterId
+            ? collect($this->semesterList)->firstWhere('id', $this->semesterId)
+            : null;
+
         return view('livewire.wali.entri-kokurikuler', [
-            'pelajarData' => $pelajarData,
+            'pelajarData'         => $pelajarData,
+            'selectedSemesterObj' => $selectedSemesterObj,
         ]);
     }
 }

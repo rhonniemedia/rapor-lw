@@ -19,7 +19,7 @@
     </div>
 
     {{-- Info Rombel Card --}}
-    @if($rombel && $semesterAktif)
+    @if($rombel && $semesterId)
     <div class="card border-success shadow-sm mb-4">
         <div class="card-body">
             <div class="row g-4">
@@ -45,7 +45,12 @@
                         <div class="ms-3 d-flex flex-column justify-content-center">
                             <small class="text-muted lh-2">Tahun Ajaran & Semester</small>
                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                {{ $semesterAktif->tahunAjaran->nama ?? 'N/A' }} ~ {{ $semesterAktif->semester->nama ?? 'Belum Ada' }}
+                                @if($selectedSemesterObj)
+                                {{ $selectedSemesterObj->tahunAjaran->nama ?? 'N/A' }} ~
+                                {{ $selectedSemesterObj->semester->nama ?? 'N/A' }}
+                                @else
+                                <span class="text-muted">Belum Dipilih</span>
+                                @endif
                             </p>
                         </div>
                     </div>
@@ -81,7 +86,7 @@
 
                 <div class="col-md-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-primary rounded-3"
+                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center bg-success rounded-3"
                             style="width: 36px; height: 36px;">
                             <i class="mdi mdi-account-supervisor text-white fs-5"></i>
                         </div>
@@ -123,22 +128,64 @@
     @else
     <div class="alert alert-danger" role="alert">
         <i class="mdi mdi-alert-circle me-2"></i>
-        <strong>Perhatian!</strong> Tidak ada kelas binaan atau semester aktif.
+        <strong>Perhatian!</strong>
+        @if(!$rombel)
+        Anda tidak memiliki kelas binaan yang aktif.
+        @else
+        Pilih tahun ajaran dan semester untuk melanjutkan.
+        @endif
     </div>
     @endif
 
-    {{-- Filter Ekstrakurikuler --}}
-    @if($rombel && $semesterAktif)
+    {{-- Filter Tahun Ajaran, Semester & Ekstrakurikuler --}}
+    @if($rombel)
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <div class="page-header mb-0 border-bottom mb-3">
                 <div class="d-flex align-items-center">
-                    <h5 class="text-dark"><i class="mdi mdi-filter me-2"></i> Filter dan Generate Data</h5>
+                    <h5 class="text-dark"><i class="mdi mdi-filter"></i> Filter dan Generate Data</h5>
                 </div>
             </div>
             <div class="row g-3">
-                <div class="col-md-6">
-                    <select wire:model.live="selectedEkstrakurikulerId" class="form-select">
+
+                {{-- Tahun Ajaran --}}
+                <div class="col-md-3">
+                    <label class="form-label">Tahun Ajaran</label>
+                    <select wire:model.live="tahunAjaranId" class="form-select">
+                        <option value="">-- Pilih Tahun Ajaran --</option>
+                        @foreach($tahunAjaranList as $ta)
+                        <option value="{{ $ta->id }}">
+                            {{ $ta->nama }}
+                            @if($ta->status === 'aktif')
+                            (Aktif)
+                            @endif
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Semester --}}
+                <div class="col-md-3">
+                    <label class="form-label">Semester</label>
+                    <select wire:model.live="semesterId" class="form-select"
+                        @if(!$tahunAjaranId) disabled @endif>
+                        <option value="">-- Pilih Semester --</option>
+                        @foreach($semesterList as $sem)
+                        <option value="{{ $sem->id }}">
+                            {{ $sem->semester->nama ?? $sem->id }}
+                            @if($sem->status === 'aktif')
+                            (Aktif)
+                            @endif
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Ekstrakurikuler --}}
+                <div class="col-md-3">
+                    <label class="form-label">Ekstrakurikuler</label>
+                    <select wire:model.live="selectedEkstrakurikulerId" class="form-select"
+                        @if(!$semesterId) disabled @endif>
                         <option value="">-- Pilih Ekstrakurikuler --</option>
                         @foreach($ekstrakurikulerList as $ekskul)
                         <option value="{{ $ekskul->id }}">
@@ -151,32 +198,36 @@
                     </select>
                 </div>
 
-                <div class="col-md-6 d-flex align-items-start gap-2">
-                    <input type="search"
-                        wire:model.live.debounce.300ms="searchPelajar"
-                        class="form-control"
-                        placeholder="Cari nama atau nomor induk..."
-                        @if(!$selectedEkstrakurikulerId) disabled @endif>
+                {{-- Pencarian + Generate --}}
+                <div class="col-md-3">
+                    <label class="form-label">Cari & Generate</label>
+                    <div class="d-flex gap-2">
+                        <input type="search"
+                            wire:model.live.debounce.300ms="searchPelajar"
+                            class="form-control"
+                            placeholder="Cari..."
+                            @if(!$selectedEkstrakurikulerId) disabled @endif>
 
-                    {{-- TOMBOL GENERATE DESKRIPSI --}}
-                    <button
-                        type="button"
-                        class="btn btn-outline-primary"
-                        wire:click="openGenerateModal"
-                        wire:key="btn-generate-deskripsi"
-                        title="Generate Deskripsi Ekstrakurikuler"
-                        @if(!$selectedEkstrakurikulerId) disabled @endif
-                        style="width: 2.5rem; display: flex; align-items: center; justify-content: center;">
-                        <i class="mdi mdi-auto-fix"></i>
-                    </button>
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary"
+                            wire:click="openGenerateModal"
+                            wire:key="btn-generate-deskripsi"
+                            title="Generate"
+                            @if(!$selectedEkstrakurikulerId) disabled @endif
+                            style="width: 2.5rem; display: flex; align-items: center; justify-content: center;">
+                            <i class="mdi mdi-auto-fix"></i>
+                        </button>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
     @endif
 
     {{-- Tabel Input Ekstrakurikuler --}}
-    @if($selectedEkstrakurikulerId)
+    @if($selectedEkstrakurikulerId && $semesterId)
     <h5 class="text-dark mb-3">
         <i class="mdi mdi-account-multiple me-2"></i> Entri Data Ekstrakurikuler Pelajar
     </h5>
@@ -347,7 +398,7 @@
             </span>
         </button>
     </div>
-    @elseif($rombel && $semesterAktif)
+    @elseif($rombel && $semesterId)
     <div class="alert alert-warning text-center" role="alert">
         <i class="mdi mdi-information-outline me-2"></i>
         <strong>Silakan pilih Ekstrakurikuler untuk mulai mengentri data.</strong>
@@ -356,10 +407,10 @@
 
     {{-- Loading Overlay --}}
     <div wire:loading.flex
-        wire:target="saveEkskul,selectedEkstrakurikulerId,searchPelajar"
+        wire:target="saveEkskul,selectedEkstrakurikulerId,semesterId,tahunAjaranId,searchPelajar"
         class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center"
         style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: none;">
-        <div class="spinner-border text-warning" role="status">
+        <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
@@ -489,7 +540,6 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Inisialisasi Modal Generate ---
         const generateModalEl = document.getElementById('generateEkskulModal');
         let generateModal = null;
 
@@ -499,19 +549,14 @@
                 keyboard: true
             });
 
-            // Reset mode ke 'empty' saat modal ditutup
             generateModalEl.addEventListener('hidden.bs.modal', function() {
                 Livewire.dispatch('closeGenerateModal');
             });
         }
 
-        // --- Livewire Event Listeners ---
-
-        // ✅ Listener untuk membuka modal
         window.addEventListener('show-generate-modal', event => {
             const data = event.detail.params ?? event.detail[0] ?? event.detail;
 
-            // Update nilai di modal
             document.getElementById('modal-count-ekskul').textContent = data.countPelajarWithEkskul || 0;
             document.getElementById('modal-count-ekskul-2').textContent = data.countPelajarWithEkskul || 0;
             document.getElementById('modal-count-kosong').textContent = data.countDeskripsiKosong || 0;
@@ -523,14 +568,12 @@
             }
         });
 
-        // ✅ Listener untuk menutup modal
         window.addEventListener('hide-generate-modal', event => {
             if (generateModal) {
                 generateModal.hide();
             }
         });
 
-        // ✅ Function untuk menampilkan deskripsi lengkap
         window.showFullDeskripsi = function(namaPelajar, deskripsi) {
             Swal.fire({
                 title: 'Deskripsi Ekstrakurikuler - ' + namaPelajar,
@@ -541,7 +584,6 @@
             });
         };
 
-        // ✅ Function untuk handle delete confirmation
         window.confirmDeleteEkskul = function(pelajarId) {
             Swal.fire({
                 icon: 'warning',
@@ -564,8 +606,6 @@
                 }
             });
         };
-
-        // --- SweetAlert Handlers ---
 
         window.addEventListener('swal:success', event => {
             let detail = event.detail.params ?? event.detail[0] ?? event.detail;

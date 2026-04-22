@@ -7,6 +7,7 @@ use App\Models\Ekstrakurikuler;
 use App\Models\Pelajar;
 use App\Models\Rombel;
 use App\Models\RombelPelajar;
+use App\Models\TahunAjaran;
 use App\Models\TahunAjaranSemester;
 use App\Models\TemplateEkstrakurikulerDeskripsi;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,11 +23,18 @@ class EntriEkstrakurikuler extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    // Properties
-    public $rombel;
-    public $semesterAktif;
+    // Filter Properties
+    public $tahunAjaranId = null;
+    public $semesterId = null;
     public $selectedEkstrakurikulerId = null;
+
+    // Data Collections
+    public $tahunAjaranList = [];
+    public $semesterList = [];
     public $ekstrakurikulerList = [];
+
+    // Main Data
+    public $rombel;
     public $pembinaName = null;
 
     // Search & Pagination
@@ -49,8 +57,17 @@ class EntriEkstrakurikuler extends Component
 
     // Query string
     protected $queryString = [
+        'tahunAjaranId'             => ['except' => null],
+        'semesterId'                => ['except' => null],
         'selectedEkstrakurikulerId' => ['except' => null],
-        'searchPelajar' => ['except' => ''],
+        'searchPelajar'             => ['except' => ''],
+    ];
+
+    // Listeners
+    protected $listeners = [
+        'deleteEkskul',
+        'confirmResetEkskul' => 'resetEkskul',
+        'closeGenerateModal'
     ];
 
     // Validation
@@ -77,24 +94,58 @@ class EntriEkstrakurikuler extends Component
             return redirect()->route('walikelas.dashboard');
         }
 
-        $this->loadSemesterAktif();
+        $this->initializeFilters();
+    }
 
-        if (!$this->semesterAktif) {
-            session()->flash('warning', 'Tidak ada semester aktif saat ini.');
+    // ========================================
+    // INITIALIZATION METHODS
+    // ========================================
+
+    private function initializeFilters(): void
+    {
+        $this->loadTahunAjaran();
+
+        if (!$this->tahunAjaranId) {
+            $this->setActiveTahunAjaran();
         }
 
-        $this->loadEkstrakurikulerList();
+        if ($this->tahunAjaranId) {
+            $this->loadSemester();
+
+            if (!$this->semesterId) {
+                $this->setActiveSemester();
+            }
+        }
+
+        // Ekstrakurikuler tidak bergantung pada semester/rombel tertentu
+        $this->loadEkstrakurikuler();
 
         if ($this->selectedEkstrakurikulerId) {
             $this->loadEkskulPelajar();
         }
     }
 
-    protected $listeners = [
-        'deleteEkskul',
-        'confirmResetEkskul' => 'resetEkskul',
-        'closeGenerateModal'
-    ];
+    private function setActiveTahunAjaran(): void
+    {
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+        if ($activeTahunAjaran) {
+            $this->tahunAjaranId = $activeTahunAjaran->id;
+        }
+    }
+
+    private function setActiveSemester(): void
+    {
+        $activeSemester = TahunAjaranSemester::where('tahun_ajaran_id', $this->tahunAjaranId)
+            ->where('status', 'aktif')
+            ->first();
+        if ($activeSemester) {
+            $this->semesterId = $activeSemester->id;
+        }
+    }
+
+    // ========================================
+    // DATA LOADING METHODS
+    // ========================================
 
     private function loadRombelWaliKelas(): void
     {
@@ -108,14 +159,26 @@ class EntriEkstrakurikuler extends Component
         ])->where('wali_kelas_slug', $user->slug)->first();
     }
 
-    private function loadSemesterAktif(): void
+    private function loadTahunAjaran(): void
     {
-        $this->semesterAktif = TahunAjaranSemester::where('status', 'aktif')
-            ->with(['semester', 'tahunAjaran'])
-            ->first();
+        $this->tahunAjaranList = TahunAjaran::whereHas('tahunAjaranSemesters')
+            ->orderBy('tgl_mulai', 'desc')
+            ->get();
     }
 
-    private function loadEkstrakurikulerList(): void
+    private function loadSemester(): void
+    {
+        if (!$this->tahunAjaranId) {
+            $this->semesterList = [];
+            return;
+        }
+
+        $this->semesterList = TahunAjaranSemester::with('semester')
+            ->where('tahun_ajaran_id', $this->tahunAjaranId)
+            ->get();
+    }
+
+    private function loadEkstrakurikuler(): void
     {
         $this->ekstrakurikulerList = Ekstrakurikuler::with('pembina')
             ->where('status', 'aktif')
@@ -123,23 +186,9 @@ class EntriEkstrakurikuler extends Component
             ->get();
     }
 
-    public function updatedSelectedEkstrakurikulerId(): void
-    {
-        $this->resetPage();
-        $this->searchPelajar = '';
-        $this->ekskulInput = [];
-        $this->cachedEkskulExist = null;
-        $this->loadEkskulPelajar();
-    }
-
-    public function updatingSearchPelajar(): void
-    {
-        $this->resetPage();
-    }
-
     private function loadEkskulPelajar(): void
     {
-        if (!$this->selectedEkstrakurikulerId || !$this->semesterAktif || !$this->rombel) {
+        if (!$this->selectedEkstrakurikulerId || !$this->semesterId || !$this->rombel) {
             $this->ekskulInput = [];
             $this->pembinaName = null;
             $this->cachedEkskulExist = null;
@@ -159,9 +208,8 @@ class EntriEkstrakurikuler extends Component
 
         $this->pembinaName = $ekstrakurikuler->pembina->name ?? 'N/A';
 
-        // Ambil data ekskul pelajar yang sudah ada
         $ekskulData = EkskulPelajar::where('ekstrakurikuler_id', $this->selectedEkstrakurikulerId)
-            ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+            ->where('tahun_ajaran_semester_id', $this->semesterId)
             ->whereIn('pelajar_id', function ($q) {
                 $q->select('pelajar_id')
                     ->from('rombel_pelajars')
@@ -173,7 +221,6 @@ class EntriEkstrakurikuler extends Component
         $this->cachedEkskulExist = $ekskulData;
         $this->ekskulInput = [];
 
-        // Mengisi input array dari cache
         foreach ($ekskulData as $pelajarId => $data) {
             $this->ekskulInput[$pelajarId] = [
                 'nilai' => $data->nilai ?? null,
@@ -181,6 +228,60 @@ class EntriEkstrakurikuler extends Component
             ];
         }
     }
+
+    // ========================================
+    // FILTER UPDATE HANDLERS
+    // ========================================
+
+    public function updatedTahunAjaranId(): void
+    {
+        $this->resetFilters();
+        $this->loadSemester();
+        $this->setActiveSemester();
+
+        if ($this->semesterId) {
+            $this->updatedSemesterId();
+        }
+
+        $this->resetPage();
+    }
+
+    public function updatedSemesterId(): void
+    {
+        $this->selectedEkstrakurikulerId = null;
+        $this->ekskulInput = [];
+        $this->cachedEkskulExist = null;
+        $this->pembinaName = null;
+        $this->resetPage();
+    }
+
+    public function updatedSelectedEkstrakurikulerId(): void
+    {
+        $this->resetPage();
+        $this->searchPelajar = '';
+        $this->ekskulInput = [];
+        $this->cachedEkskulExist = null;
+        $this->loadEkskulPelajar();
+    }
+
+    public function updatingSearchPelajar(): void
+    {
+        $this->resetPage();
+    }
+
+    private function resetFilters(): void
+    {
+        $this->semesterId = null;
+        $this->selectedEkstrakurikulerId = null;
+        $this->semesterList = [];
+        $this->ekskulInput = [];
+        $this->cachedEkskulExist = null;
+        $this->pembinaName = null;
+    }
+
+    // ========================================
+    // HELPER QUERY
+    // ========================================
 
     private function getPelajarQuery(): Builder
     {
@@ -203,9 +304,13 @@ class EntriEkstrakurikuler extends Component
         return $query;
     }
 
+    // ========================================
+    // SAVE / RESET / DELETE METHODS
+    // ========================================
+
     public function saveEkskul(): void
     {
-        if (!$this->selectedEkstrakurikulerId || !$this->semesterAktif || !$this->rombel) {
+        if (!$this->selectedEkstrakurikulerId || !$this->semesterId || !$this->rombel) {
             $this->dispatchError('Silakan pilih ekstrakurikuler terlebih dahulu.');
             return;
         }
@@ -244,13 +349,7 @@ class EntriEkstrakurikuler extends Component
             }
         } catch (\Exception $e) {
             DB::rollback();
-
-            Log::error('Error saving ekskul', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'semester_id' => $this->semesterAktif->id,
-            ]);
-
+            $this->logError('saving ekskul', $e);
             $this->dispatchError('Gagal menyimpan data: ' . $e->getMessage());
         }
     }
@@ -272,10 +371,9 @@ class EntriEkstrakurikuler extends Component
 
             $existingData = EkskulPelajar::where('pelajar_id', $pelajarId)
                 ->where('ekstrakurikuler_id', $this->selectedEkstrakurikulerId)
-                ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
                 ->first();
 
-            // Logic untuk menghapus jika nilai dikosongkan
             if (empty($nilai) && empty($deskripsi)) {
                 if ($existingData) {
                     $existingData->delete();
@@ -284,12 +382,10 @@ class EntriEkstrakurikuler extends Component
                 continue;
             }
 
-            // Memastikan nilai yang diinput valid (A, B, atau C)
             if (!in_array($nilai, array_keys($this->predikatOptions)) && !empty($nilai)) {
                 continue;
             }
 
-            // Jika ada nilai yang terisi, simpan/update
             if ($existingData) {
                 $existingData->update([
                     'nilai' => $nilai,
@@ -298,12 +394,11 @@ class EntriEkstrakurikuler extends Component
                 ]);
                 $updatedCount++;
             } else {
-                // Hanya buat baru jika ada nilai yang dipilih
                 if (!empty($nilai)) {
                     EkskulPelajar::create([
                         'pelajar_id' => $pelajarId,
                         'ekstrakurikuler_id' => $this->selectedEkstrakurikulerId,
-                        'tahun_ajaran_semester_id' => $this->semesterAktif->id,
+                        'tahun_ajaran_semester_id' => $this->semesterId,
                         'nilai' => $nilai,
                         'deskripsi' => $deskripsi,
                         'created_by' => $userId,
@@ -337,7 +432,6 @@ class EntriEkstrakurikuler extends Component
             $this->loadEkskulPelajar();
         }
 
-        // Mengembalikan input ke nilai tersimpan (cache)
         foreach ($this->cachedEkskulExist as $pelajarId => $data) {
             $this->ekskulInput[$pelajarId] = [
                 'nilai' => $data->nilai ?? null,
@@ -345,7 +439,6 @@ class EntriEkstrakurikuler extends Component
             ];
         }
 
-        // Mengosongkan input yang tidak ada di cache
         foreach ($this->ekskulInput as $pelajarId => $input) {
             if (!isset($this->cachedEkskulExist[$pelajarId])) {
                 $this->ekskulInput[$pelajarId] = [
@@ -364,7 +457,7 @@ class EntriEkstrakurikuler extends Component
             $pelajarId = $pelajarId[0];
         }
 
-        if (!$pelajarId || !$this->selectedEkstrakurikulerId || !$this->semesterAktif) {
+        if (!$pelajarId || !$this->selectedEkstrakurikulerId || !$this->semesterId) {
             $this->dispatchError('ID Pelajar tidak ditemukan atau data tidak valid.', 'Gagal!');
             return;
         }
@@ -372,7 +465,7 @@ class EntriEkstrakurikuler extends Component
         try {
             $deleted = EkskulPelajar::where('pelajar_id', $pelajarId)
                 ->where('ekstrakurikuler_id', $this->selectedEkstrakurikulerId)
-                ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+                ->where('tahun_ajaran_semester_id', $this->semesterId)
                 ->delete();
 
             if ($deleted) {
@@ -391,7 +484,7 @@ class EntriEkstrakurikuler extends Component
                 $this->dispatchInfo('Data tidak ditemukan.');
             }
         } catch (\Exception $e) {
-            Log::error('Error deleting ekskul: ' . $e->getMessage(), ['pelajar_id' => $pelajarId]);
+            $this->logError('deleting ekskul', $e, ['pelajar_id' => $pelajarId]);
             $this->dispatchError('Terjadi kesalahan saat menghapus data.');
         }
     }
@@ -417,7 +510,7 @@ class EntriEkstrakurikuler extends Component
 
     private function calculateGenerateStatistics(): array
     {
-        $countPelajarWithEkskul = EkskulPelajar::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+        $countPelajarWithEkskul = EkskulPelajar::where('tahun_ajaran_semester_id', $this->semesterId)
             ->where('ekstrakurikuler_id', $this->selectedEkstrakurikulerId)
             ->whereIn('pelajar_id', function ($query) {
                 $query->select('pelajar_id')
@@ -426,7 +519,7 @@ class EntriEkstrakurikuler extends Component
             })
             ->count();
 
-        $countDeskripsiKosong = EkskulPelajar::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+        $countDeskripsiKosong = EkskulPelajar::where('tahun_ajaran_semester_id', $this->semesterId)
             ->where('ekstrakurikuler_id', $this->selectedEkstrakurikulerId)
             ->whereIn('pelajar_id', function ($query) {
                 $query->select('pelajar_id')
@@ -442,10 +535,10 @@ class EntriEkstrakurikuler extends Component
         return [
             'countPelajarWithEkskul' => $countPelajarWithEkskul,
             'countDeskripsiKosong' => $countDeskripsiKosong,
-            'countTemplateAvailable' => TemplateEkstrakurikulerDeskripsi::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+            'countTemplateAvailable' => TemplateEkstrakurikulerDeskripsi::where('tahun_ajaran_semester_id', $this->semesterId)
                 ->where(function ($q) {
                     $q->where('ekstrakurikuler_id', $this->selectedEkstrakurikulerId)
-                        ->orWhereNull('ekstrakurikuler_id'); // Template umum
+                        ->orWhereNull('ekstrakurikuler_id');
                 })
                 ->where('aktif', true)
                 ->count(),
@@ -503,7 +596,7 @@ class EntriEkstrakurikuler extends Component
 
     private function processDeskripsiGeneration(): array
     {
-        $query = EkskulPelajar::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+        $query = EkskulPelajar::where('tahun_ajaran_semester_id', $this->semesterId)
             ->where('ekstrakurikuler_id', $this->selectedEkstrakurikulerId)
             ->whereIn('pelajar_id', function ($q) {
                 $q->select('pelajar_id')
@@ -532,7 +625,6 @@ class EntriEkstrakurikuler extends Component
             if ($template) {
                 $deskripsi = $template->deskripsi;
 
-                // Handle placeholder jika ada
                 if ($template->gunakan_placeholder) {
                     $deskripsi = $this->replacePlaceholders($deskripsi, $ekskul);
                 }
@@ -555,16 +647,14 @@ class EntriEkstrakurikuler extends Component
 
     private function getMatchingTemplate(string $nilai): ?TemplateEkstrakurikulerDeskripsi
     {
-        // Prioritaskan template spesifik ekstrakurikuler
-        $template = TemplateEkstrakurikulerDeskripsi::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+        $template = TemplateEkstrakurikulerDeskripsi::where('tahun_ajaran_semester_id', $this->semesterId)
             ->where('ekstrakurikuler_id', $this->selectedEkstrakurikulerId)
             ->where('predikat', $nilai)
             ->where('aktif', true)
             ->first();
 
-        // Jika tidak ada, gunakan template umum
         if (!$template) {
-            $template = TemplateEkstrakurikulerDeskripsi::where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+            $template = TemplateEkstrakurikulerDeskripsi::where('tahun_ajaran_semester_id', $this->semesterId)
                 ->whereNull('ekstrakurikuler_id')
                 ->where('predikat', $nilai)
                 ->where('aktif', true)
@@ -622,7 +712,7 @@ class EntriEkstrakurikuler extends Component
 
     private function validateGenerateContext(): bool
     {
-        if (!$this->selectedEkstrakurikulerId || !$this->semesterAktif || !$this->rombel) {
+        if (!$this->selectedEkstrakurikulerId || !$this->semesterId || !$this->rombel) {
             $this->dispatchError('Pastikan ekstrakurikuler sudah dipilih dan ada semester aktif.');
             return false;
         }
@@ -652,7 +742,7 @@ class EntriEkstrakurikuler extends Component
     {
         Log::error("Error {$action}: " . $e->getMessage(), array_merge($context, [
             'ekstrakurikuler_id' => $this->selectedEkstrakurikulerId,
-            'semester_id' => $this->semesterAktif->id ?? 'N/A',
+            'semester_id' => $this->semesterId ?? 'N/A',
             'user_id' => Auth::id(),
         ]));
     }
@@ -670,7 +760,7 @@ class EntriEkstrakurikuler extends Component
             $totalSiswa = RombelPelajar::where('rombel_id', $this->rombel->id)->count();
         }
 
-        if ($this->selectedEkstrakurikulerId && $this->semesterAktif) {
+        if ($this->selectedEkstrakurikulerId && $this->semesterId) {
             if ($this->cachedEkskulExist === null) {
                 $this->loadEkskulPelajar();
             }
@@ -687,7 +777,6 @@ class EntriEkstrakurikuler extends Component
             $pelajarData = $pelajarPaginated->through(function ($rombelPelajar) use ($ekskulExist) {
                 $pelajarId = $rombelPelajar->pelajar_id;
 
-                // Memastikan input array terisi dengan nilai tersimpan jika belum diubah
                 if (!isset($this->ekskulInput[$pelajarId])) {
                     $existingEkskul = $ekskulExist->get($pelajarId);
                     $this->ekskulInput[$pelajarId] = [
@@ -709,9 +798,14 @@ class EntriEkstrakurikuler extends Component
             });
         }
 
+        $selectedSemesterObj = $this->semesterId
+            ? collect($this->semesterList)->firstWhere('id', $this->semesterId)
+            : null;
+
         return view('livewire.wali.entri-ekstrakurikuler', [
             'pelajarData' => $pelajarData,
             'totalSiswa' => $totalSiswa,
+            'selectedSemesterObj' => $selectedSemesterObj,
         ]);
     }
 }

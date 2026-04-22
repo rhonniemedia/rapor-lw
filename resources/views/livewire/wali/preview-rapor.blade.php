@@ -7,7 +7,7 @@
                     {{-- Header halaman --}}
                     <div class="row g-4">
                         <div class="col-lg-12">
-                            <div class="page-header pb-3 mb-4 border-bottom">
+                            <div class="page-header pb-3 border-bottom">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div class="d-flex align-items-center">
                                         <div class="icon-wrapper position-relative">
@@ -27,8 +27,8 @@
                         </div>
                     </div>
 
-                    {{-- Info Rombel Card (Cek pakai $this->) --}}
-                    @if($this->rombel && $this->semesterAktif)
+                    {{-- Info Rombel Card --}}
+                    @if($rombel && $semesterId)
                     <div class="card border-success shadow-sm mb-4">
                         <div class="card-body">
                             <div class="row g-4">
@@ -41,8 +41,7 @@
                                         <div class="ms-3 d-flex flex-column justify-content-center">
                                             <small class="text-muted lh-2">Kurikulum</small>
                                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                                {{-- AKSES MENGGUNAKAN $this-> --}}
-                                                {{ $this->rombel->tahunAjaranKurikulum->kurikulum->nama ?? 'Global' }}
+                                                {{ $rombel->tahunAjaranKurikulum->kurikulum->nama ?? 'Global' }}
                                             </p>
                                         </div>
                                     </div>
@@ -55,8 +54,12 @@
                                         <div class="ms-3 d-flex flex-column justify-content-center">
                                             <small class="text-muted lh-2">Tahun Ajaran & Semester</small>
                                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                                {{-- AKSES MENGGUNAKAN $this-> --}}
-                                                {{ $this->semesterAktif->tahunAjaran->nama ?? 'N/A' }} ~ {{ $this->semesterAktif->semester->nama ?? 'Belum Ada' }}
+                                                @if($selectedSemesterObj)
+                                                {{ $selectedSemesterObj->tahunAjaran->nama ?? 'N/A' }} ~
+                                                {{ $selectedSemesterObj->semester->nama ?? 'N/A' }}
+                                                @else
+                                                <span class="text-muted">Belum Dipilih</span>
+                                                @endif
                                             </p>
                                         </div>
                                     </div>
@@ -71,8 +74,7 @@
                                         <div class="ms-3 d-flex flex-column justify-content-center">
                                             <small class="text-muted lh-2">Kelas & Jurusan</small>
                                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                                {{-- AKSES MENGGUNAKAN $this-> --}}
-                                                {{ $this->rombel->tingkat ?? '-' }} {{ $this->rombel->jurusan->alias ?? 'Umum' }} {{ $this->rombel->nomor ?? '' }}
+                                                {{ $rombel->tingkat ?? '-' }} {{ $rombel->jurusan->alias ?? 'Umum' }} {{ $rombel->nomor ?? '' }}
                                             </p>
                                         </div>
                                     </div>
@@ -85,8 +87,7 @@
                                         <div class="ms-3 d-flex flex-column justify-content-center">
                                             <small class="text-muted lh-2">Kompetensi Keahlian</small>
                                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                                {{-- AKSES MENGGUNAKAN $this-> --}}
-                                                {{ $this->rombel->jurusan->nama ?? 'Umum' }}
+                                                {{ $rombel->jurusan->nama ?? 'Umum' }}
                                             </p>
                                         </div>
                                     </div>
@@ -101,8 +102,7 @@
                                         <div class="ms-3 d-flex flex-column justify-content-center">
                                             <small class="text-muted lh-2">Wali Kelas</small>
                                             <p class="fw-bold mb-0 text-dark lh-sm">
-                                                {{-- AKSES MENGGUNAKAN $this-> --}}
-                                                {{ $this->rombel->waliKelas->name ?? 'Belum Ditentukan' }}
+                                                {{ $rombel->waliKelas->name ?? 'Belum Ditentukan' }}
                                             </p>
                                         </div>
                                     </div>
@@ -113,12 +113,86 @@
                     @else
                     <div class="alert alert-danger" role="alert">
                         <i class="mdi mdi-alert-circle me-2"></i>
-                        <strong>Perhatian!</strong> Tidak ada kelas binaan atau semester aktif.
+                        <strong>Perhatian!</strong>
+                        @if(!$rombel)
+                        Anda tidak memiliki kelas binaan yang aktif.
+                        @else
+                        Pilih tahun ajaran dan semester untuk melanjutkan.
+                        @endif
                     </div>
                     @endif
 
-                    {{-- Cek pakai $this-> --}}
-                    @if($this->rombel && $this->semesterAktif && isset($currentStudent))
+                    {{-- Filter Tahun Ajaran & Semester --}}
+                    @if($rombel)
+                    <div class="card shadow-sm mb-2">
+                        <div class="card-body">
+                            <div class="page-header mb-0 border-bottom mb-3">
+                                <div class="d-flex align-items-center">
+                                    <h5 class="text-dark"><i class="mdi mdi-filter"></i> Filter Data</h5>
+                                </div>
+                            </div>
+                            <div class="row g-3">
+
+                                {{-- Tahun Ajaran --}}
+                                <div class="col-md-4">
+                                    <label class="form-label">Tahun Ajaran</label>
+                                    <select wire:model.live="tahunAjaranId" class="form-select">
+                                        <option value="">-- Pilih Tahun Ajaran --</option>
+                                        @foreach($tahunAjaranList as $ta)
+                                        <option value="{{ $ta->id }}">
+                                            {{ $ta->nama }}
+                                            @if($ta->status === 'aktif')
+                                            (Aktif)
+                                            @endif
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Semester --}}
+                                <div class="col-md-4">
+                                    <label class="form-label">Semester</label>
+                                    <select wire:model.live="semesterId" class="form-select"
+                                        @if(!$tahunAjaranId) disabled @endif>
+                                        <option value="">-- Pilih Semester --</option>
+                                        @foreach($semesterList as $sem)
+                                        <option value="{{ $sem->id }}">
+                                            {{ $sem->semester->nama ?? $sem->id }}
+                                            @if($sem->status === 'aktif')
+                                            (Aktif)
+                                            @endif
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Konten Rapor --}}
+                                <div class="col-md-4">
+                                    <label class="form-label">Konten Rapor</label>
+                                    <div class="input-group" style="height: 38px;">
+                                        <label class="input-group-text bg-light border rounded-start-3 h-100 d-flex align-items-center justify-content-center px-2" style="width: 40px;">
+                                            <i class="mdi mdi-file-document"></i>
+                                        </label>
+                                        <select class="form-select border rounded-end-3 h-100" wire:model.live="selectedPage" @if(!$semesterId) disabled @endif>
+                                            <option value="cover">Halaman Biodata (Cover)</option>
+                                            <option value="content">Halaman Nilai (Content)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- Area Preview PDF (Struktur Card utuh seperti awal) --}}
+        <div class="col-xl-12 col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    @if($rombel && $semesterId && isset($currentStudent))
                     <div class="row align-items-center mb-3">
                         <div class="col-lg-4">
                             <h5 class="text-dark mb-0">
@@ -133,20 +207,9 @@
                         <div class="col-lg-8 d-flex justify-content-end align-items-center flex-wrap gap-1">
                             <div class="input-group me-2" style="width: 300px; height: 38px;">
                                 <label class="input-group-text bg-light border rounded-start-3 h-100 d-flex align-items-center justify-content-center px-2" style="width: 40px;">
-                                    <i class="mdi mdi-file-document"></i>
-                                </label>
-                                <select class="form-select border rounded-end-3 h-100" wire:model.live="selectedPage">
-                                    <option value="cover">Halaman Biodata (Cover)</option>
-                                    <option value="content">Halaman Nilai (Content)</option>
-                                </select>
-                            </div>
-
-                            <div class="input-group me-2" style="width: 300px; height: 38px;">
-                                <label class="input-group-text bg-light border rounded-start-3 h-100 d-flex align-items-center justify-content-center px-2" style="width: 40px;">
                                     <i class="mdi mdi-account"></i>
                                 </label>
                                 <select class="form-select border rounded-end-3 h-100" wire:change="selectStudent($event.target.value)">
-                                    {{-- PERBAIKAN UTAMA: Gunakan $this->studentsList --}}
                                     @foreach($this->studentsList as $index => $student)
                                     <option value="{{ $index }}" {{ $currentIndex == $index ? 'selected' : '' }}>
                                         {{ $student['nama'] }}
@@ -179,11 +242,12 @@
 
                     @if(isset($pdfUrl) && $pdfUrl)
                     <div class="ratio ratio-16x9 border rounded shadow-sm mb-3" style="height: 600px;">
+                        {{-- Menggunakan key kombinasi untuk memaksa reload iframe ketika data filter berubah --}}
                         <iframe
                             src="{{ $pdfUrl }}"
                             title="Preview {{ $selectedPage === 'cover' ? 'Biodata' : 'Nilai' }} - {{ $currentStudent['nama'] }}"
                             frameborder="0"
-                            wire:key="pdf-{{ $currentStudent['id'] }}-{{ $selectedPage }}">
+                            wire:key="pdf-{{ $currentStudent['id'] }}-{{ $selectedPage }}-{{ $semesterId }}-{{ time() }}">
                         </iframe>
                     </div>
                     @else
@@ -196,6 +260,17 @@
 
                 </div>
             </div>
+        </div>
+
+    </div>
+
+    {{-- Loading Overlay --}}
+    <div wire:loading.flex
+        wire:target="tahunAjaranId,semesterId,selectedPage,selectStudent,previousStudent,nextStudent"
+        class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center"
+        style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 </div>

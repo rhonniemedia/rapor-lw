@@ -24,6 +24,17 @@ class PreviewRapor extends Component
     // PROPERTIES (STATE)
     // ========================================
 
+    // Filter Properties
+    public $tahunAjaranId = null;
+    public $semesterId = null;
+
+    // Data Collections
+    public $tahunAjaranList = [];
+    public $semesterList = [];
+
+    // Main Data
+    public $rombel;
+
     // Navigation & State
     public $currentIndex = 0;
     public $selectedPage = 'cover';
@@ -33,56 +44,141 @@ class PreviewRapor extends Component
     public $pdfUrl = null;
 
     protected $queryString = [
-        'selectedPage' => ['except' => 'cover'],
+        'selectedPage'  => ['except' => 'cover'],
+        'tahunAjaranId' => ['except' => null],
+        'semesterId'    => ['except' => null],
     ];
 
     public function mount()
     {
-        // Validasi Awal: Akses computed property menggunakan $this->
+        $this->loadRombelWaliKelas();
+
         if (!$this->rombel) {
             session()->flash('error', 'Anda tidak memiliki kelas binaan.');
             return redirect()->route('walikelas.dashboard');
         }
 
-        if (!$this->semesterAktif) {
-            session()->flash('warning', 'Tidak ada semester aktif saat ini.');
-            return;
+        $this->initializeFilters();
+    }
+
+    // ========================================
+    // INITIALIZATION & FILTER METHODS
+    // ========================================
+
+    private function initializeFilters(): void
+    {
+        $this->loadTahunAjaran();
+
+        if (!$this->tahunAjaranId) {
+            $this->setActiveTahunAjaran();
         }
 
-        // Load siswa pertama jika ada
-        if ($this->rombel && $this->semesterAktif) {
+        if ($this->tahunAjaranId) {
+            $this->loadSemester();
+
+            if (!$this->semesterId) {
+                $this->setActiveSemester();
+            }
+        }
+
+        if ($this->rombel && $this->semesterId) {
             $this->loadCurrentStudent();
         }
     }
 
+    private function setActiveTahunAjaran(): void
+    {
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+        if ($activeTahunAjaran) {
+            $this->tahunAjaranId = $activeTahunAjaran->id;
+        }
+    }
+
+    private function setActiveSemester(): void
+    {
+        $activeSemester = TahunAjaranSemester::where('tahun_ajaran_id', $this->tahunAjaranId)
+            ->where('status', 'aktif')
+            ->first();
+        if ($activeSemester) {
+            $this->semesterId = $activeSemester->id;
+        }
+    }
+
+    private function loadRombelWaliKelas(): void
+    {
+        $user = Auth::user();
+        $this->rombel = Rombel::with([
+            'tahunAjaranKurikulum.tahunAjaran',
+            'tahunAjaranKurikulum.kurikulum',
+            'waliKelas',
+            'jurusan'
+        ])->where('wali_kelas_slug', $user->slug ?? $user->id)->first();
+    }
+
+    private function loadTahunAjaran(): void
+    {
+        $this->tahunAjaranList = TahunAjaran::orderBy('tgl_mulai', 'desc')->get();
+    }
+
+    private function loadSemester(): void
+    {
+        if (!$this->tahunAjaranId) {
+            $this->semesterList = [];
+            return;
+        }
+
+        $this->semesterList = TahunAjaranSemester::with('semester')
+            ->where('tahun_ajaran_id', $this->tahunAjaranId)
+            ->get();
+    }
+
     // ========================================
-    // 1. COMPUTED PROPERTIES
+    // FILTER UPDATE HANDLERS
+    // ========================================
+
+    public function updatedTahunAjaranId(): void
+    {
+        $this->semesterId = null;
+        $this->semesterList = [];
+        $this->loadSemester();
+        $this->setActiveSemester();
+
+        if ($this->semesterId) {
+            $this->updatedSemesterId();
+        } else {
+            $this->resetStudentData();
+        }
+    }
+
+    public function updatedSemesterId(): void
+    {
+        $this->currentIndex = 0;
+        if ($this->semesterId) {
+            $this->loadCurrentStudent();
+        } else {
+            $this->resetStudentData();
+        }
+    }
+
+    private function resetStudentData(): void
+    {
+        $this->currentStudent = null;
+        $this->pdfUrl = null;
+    }
+
+    public function updatedSelectedPage(): void
+    {
+        $this->generatePdfUrl();
+    }
+
+    // ========================================
+    // COMPUTED PROPERTIES
     // ========================================
 
     #[Computed]
     public function dataSekolah()
     {
         return DataSekolah::first();
-    }
-
-    #[Computed]
-    public function semesterAktif()
-    {
-        return TahunAjaranSemester::where('status', 'aktif')
-            ->with(['semester', 'tahunAjaran'])
-            ->first();
-    }
-
-    #[Computed]
-    public function rombel()
-    {
-        $user = Auth::user();
-        return Rombel::with([
-            'tahunAjaranKurikulum.tahunAjaran',
-            'tahunAjaranKurikulum.kurikulum',
-            'waliKelas',
-            'jurusan'
-        ])->where('wali_kelas_slug', $user->slug ?? $user->id)->first();
     }
 
     #[Computed]
@@ -95,9 +191,9 @@ class PreviewRapor extends Component
             ->get()
             ->map(function ($item) {
                 return [
-                    'id' => $item->pelajar->id,
+                    'id'   => $item->pelajar->id,
                     'nama' => $item->pelajar->nama_lengkap,
-                    'nis' => $item->pelajar->nomor_induk
+                    'nis'  => $item->pelajar->nomor_induk
                 ];
             })
             ->sortBy('nama')
@@ -106,17 +202,15 @@ class PreviewRapor extends Component
     }
 
     // ========================================
-    // 2. LOGIKA UTAMA (LOAD DATA)
+    // LOGIKA UTAMA (LOAD DATA)
     // ========================================
 
     public function loadCurrentStudent()
     {
-        // Akses via Computed $this->studentsList
         $list = $this->studentsList;
 
         if (empty($list) || !isset($list[$this->currentIndex])) {
-            $this->currentStudent = null;
-            $this->pdfUrl = '';
+            $this->resetStudentData();
             return;
         }
 
@@ -154,7 +248,6 @@ class PreviewRapor extends Component
             'pada_tanggal' => $pelajar->pada_tanggal,
             'kelas' => $rombel->nama,
             'fase' => $fase,
-            'tingkat' => $tingkat,
             'ayah' => $this->formatOrangTua($orangTuaWalis->firstWhere('hubungan', 'ayah')),
             'ibu' => $this->formatOrangTua($orangTuaWalis->firstWhere('hubungan', 'ibu')),
             'wali' => $this->formatOrangTua($orangTuaWalis->firstWhere('hubungan', 'wali')),
@@ -172,13 +265,15 @@ class PreviewRapor extends Component
 
     public function generatePdfUrl()
     {
-        if (!$this->currentStudent || !$this->semesterAktif) {
+        if (!$this->currentStudent || !$this->semesterId) {
             $this->pdfUrl = '';
             return;
         }
 
+        $selectedSemesterObj = TahunAjaranSemester::with(['semester', 'tahunAjaran'])->find($this->semesterId);
+
         $pengaturan = Pengaturan::with('kepalaSekolah')
-            ->where('tahun_ajaran_semester_id', $this->semesterAktif->id)
+            ->where('tahun_ajaran_semester_id', $this->semesterId)
             ->first();
 
         $sekolah = $this->dataSekolah;
@@ -204,9 +299,9 @@ class PreviewRapor extends Component
                 'logo_sekolah_path' => $sekolah->logo_sekolah_path ?? null,
                 'logo_pemda_path' => $sekolah->logo_pemda_path ?? null,
             ],
-            'semester_nama' => $this->semesterAktif->semester->nama ?? 'N/A',
-            'semester_urutan' => $this->semesterAktif->semester->urutan ?? 'N/A',
-            'tahun_ajaran' => $this->semesterAktif->tahunAjaran->nama ?? 'N/A',
+            'semester_nama' => $selectedSemesterObj->semester->nama ?? 'N/A',
+            'semester_urutan' => $selectedSemesterObj->semester->urutan ?? 'N/A',
+            'tahun_ajaran' => $selectedSemesterObj->tahunAjaran->nama ?? 'N/A',
             'ayah' => $this->currentStudent['ayah'],
             'ibu'  => $this->currentStudent['ibu'],
             'wali' => $this->currentStudent['wali'],
@@ -221,7 +316,9 @@ class PreviewRapor extends Component
 
         Cache::put($cacheKey, $pdfData, 600);
 
-        $this->pdfUrl = route('pdf.generate') . '?key=' . $cacheKey . '&view=' . $this->selectedPage;
+        // PENAMBAHAN: parameter timestamp `&t=` ditambahkan agar cache dari iframe browser terbypass ketika file yang sama di-generate ulang
+        $timestamp = now()->timestamp;
+        $this->pdfUrl = route('pdf.generate') . '?key=' . $cacheKey . '&view=' . $this->selectedPage . '&t=' . $timestamp;
     }
 
     // ========================================
@@ -252,7 +349,7 @@ class PreviewRapor extends Component
             ->leftJoin('nilais', function ($join) use ($pelajarId) {
                 $join->on('mp.id', '=', 'nilais.mata_pelajaran_id')
                     ->where('nilais.pelajar_id', '=', $pelajarId)
-                    ->where('nilais.tahun_ajaran_semester_id', '=', $this->semesterAktif->id);
+                    ->where('nilais.tahun_ajaran_semester_id', '=', $this->semesterId);
             })
             ->where('rombel_pengajars.rombel_id', $rombel->id)
             ->where(function ($query) use ($agamaPelajarHash) {
@@ -295,24 +392,27 @@ class PreviewRapor extends Component
 
     private function loadKokurikuler($pelajarId): string
     {
-        $k = Kokurikuler::where('pelajar_id', $pelajarId)->where('tahun_ajaran_semester_id', $this->semesterAktif->id)->first();
+        $k = Kokurikuler::where('pelajar_id', $pelajarId)->where('tahun_ajaran_semester_id', $this->semesterId)->first();
         return $k ? ($k->capaian ?? '') : '';
     }
+
     private function loadEkstrakurikuler($pelajarId): array
     {
-        $e = EkskulPelajar::with('ekstrakurikuler')->where('pelajar_id', $pelajarId)->where('tahun_ajaran_semester_id', $this->semesterAktif->id)->get();
+        $e = EkskulPelajar::with('ekstrakurikuler')->where('pelajar_id', $pelajarId)->where('tahun_ajaran_semester_id', $this->semesterId)->get();
         return $e->map(function ($x) {
             return ['nama' => $x->ekstrakurikuler->nama ?? 'N/A', 'keterangan' => $x->deskripsi ?? 'Tidak ada keterangan.'];
         })->toArray();
     }
+
     private function loadKehadiran($pelajarId): array
     {
-        $k = Kehadiran::where('pelajar_id', $pelajarId)->where('rombel_id', $this->rombel->id)->where('tahun_ajaran_semester_id', $this->semesterAktif->id)->first();
+        $k = Kehadiran::where('pelajar_id', $pelajarId)->where('rombel_id', $this->rombel->id)->where('tahun_ajaran_semester_id', $this->semesterId)->first();
         return ['sakit' => $k->jumlah_sakit ?? 0, 'izin' => $k->jumlah_izin ?? 0, 'tanpa_keterangan' => $k->jumlah_tanpa_keterangan ?? 0];
     }
+
     private function loadCatatanWali($pelajarId): string
     {
-        $c = CatatanWaliKelas::where('pelajar_id', $pelajarId)->where('tahun_ajaran_semester_id', $this->semesterAktif->id)->first();
+        $c = CatatanWaliKelas::where('pelajar_id', $pelajarId)->where('tahun_ajaran_semester_id', $this->semesterId)->first();
         return $c ? ($c->catatan ?? '') : '';
     }
 
@@ -350,20 +450,24 @@ class PreviewRapor extends Component
         $this->loadCurrentStudent();
     }
 
-    public function updatedSelectedPage(): void
-    {
-        $this->generatePdfUrl();
-    }
-
     // ========================================
-    // RENDER (SAMA PERSIS DENGAN ADMIN)
+    // RENDER
     // ========================================
 
     public function render()
     {
-        // Hanya mengirim totalStudents, sama seperti Admin
+        $selectedSemesterObj = $this->semesterId
+            ? collect($this->semesterList)->firstWhere('id', $this->semesterId)
+            : null;
+
+        if (!$selectedSemesterObj && $this->semesterId) {
+            $selectedSemesterObj = TahunAjaranSemester::with(['semester', 'tahunAjaran'])->find($this->semesterId);
+        }
+
         return view('livewire.wali.preview-rapor', [
-            'totalStudents' => count($this->studentsList),
+            'totalStudents'       => count($this->studentsList),
+            'selectedSemesterObj' => $selectedSemesterObj,
+            'rombel'              => $this->rombel,
         ]);
     }
 }
