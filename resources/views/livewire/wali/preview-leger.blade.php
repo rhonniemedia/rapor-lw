@@ -1,13 +1,10 @@
 <div>
-    {{-- Header dengan tombol download --}}
-
+    {{-- Header dan Filter Area --}}
     <div class="row g-4">
         <div class="col-lg-12">
             <div class="page-header pb-3 mb-4 border-bottom">
+                <div class="d-flex align-items-center justify-content-between w-100">
 
-                <div class="d-flex justify-content-between align-items-center w-100">
-
-                    <!-- Kiri: Ikon + Judul -->
                     <div class="d-flex align-items-center">
                         <span class="bg-gradient-primary p-2 rounded-3 shadow-sm me-3 d-inline-flex align-items-center justify-content-center">
                             <i class="mdi mdi-file-document-box mdi-24px text-white"></i>
@@ -18,21 +15,23 @@
                                 Leger Kelas {{ $rombel->nama ?? 'N/A' }}
                             </h4>
                             <small class="text-muted">
-                                {{ $semesterAktif->tahunAjaran->nama ?? 'N/A' }}
-                                - Semester {{ $semesterAktif->semester->nama ?? 'N/A' }}
+                                @if($selectedSemesterObj)
+                                {{ $selectedSemesterObj->tahunAjaran->nama ?? 'N/A' }}
+                                - Semester {{ $selectedSemesterObj->semester->nama ?? 'N/A' }}
+                                @else
+                                <span class="text-warning">Semester Belum Dipilih</span>
+                                @endif
                             </small>
                         </div>
                     </div>
 
-                    <!-- Kanan: Tombol -->
                     @php
-                    // Definisikan nama file di sini agar HTML di bawah bersih
                     $namaRombel = $rombel->nama ?? 'unknown';
                     $fileName = "leger-kelas-{$namaRombel}.pdf";
                     @endphp
 
                     <div class="d-flex align-items-center gap-2 ms-auto">
-                        @if($pdfUrl)
+                        @if($pdfUrl && $semesterId && count($studentsList) > 0)
                         {{-- TOMBOL DOWNLOAD --}}
                         <button
                             type="button"
@@ -58,13 +57,63 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Filter Tahun Ajaran & Semester --}}
+            @if($rombel)
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="page-header mb-0 border-bottom mb-3">
+                        <div class="d-flex align-items-center">
+                            <h5 class="text-dark"><i class="mdi mdi-filter"></i> Filter Data</h5>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+
+                        {{-- Tahun Ajaran --}}
+                        <div class="col-md-6">
+                            <label class="form-label">Tahun Ajaran</label>
+                            <select wire:model.live="tahunAjaranId" class="form-select">
+                                <option value="">-- Pilih Tahun Ajaran --</option>
+                                @foreach($tahunAjaranList as $ta)
+                                <option value="{{ $ta->id }}">
+                                    {{ $ta->nama }}
+                                    @if($ta->status === 'aktif')
+                                    (Aktif)
+                                    @endif
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Semester --}}
+                        <div class="col-md-6">
+                            <label class="form-label">Semester</label>
+                            <select wire:model.live="semesterId" class="form-select" @if(!$tahunAjaranId) disabled @endif>
+                                <option value="">-- Pilih Semester --</option>
+                                @foreach($semesterList as $sem)
+                                <option value="{{ $sem->id }}">
+                                    {{ $sem->semester->nama ?? $sem->id }}
+                                    @if($sem->status === 'aktif')
+                                    (Aktif)
+                                    @endif
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 
     {{-- Tabel Leger --}}
+    @if($rombel && $semesterId)
+    @if(count($studentsList) > 0)
     <div id="tabel-leger">
-        <div class="bg-white overflow-hidden">
-            <div class="overflow-x-auto">
+        <div class="bg-white overflow-hidden shadow-sm rounded border">
+            <div class="overflow-x-auto p-3">
                 <style>
                     @media print {
                         @page {
@@ -195,7 +244,7 @@
                                 <table class="info-row" style="width: 100%;">
                                     <tr class="info-row">
                                         <td style="width: 20%;">TAHUN AJARAN / SEMESTER</td>
-                                        <td style="width: 80%;">: {{ $semesterAktif->tahunAjaran->nama ?? 'N/A' }} ~ {{ $semesterAktif->semester->nama ?? 'N/A' }} ({{ $semesterAktif->semester->urutan ?? 'N/A' }})</td>
+                                        <td style="width: 80%;">: {{ $selectedSemesterObj->tahunAjaran->nama ?? 'N/A' }} ~ {{ $selectedSemesterObj->semester->nama ?? 'N/A' }} ({{ $selectedSemesterObj->semester->urutan ?? 'N/A' }})</td>
                                     </tr>
                                     <tr class="info-row">
                                         <td>KELAS</td>
@@ -245,7 +294,7 @@
 
                     <tbody>
                         @forelse($studentsList as $student)
-                        <tr class="data-row">
+                        <tr class="data-row hover:bg-gray-50">
                             <td>{{ $student['no'] }}</td>
                             <td>{{ $student['nis'] }}</td>
                             <td class="text-left" style="padding-left: 4px;">{{ $student['nama'] }}</td>
@@ -300,7 +349,7 @@
                                         <div style="margin-bottom: 1px;">
                                             {{ $dataSekolah->kota_kabupaten ?? 'Kota' }},
                                             @if ($pengaturan && $pengaturan->tanggal_rapor)
-                                            {{ \Carbon\Carbon::parse($pengaturan->tanggal_rapor)->format('d F Y') }}
+                                            {{ \Carbon\Carbon::parse($pengaturan->tanggal_rapor ?? now())->locale('id')->isoFormat('D MMMM Y') }}
                                             @else
                                             {{ now()->format('d F Y') }}
                                             @endif
@@ -313,8 +362,6 @@
                                             NIP {{ $rombel->waliKelas->nip ?? '-' }}
                                         </div>
                                     </div>
-
-
                                 </div>
                             </td>
                         </tr>
@@ -325,7 +372,7 @@
     </div>
 
     {{-- Keterangan --}}
-    <div class="mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 no-print">
+    <div class="mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded no-print">
         <div class="flex">
             <div class="ml-3">
                 <p class="text-blue-500" style="font-size: 12px;">
@@ -337,6 +384,28 @@
                     • <strong>S</strong> = Sakit, <strong>I</strong> = Izin, <strong>A</strong> = Tanpa Keterangan
                 </p>
             </div>
+        </div>
+    </div>
+    @else
+    <div class="alert alert-info text-center" role="alert">
+        <i class="mdi mdi-information-outline me-2"></i>
+        <strong>Belum ada data siswa / nilai untuk semester ini.</strong>
+    </div>
+    @endif
+    @else
+    <div class="alert alert-warning text-center" role="alert">
+        <i class="mdi mdi-information-outline me-2"></i>
+        <strong>Silakan pilih Tahun Ajaran dan Semester untuk melihat Leger.</strong>
+    </div>
+    @endif
+
+    {{-- Loading Overlay --}}
+    <div wire:loading.flex
+        wire:target="tahunAjaranId,semesterId"
+        class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center"
+        style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 
