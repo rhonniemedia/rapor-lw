@@ -146,7 +146,21 @@
                                 <span class="profile-name">{{ Auth::user()->name ?? '' }}</span>
                             </a>
                             <div class="dropdown-menu navbar-dropdown w-100" aria-labelledby="profileDropdown">
-                                <a href="{{ url('admin/users/user-profile') }}" class="dropdown-item">
+                                {{-- LOGIKA URL PROFIL MENGGUNAKAN SPATIE --}}
+                                @php
+                                $user = Auth::user();
+                                $profileUrl = url('/dashboard'); // Fallback default
+
+                                if ($user) {
+                                if ($user->hasAnyRole(['superadmin', 'admin'])) {
+                                $profileUrl = url('admin/users/user-profile');
+                                } elseif ($user->hasAnyRole(['walikelas', 'guru'])) {
+                                $profileUrl = url('homeroom/user');
+                                }
+                                }
+                                @endphp
+
+                                <a href="{{ $profileUrl }}" class="dropdown-item">
                                     <i class="mdi mdi-account-badge mr-2 text-success"></i> Profil
                                 </a>
                                 <form method="POST" action="{{ route('logout') }}">
