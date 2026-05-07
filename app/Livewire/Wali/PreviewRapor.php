@@ -248,6 +248,7 @@ class PreviewRapor extends Component
             'pada_tanggal' => $pelajar->pada_tanggal,
             'kelas' => $rombel->nama,
             'fase' => $fase,
+            'tingkat' => $tingkat,
             'ayah' => $this->formatOrangTua($orangTuaWalis->firstWhere('hubungan', 'ayah')),
             'ibu' => $this->formatOrangTua($orangTuaWalis->firstWhere('hubungan', 'ibu')),
             'wali' => $this->formatOrangTua($orangTuaWalis->firstWhere('hubungan', 'wali')),

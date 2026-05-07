@@ -388,6 +388,43 @@
             </table>
         </div>
 
+        @if(($semester_urutan ?? 0) == 2)
+        <div class="tanggapan">
+            <table class="bordered">
+                <tbody>
+                    @if(($tingkat ?? 0) < 12)
+                        {{-- Bagian Kenaikan Kelas untuk Kelas 10 & 11 --}}
+                        <tr>
+                        <th class="center"><strong>Kenaikan Kelas</strong></th>
+                        </tr>
+                        @php
+                        $kelasTujuan = '';
+                        if (($tingkat ?? 0) == 10) {
+                        $kelasTujuan = 'XI (sebelas)';
+                        } elseif (($tingkat ?? 0) == 11) {
+                        $kelasTujuan = 'XII (dua belas)';
+                        }
+                        @endphp
+                        <tr>
+                            <td style="height: 40px;">
+                                Berdasarkan hasil yang dicapai pada semester ganjil dan genap, maka peserta didik dinyatakan
+                                <strong>dapat / tidak dapat</strong> melanjutkan ke kelas
+                                <strong>{{ $kelasTujuan }}</strong>
+                            </td>
+                        </tr>
+                        @else
+                        {{-- Bagian Kelulusan untuk Kelas 12 --}}
+                        <tr>
+                            <td style="height: 30px; vertical-align: middle;" class="center">
+                                <strong>Keterangan Kelulusan : Lulus</strong>
+                            </td>
+                        </tr>
+                        @endif
+                </tbody>
+            </table>
+        </div>
+        @endif
+
         <div class="tanggapan">
             <table class="bordered">
                 <tbody>
@@ -395,43 +432,14 @@
                         <th class="center"><strong>Tanggapan Orang Tua/Wali Murid</strong></th>
                     </tr>
                     <tr>
-                        <td style="height: 60px;">{{ $tanggapan_ortu ?? 'Tidak ada tanggapan.' }}</td>
+                        <td style="height: 50px;">{{ $tanggapan_ortu ?? 'Tidak ada tanggapan.' }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-
-        @if(($semester_urutan ?? 0) == 2 && ($tingkat ?? 0) < 12)
-        <div class="tanggapan">
-            <table class="bordered">
-                <tbody>
-                    <tr>
-                        <th class="center"><strong>Kenaikan Kelas</strong></th>
-                    </tr>
-                    @php
-                        // Logika menentukan teks kelas tujuan
-                        $kelasTujuan = '';
-                        if (($tingkat ?? 0) == 10) {
-                            $kelasTujuan = 'XI (sebelas)';
-                        } elseif (($tingkat ?? 0) == 11) {
-                            $kelasTujuan = 'XII (dua belas)';
-                        }
-                    @endphp
-
-                    <tr>
-                        <td style="height: 40px;">
-                            Berdasarkan hasil yang dicapai pada semester ganjil dan genap, maka peserta didik dinyatakan 
-                            <strong>dapat / tidak dapat</strong> melanjutkan ke kelas 
-                            <strong>{{ $kelasTujuan }}</strong>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        @endif
 
         <div class="body-signature">
-            <table class="no-border signature-table" style="margin-top: 20px;">
+            <table class="no-border signature-table" style="margin-top: 5px;">
                 <tbody>
                     <tr class="signature">
                         <td style="width: 50%;"></td>
