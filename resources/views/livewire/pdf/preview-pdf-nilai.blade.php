@@ -113,7 +113,7 @@
         }
 
         table.bordered.nilai td {
-            line-height: 0.95rem;
+            line-height: 0.88rem;
             padding-top: 3px;
             padding-bottom: 3px;
         }
